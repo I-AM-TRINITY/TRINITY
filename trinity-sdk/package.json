@@ -1,0 +1,35 @@
+{
+  "name": "trinity-sdk",
+  "version": "0.1.0",
+  "description": "A deterministic state engine that syncs anywhere — local, P2P, AI, network.",
+  "type": "module",
+  "scripts": {
+    "signal": "node signal-server/server.js",
+    "dev": "npx serve . --cors -p 3000",
+    "dev:signal": "concurrently \"npm run signal\" \"npm run dev\"",
+    "legal:headers": "node ../tools/apply-legal-headers.mjs --root . --preset trinity-dual"
+  },
+  "exports": {
+    "./core/createApp": "./core/createApp.js",
+    "./core/sync":      "./core/sync.js",
+    "./core/persist":   "./core/persist.js",
+    "./transport/local":     "./transport/local.js",
+    "./transport/webrtc":    "./transport/webrtc.js",
+    "./transport/websocket": "./transport/websocket.js",
+    "./crdt/crdt-text":      "./crdt/crdt-text.js",
+    "./presence":            "./presence/presence.js",
+    "./ai/runner":           "./ai/runner.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.3"
+  },
+  "keywords": [
+    "p2p", "webrtc", "crdt", "offline-first", "event-sourcing",
+    "multiplayer", "ai-workflow", "deterministic", "sync"
+  ],
+  "license": "AGPL-3.0-or-later"
+}

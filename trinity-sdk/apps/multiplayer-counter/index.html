@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<!--
+Trinity SDK / Planespace / Trinity Core
+Copyright (c) 2026 James Chapman (XheCarpenXer)
+
+Author: James Chapman
+Alias: XheCarpenXer
+Contact: xhecarpenxer@gmail.com
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This software is dual-licensed:
+1. Open Source License: GNU Affero General Public License v3.0 or later (AGPLv3+).
+2. Commercial / Government License: available for private, closed-source, warranty-backed,
+   or separately negotiated terms beyond AGPL compliance.
+
+See: LICENSE, COMMERCIAL-LICENSE.md, FEE-SCHEDULE.md, CLA.md, LEGAL-NOTES.md
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity · Multiplayer Counter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --border: #1e1e2e;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --text: #e4e4f0;
+    --muted: #6b6b80;
+    --up: #10b981;
+    --down: #f43f5e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    transition: all 0.6s ease;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent2);
+    text-transform: uppercase;
+  }
+
+  .counter-display {
+    position: relative;
+    font-size: 160px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 280px;
+    text-align: center;
+  }
+
+  .counter-display.bump {
+    transform: scale(1.06);
+  }
+
+  .counter-display .who {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    letter-spacing: 0.1em;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 16px;
+  }
+
+  button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+  }
+
+  button:hover { transform: scale(1.1); }
+  button:active { transform: scale(0.95); }
+
+  #btn-inc {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: #a78bfa;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+  }
+
+  #btn-inc:hover {
+    background: rgba(124, 58, 237, 0.3);
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.4);
+  }
+
+  #btn-dec {
+    background: rgba(244, 63, 94, 0.1);
+    border-color: rgba(244, 63, 94, 0.3);
+    color: #fb7185;
+  }
+
+  #btn-dec:hover {
+    background: rgba(244, 63, 94, 0.2);
+  }
+
+  #btn-reset {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* peers */
+  .peers-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .peers-list {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .peer-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 12px 5px 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    transition: all 0.3s ease;
+  }
+
+  .peer-pill.self {
+    border-color: rgba(124, 58, 237, 0.3);
+    color: var(--text);
+  }
+
+  .peer-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* event log */
+  .event-log {
+    width: 340px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .log-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .log-entries {
+    height: 120px;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .log-entry {
+    padding: 4px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .log-entry .entry-type { color: var(--accent2); }
+  .log-entry .entry-ts { opacity: 0.5; }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s ease;
+  }
+
+  .status-dot.connected { background: var(--up); box-shadow: 0 0 6px var(--up); }
+  .status-dot.offline { background: var(--muted); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* delta flash */
+  .delta-flash {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    font-weight: 800;
+    font-family: 'Syne', sans-serif;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0;
+  }
+
+  .delta-flash.show-inc {
+    color: var(--accent);
+    animation: flashUp 0.5s ease forwards;
+  }
+
+  .delta-flash.show-dec {
+    color: var(--down);
+    animation: flashDown 0.5s ease forwards;
+  }
+
+  @keyframes flashUp {
+    0% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -120%); }
+  }
+
+  @keyframes flashDown {
+    0% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, 20%); }
+  }
+</style>
+</head>
+<body>
+<div class="glow" id="glow"></div>
+
+<div class="container">
+  <div class="label">Trinity SDK · Multiplayer Counter</div>
+
+  <div class="counter-display" id="counter">
+    0
+    <div class="who" id="last-actor"></div>
+  </div>
+
+  <div class="buttons">
+    <button id="btn-dec">−</button>
+    <button id="btn-inc">+</button>
+  </div>
+
+  <button id="btn-reset">RESET</button>
+
+  <div class="peers-panel">
+    <div class="label">Connected Peers</div>
+    <div class="peers-list" id="peers-list"></div>
+    <div class="status-bar">
+      <div class="status-dot offline" id="status-dot"></div>
+      <span id="status-text">local only (open in another tab to sync)</span>
+    </div>
+  </div>
+
+  <div class="event-log">
+    <div class="log-header">Event Log (deterministic)</div>
+    <div class="log-entries" id="log-entries"></div>
+  </div>
+</div>
+
+<div class="delta-flash" id="delta-flash"></div>
+
+<script type="module">
+// ─── SDK imports ──────────────────────────────────────────────
+import { createApp }       from "../../core/createApp.js"
+import { attachSync }      from "../../core/sync.js"
+import { createPresence }  from "../../presence/presence.js"
+import { localTransport }  from "../../transport/local.js"
+
+// ─── App definition ───────────────────────────────────────────
+const SELF_ID = crypto.randomUUID()
+const SELF_COLOR = `hsl(${Math.floor(Math.random()*360)}, 70%, 55%)`
+
+const app = createApp({
+  init: { count: 0, lastActor: null, lastAction: null },
+
+  reduce(state, event) {
+    switch (event.type) {
+      case "counter.inc":
+        return { ...state, count: state.count + 1,  lastActor: event.peerId, lastAction: "inc" }
+      case "counter.dec":
+        return { ...state, count: state.count - 1,  lastActor: event.peerId, lastAction: "dec" }
+      case "counter.reset":
+        return { ...state, count: 0, lastActor: event.peerId, lastAction: "reset" }
+      default:
+        return state
+    }
+  }
+})
+
+// ─── Transport ────────────────────────────────────────────────
+// Try WebRTC; fall back to local if signal server isn't running.
+let transport = localTransport
+
+try {
+  const { createWebRTCTransport } = await import("../../transport/webrtc.js")
+  transport = createWebRTCTransport("trinity-counter-demo", {
+    signalUrl: "ws://localhost:8080",
+  })
+  console.log("[trinity] using WebRTC transport")
+} catch (e) {
+  console.log("[trinity] signal server not found — running local only")
+}
+
+attachSync(app, transport)
+
+// ─── Presence ─────────────────────────────────────────────────
+const presence = createPresence(transport, SELF_ID)
+
+presence.update({ color: SELF_COLOR, isSelf: true })
+
+// ─── UI helpers ───────────────────────────────────────────────
+const counterEl    = document.getElementById("counter")
+const lastActorEl  = document.getElementById("last-actor")
+const peersListEl  = document.getElementById("peers-list")
+const logEntriesEl = document.getElementById("log-entries")
+const statusDot    = document.getElementById("status-dot")
+const statusText   = document.getElementById("status-text")
+const deltaFlash   = document.getElementById("delta-flash")
+
+function renderCounter(state) {
+  counterEl.textContent = state.count
+  lastActorEl.textContent = state.lastActor
+    ? (state.lastActor === SELF_ID ? "you" : "peer: " + state.lastActor.slice(0, 8))
+    : ""
+}
+
+function bump(type) {
+  counterEl.classList.remove("bump")
+  void counterEl.offsetWidth // reflow
+  counterEl.classList.add("bump")
+  counterEl.addEventListener("transitionend", () => counterEl.classList.remove("bump"), { once: true })
+
+  // Glow pulse
+  const glow = document.getElementById("glow")
+  glow.style.background = type === "inc"
+    ? "radial-gradient(circle, rgba(124,58,237,0.35) 0%, transparent 70%)"
+    : "radial-gradient(circle, rgba(244,63,94,0.25) 0%, transparent 70%)"
+  setTimeout(() => {
+    glow.style.background = "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)"
+  }, 400)
+}
+
+function flashDelta(type) {
+  deltaFlash.textContent = type === "inc" ? "+1" : "−1"
+  deltaFlash.className = "delta-flash show-" + type
+  setTimeout(() => { deltaFlash.className = "delta-flash" }, 500)
+}
+
+function renderLog() {
+  const entries = app.log.slice(-6).reverse()
+  logEntriesEl.innerHTML = entries.map(e => `
+    <div class="log-entry">
+      <span class="entry-type">${e.type}</span>
+      <span>${e.peerId ? e.peerId.slice(0,8) : "—"}</span>
+      <span class="entry-ts">${new Date(e._ts).toLocaleTimeString()}</span>
+    </div>
+  `).join("")
+}
+
+function renderPeers(peerList) {
+  const allPeers = [
+    { peerId: SELF_ID, color: SELF_COLOR, name: "You" },
+    ...peerList.filter(p => p.peerId !== SELF_ID)
+  ]
+
+  peersListEl.innerHTML = allPeers.map(p => `
+    <div class="peer-pill ${p.peerId === SELF_ID ? "self" : ""}">
+      <div class="peer-dot" style="background:${p.color || "#6b6b80"}"></div>
+      ${p.name || ("peer " + p.peerId.slice(0,6))}
+    </div>
+  `).join("")
+
+  const connected = peerList.length > 0
+  statusDot.className = "status-dot " + (connected ? "connected" : "offline")
+  statusText.textContent = connected
+    ? `${peerList.length} peer${peerList.length > 1 ? "s" : ""} connected`
+    : "local only (open in another tab to sync)"
+}
+
+// ─── Subscribe ────────────────────────────────────────────────
+let prevCount = 0
+
+app.subscribe((state, event) => {
+  const isMyAction = event.peerId === SELF_ID
+
+  if (event.type === "counter.inc") {
+    bump("inc")
+    if (!isMyAction) flashDelta("inc")
+  }
+  if (event.type === "counter.dec") {
+    bump("dec")
+    if (!isMyAction) flashDelta("dec")
+  }
+
+  renderCounter(state)
+  renderLog()
+  prevCount = state.count
+})
+
+presence.subscribe(renderPeers)
+
+// ─── Event emitters ───────────────────────────────────────────
+document.getElementById("btn-inc").onclick = () => {
+  app.emit({ type: "counter.inc", peerId: SELF_ID })
+  flashDelta("inc")
+}
+
+document.getElementById("btn-dec").onclick = () => {
+  app.emit({ type: "counter.dec", peerId: SELF_ID })
+  flashDelta("dec")
+}
+
+document.getElementById("btn-reset").onclick = () => {
+  app.emit({ type: "counter.reset", peerId: SELF_ID })
+}
+
+// Initial render
+renderCounter(app.getState())
+renderPeers([])
+
+console.log("[trinity] Multiplayer Counter ready. Self ID:", SELF_ID)
+</script>
+</body>
+</html>

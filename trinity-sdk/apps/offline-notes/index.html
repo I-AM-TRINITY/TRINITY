@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<!--
+Trinity SDK / Planespace / Trinity Core
+Copyright (c) 2026 James Chapman (XheCarpenXer)
+
+Author: James Chapman
+Alias: XheCarpenXer
+Contact: xhecarpenxer@gmail.com
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This software is dual-licensed:
+1. Open Source License: GNU Affero General Public License v3.0 or later (AGPLv3+).
+2. Commercial / Government License: available for private, closed-source, warranty-backed,
+   or separately negotiated terms beyond AGPL compliance.
+
+See: LICENSE, COMMERCIAL-LICENSE.md, FEE-SCHEDULE.md, CLA.md, LEGAL-NOTES.md
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity · Offline Notes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #1c1917;
+    --surface: #292524;
+    --border: #3d3835;
+    --text: #e7e5e4;
+    --muted: #78716c;
+    --accent: #f97316;
+    --accent-dim: rgba(249,115,22,0.15);
+    --success: #4ade80;
+    --crdt-ins: rgba(74, 222, 128, 0.12);
+    --crdt-del: rgba(248, 113, 113, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', serif;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 52px 1fr 36px;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+
+  .topbar-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    flex: 1;
+  }
+
+  .peers-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .peer-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: #fff;
+    border: 2px solid var(--bg);
+    position: relative;
+    cursor: default;
+    transition: transform 0.2s;
+  }
+
+  .peer-avatar:hover { transform: scale(1.2); z-index: 10; }
+
+  .peer-avatar .tooltip {
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: none;
+    pointer-events: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .peer-avatar:hover .tooltip { display: block; }
+
+  .offline-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .save-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    transition: all 0.3s;
+  }
+
+  .save-indicator.saved { color: var(--success); }
+
+  /* ── Main layout ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 260px;
+    overflow: hidden;
+  }
+
+  /* ── Notes list ── */
+  .notes-list {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .notes-header {
+    padding: 14px 16px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .notes-header span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .new-note-btn {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+    line-height: 1;
+  }
+
+  .new-note-btn:hover { background: var(--accent); color: var(--bg); }
+
+  .notes-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .note-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.1s;
+  }
+
+  .note-item:hover { background: var(--surface); }
+
+  .note-item.active {
+    border-left-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .note-item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+
+  .note-item-preview {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.3;
+  }
+
+  .note-item-ts {
+    font-size: 10px;
+    color: var(--border);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Editor ── */
+  .editor-area {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #note-title {
+    font-family: 'Lora', serif;
+    font-size: 17px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    color: var(--text);
+    outline: none;
+    flex: 1;
+    min-width: 0;
+  }
+
+  #note-title::placeholder { color: var(--muted); }
+
+  .del-note-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.1s;
+  }
+
+  .del-note-btn:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+
+  #editor {
+    flex: 1;
+    padding: 24px 28px;
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    background: none;
+    border: none;
+    resize: none;
+    outline: none;
+    overflow-y: auto;
+  }
+
+  #editor::placeholder { color: var(--muted); }
+
+  /* ── Right panel: CRDT log ── */
+  .crdt-panel {
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .crdt-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .crdt-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+
+  .crdt-op {
+    padding: 4px 14px;
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    gap: 6px;
+    align-items: center;
+    line-height: 1.4;
+    animation: fadeSlide 0.2s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(4px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .crdt-op.ins { background: var(--crdt-ins); color: var(--success); }
+  .crdt-op.del { background: var(--crdt-del); color: #f87171; }
+
+  .crdt-op-sym { font-size: 12px; font-weight: 500; }
+  .crdt-op-val { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crdt-op-id  { color: var(--muted); font-size: 9px; text-align: right; }
+
+  .crdt-empty {
+    padding: 20px 16px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Status bar ── */
+  .statusbar {
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .statusbar .sep { opacity: 0.3; }
+
+  .online-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+    display: inline-block;
+    margin-right: 5px;
+  }
+
+  .online-dot.on { background: var(--success); box-shadow: 0 0 5px var(--success); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-title">trinity/offline-notes</div>
+  <div class="peers-row" id="peers-row"></div>
+  <div class="save-indicator" id="save-indicator">saved</div>
+</div>
+
+<!-- Main layout -->
+<div class="layout">
+
+  <!-- Notes list -->
+  <div class="notes-list">
+    <div class="notes-header">
+      <span>Notes</span>
+      <button class="new-note-btn" onclick="newNote()" title="New note">+</button>
+    </div>
+    <div class="notes-scroll" id="notes-scroll"></div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-area">
+    <div class="editor-toolbar">
+      <input id="note-title" placeholder="Untitled note" oninput="onTitleChange()" />
+      <button class="del-note-btn" onclick="deleteNote()" title="Delete note">✕</button>
+    </div>
+    <textarea id="editor" placeholder="Start writing…" oninput="onEditorInput()" onkeydown="onEditorKeydown(event)"></textarea>
+  </div>
+
+  <!-- CRDT op log -->
+  <div class="crdt-panel">
+    <div class="crdt-header">CRDT Operations</div>
+    <div class="crdt-scroll" id="crdt-scroll">
+      <div class="crdt-empty">No ops yet</div>
+    </div>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="statusbar">
+  <span><span class="online-dot" id="online-dot"></span><span id="online-text">local only</span></span>
+  <span class="sep">|</span>
+  <span id="log-count">0 events in log</span>
+  <span class="sep">|</span>
+  <span>offline-first · deterministic replay</span>
+</div>
+
+<script type="module">
+// ─── SDK imports ──────────────────────────────────────────────
+import { createApp }      from "../../core/createApp.js"
+import { attachSync }     from "../../core/sync.js"
+import { persist }        from "../../core/persist.js"
+import { localTransport } from "../../transport/local.js"
+import { createPresence } from "../../presence/presence.js"
+import { createTextCRDT, createOps } from "../../crdt/crdt-text.js"
+
+// ─── State shape ──────────────────────────────────────────────
+// notes: { [noteId]: { id, title, createdAt, updatedAt } }
+// The text content of each note is managed by a dedicated CRDT.
+const SELF_ID = crypto.randomUUID()
+const SELF_COLOR = `hsl(${Math.floor(Math.random()*360)}, 65%, 55%)`
+
+// Per-note CRDT instances (rebuilt from event log on load)
+const crdts = {}   // noteId → createTextCRDT()
+const ops = createOps(SELF_ID)
+
+// ─── App ──────────────────────────────────────────────────────
+const app = createApp({
+  init: {
+    notes: {},
+    activeNoteId: null,
+  },
+
+  reduce(state, event) {
+    switch (event.type) {
+
+      case "note.create": {
+        const note = {
+          id: event.id,
+          title: event.title || "Untitled",
+          createdAt: event._ts,
+          updatedAt: event._ts,
+        }
+        // Initialise CRDT for this note
+        if (!crdts[event.id]) crdts[event.id] = createTextCRDT()
+        return {
+          ...state,
+          notes: { ...state.notes, [event.id]: note },
+          activeNoteId: event.id,
+        }
+      }
+
+      case "note.rename": {
+        const note = state.notes[event.id]
+        if (!note) return state
+        return {
+          ...state,
+          notes: {
+            ...state.notes,
+            [event.id]: { ...note, title: event.title, updatedAt: event._ts },
+          },
+        }
+      }
+
+      case "note.delete": {
+        const { [event.id]: _, ...rest } = state.notes
+        delete crdts[event.id]
+        const remaining = Object.keys(rest)
+        return {
+          ...state,
+          notes: rest,
+          activeNoteId: remaining.length ? remaining[remaining.length - 1] : null,
+        }
+      }
+
+      case "crdt.op": {
+        // Make sure the CRDT exists (could be replaying from log)
+        if (!crdts[event.noteId]) crdts[event.noteId] = createTextCRDT()
+        crdts[event.noteId].apply(event.op)
+
+        // Update the note's updatedAt timestamp
+        const note = state.notes[event.noteId]
+        if (!note) return state
+        return {
+          ...state,
+          notes: {
+            ...state.notes,
+            [event.noteId]: { ...note, updatedAt: event._ts },
+          },
+        }
+      }
+
+      case "note.setActive":
+        return { ...state, activeNoteId: event.id }
+
+      default:
+        return state
+    }
+  }
+})
+
+// ─── Transport & sync ─────────────────────────────────────────
+let transport = localTransport
+try {
+  const { createWebRTCTransport } = await import("../../transport/webrtc.js")
+  transport = createWebRTCTransport("trinity-notes-demo", {
+    signalUrl: "ws://localhost:8080",
+  })
+  document.getElementById("online-dot").className = "online-dot on"
+  document.getElementById("online-text").textContent = "0 peers"
+} catch { /* offline only */ }
+
+attachSync(app, transport)
+persist(app, "trinity-offline-notes")
+
+// Presence (ephemeral cursors / user info)
+const presence = createPresence(transport, SELF_ID)
+presence.update({ color: SELF_COLOR, name: "You" })
+
+// ─── CRDT op log for the panel ────────────────────────────────
+const recentOps = []   // last 50 crdt ops for display
+
+// ─── UI state ─────────────────────────────────────────────────
+let ignoreEditorInput = false  // prevent re-entrant edits during render
+
+// ─── Render ───────────────────────────────────────────────────
+function getActiveText() {
+  const state = app.getState()
+  const id = state.activeNoteId
+  if (!id || !crdts[id]) return ""
+  return crdts[id].value()
+}
+
+function renderNotesList(state) {
+  const scroll = document.getElementById("notes-scroll")
+  const notes = Object.values(state.notes).sort((a, b) => b.updatedAt - a.updatedAt)
+
+  scroll.innerHTML = notes.map(n => `
+    <div class="note-item ${n.id === state.activeNoteId ? "active" : ""}"
+         onclick="selectNote('${n.id}')">
+      <div class="note-item-title">${escHtml(n.title)}</div>
+      <div class="note-item-preview">${escHtml((crdts[n.id]?.value() || "").slice(0, 40) || "Empty")}</div>
+      <div class="note-item-ts">${timeSince(n.updatedAt)}</div>
+    </div>
+  `).join("") || `<div style="padding:16px;font-family:monospace;font-size:11px;color:var(--muted)">No notes yet</div>`
+}
+
+function renderEditor(state) {
+  const note = state.notes[state.activeNoteId]
+  const title = document.getElementById("note-title")
+  const editor = document.getElementById("editor")
+
+  if (!note) {
+    title.value = ""
+    title.disabled = true
+    editor.value = ""
+    editor.disabled = true
+    editor.placeholder = "Select or create a note"
+    return
+  }
+
+  title.disabled = false
+  editor.disabled = false
+  editor.placeholder = "Start writing…"
+
+  if (title.value !== note.title) {
+    title.value = note.title
+  }
+
+  const text = crdts[state.activeNoteId]?.value() || ""
+  ignoreEditorInput = true
+  const sel = [editor.selectionStart, editor.selectionEnd]
+  editor.value = text
+  editor.setSelectionRange(sel[0], sel[1])
+  ignoreEditorInput = false
+}
+
+function renderCRDTPanel() {
+  const scroll = document.getElementById("crdt-scroll")
+
+  if (recentOps.length === 0) {
+    scroll.innerHTML = `<div class="crdt-empty">Edit a note to see CRDT ops</div>`
+    return
+  }
+
+  scroll.innerHTML = recentOps.slice(-40).reverse().map(op => `
+    <div class="crdt-op ${op.type === "insert" ? "ins" : "del"}">
+      <span class="crdt-op-sym">${op.type === "insert" ? "+" : "−"}</span>
+      <span class="crdt-op-val">${op.type === "insert" ? escHtml(JSON.stringify(op.value)) : "del"}</span>
+      <span class="crdt-op-id">${op.id.split(":")[1] ?? op.id.slice(0,6)}</span>
+    </div>
+  `).join("")
+}
+
+function renderStatusBar(state) {
+  document.getElementById("log-count").textContent =
+    `${app.log.length} events in log`
+}
+
+function renderAll(state) {
+  renderNotesList(state)
+  renderEditor(state)
+  renderCRDTPanel()
+  renderStatusBar(state)
+  flashSaved()
+}
+
+let saveTimeout = null
+function flashSaved() {
+  const el = document.getElementById("save-indicator")
+  el.textContent = "saving…"
+  el.className = "save-indicator"
+  clearTimeout(saveTimeout)
+  saveTimeout = setTimeout(() => {
+    el.textContent = "saved"
+    el.className = "save-indicator saved"
+  }, 600)
+}
+
+// ─── Event emitters ───────────────────────────────────────────
+window.newNote = function() {
+  app.emit({
+    type: "note.create",
+    id: crypto.randomUUID(),
+    title: "Untitled",
+  })
+}
+
+window.selectNote = function(id) {
+  app.emit({ type: "note.setActive", id })
+}
+
+window.deleteNote = function() {
+  const state = app.getState()
+  if (!state.activeNoteId) return
+  if (!confirm("Delete this note?")) return
+  app.emit({ type: "note.delete", id: state.activeNoteId })
+}
+
+window.onTitleChange = function() {
+  const state = app.getState()
+  if (!state.activeNoteId) return
+  app.emit({
+    type: "note.rename",
+    id: state.activeNoteId,
+    title: document.getElementById("note-title").value,
+  })
+}
+
+// ─── CRDT text editing ────────────────────────────────────────
+// We track an explicit "cursor" into the CRDT node list.
+// For simplicity we rebuild ops from textarea diff on each change.
+// A production system would hook into the Selection API more precisely.
+
+let prevText = ""
+
+window.onEditorInput = function() {
+  if (ignoreEditorInput) return
+  const state = app.getState()
+  const noteId = state.activeNoteId
+  if (!noteId) return
+
+  const editor = document.getElementById("editor")
+  const newText = editor.value
+  const crdt = crdts[noteId]
+
+  if (!crdt) return
+
+  const oldText = crdt.value()
+
+  // Simple diff: find first change position
+  let start = 0
+  while (start < oldText.length && start < newText.length && oldText[start] === newText[start]) {
+    start++
+  }
+
+  let oldEnd = oldText.length
+  let newEnd = newText.length
+
+  while (
+    oldEnd > start &&
+    newEnd > start &&
+    oldText[oldEnd - 1] === newText[newEnd - 1]
+  ) {
+    oldEnd--
+    newEnd--
+  }
+
+  const deleted = oldText.slice(start, oldEnd)
+  const inserted = newText.slice(start, newEnd)
+
+  // Get the node id at position `start - 1` (the anchor)
+  const snapshot = crdt.snapshot().filter(n => !n.deleted && n.id !== "root")
+  const anchorNode = start > 0 ? snapshot[start - 1] : null
+  const anchorId = anchorNode?.id ?? "root"
+
+  // Emit deletes first
+  if (deleted.length > 0) {
+    for (let i = start; i < start + deleted.length; i++) {
+      const node = snapshot[i]
+      if (node) {
+        const op = { type: "delete", id: node.id }
+        recentOps.push(op)
+        app.emit({ type: "crdt.op", noteId, op })
+      }
+    }
+  }
+
+  // Emit inserts
+  if (inserted.length > 0) {
+    let prevId = anchorId
+    for (const char of inserted) {
+      const op = ops.insert(char, prevId)
+      recentOps.push(op)
+      prevId = op.id
+      app.emit({ type: "crdt.op", noteId, op })
+    }
+  }
+
+  prevText = newText
+  renderCRDTPanel()
+}
+
+window.onEditorKeydown = function(e) {
+  // Allow tab insertion
+  if (e.key === "Tab") {
+    e.preventDefault()
+    const editor = document.getElementById("editor")
+    const start = editor.selectionStart
+    editor.value = editor.value.slice(0, start) + "  " + editor.value.slice(editor.selectionEnd)
+    editor.selectionStart = editor.selectionEnd = start + 2
+    window.onEditorInput()
+  }
+}
+
+// ─── Presence ─────────────────────────────────────────────────
+presence.subscribe((peers) => {
+  const row = document.getElementById("peers-row")
+  const online = document.getElementById("online-text")
+
+  const others = peers.filter(p => p.peerId !== SELF_ID)
+  online.textContent = others.length > 0
+    ? `${others.length} peer${others.length > 1 ? "s" : ""}`
+    : "local only"
+
+  row.innerHTML = [
+    { peerId: SELF_ID, color: SELF_COLOR, name: "You" },
+    ...others
+  ].map(p => `
+    <div class="peer-avatar" style="background:${p.color || "#6b6b80"}">
+      ${(p.name || "P").charAt(0).toUpperCase()}
+      <div class="tooltip">${p.name || p.peerId.slice(0,8)}</div>
+    </div>
+  `).join("")
+})
+
+// ─── Subscribe ────────────────────────────────────────────────
+app.subscribe((state) => renderAll(state))
+
+// ─── Init ─────────────────────────────────────────────────────
+const initial = app.getState()
+if (Object.keys(initial.notes).length === 0) {
+  // Create a starter note on first load
+  app.emit({
+    type: "note.create",
+    id: crypto.randomUUID(),
+    title: "Welcome to Trinity Notes",
+  })
+  const noteId = app.getState().activeNoteId
+  const welcomeText = "This editor works offline.\n\nEvery keystroke is a CRDT operation stored in the deterministic event log.\n\nOpen in another tab with the signal server running to sync P2P."
+
+  let prevId = "root"
+  for (const char of welcomeText) {
+    const op = ops.insert(char, prevId)
+    prevId = op.id
+    app.emit({ type: "crdt.op", noteId, op })
+  }
+} else {
+  renderAll(initial)
+}
+
+// ─── Helpers ──────────────────────────────────────────────────
+function escHtml(str) {
+  if (!str) return ""
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+function timeSince(ts) {
+  const d = Date.now() - ts
+  if (d < 60000) return "just now"
+  if (d < 3600000) return Math.floor(d / 60000) + "m ago"
+  if (d < 86400000) return Math.floor(d / 3600000) + "h ago"
+  return new Date(ts).toLocaleDateString()
+}
+
+console.log("[trinity] Offline Notes ready. Self ID:", SELF_ID)
+</script>
+</body>
+</html>

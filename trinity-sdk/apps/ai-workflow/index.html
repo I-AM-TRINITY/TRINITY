@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<!--
+Trinity SDK / Planespace / Trinity Core
+Copyright (c) 2026 James Chapman (XheCarpenXer)
+
+Author: James Chapman
+Alias: XheCarpenXer
+Contact: xhecarpenxer@gmail.com
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This software is dual-licensed:
+1. Open Source License: GNU Affero General Public License v3.0 or later (AGPLv3+).
+2. Commercial / Government License: available for private, closed-source, warranty-backed,
+   or separately negotiated terms beyond AGPL compliance.
+
+See: LICENSE, COMMERCIAL-LICENSE.md, FEE-SCHEDULE.md, CLA.md, LEGAL-NOTES.md
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity · AI Workflow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap');
+
+  :root {
+    --bg: #fafaf7;
+    --surface: #ffffff;
+    --border: #e8e6df;
+    --text: #1a1a14;
+    --muted: #8a8878;
+    --accent: #c2510f;
+    --accent-light: #fff3ec;
+    --success: #1a6b3c;
+    --success-light: #edf7f1;
+    --error: #a51d2d;
+    --queued: #5b4b00;
+    --queued-light: #fffbe6;
+    --running-color: #1a3a6b;
+    --running-light: #edf2ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* subtle paper texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23fafaf7'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23e8e6df' opacity='0.3'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  header .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    height: calc(100vh - 73px);
+  }
+
+  /* ── Left panel: prompt builder ── */
+  .left-panel {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-area {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, textarea {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: none;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  textarea { height: 100px; }
+
+  #system-prompt { height: 70px; font-size: 12px; }
+
+  .api-key-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .api-key-row label { flex: 1; }
+
+  button.run-btn {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  button.run-btn:hover {
+    background: var(--accent);
+  }
+
+  button.run-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .presets {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .preset-chip {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.1s;
+  }
+
+  .preset-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  /* ── Right panel: workflow log ── */
+  .right-panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+
+  .log-toolbar {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .clear-btn {
+    background: none;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.1s;
+  }
+
+  .clear-btn:hover { color: var(--error); background: #fff0f2; }
+
+  .tasks-list {
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: slideIn 0.25s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-header {
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    gap: 8px;
+  }
+
+  .task-id {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .task-status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .task-status.queued  { background: var(--queued-light);  color: var(--queued); }
+  .task-status.running { background: var(--running-light); color: var(--running-color); }
+  .task-status.done    { background: var(--success-light); color: var(--success); }
+  .task-status.error   { background: #fff0f2;              color: var(--error); }
+
+  .task-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task-prompt {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .task-output {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .task-error {
+    font-size: 12px;
+    color: var(--error);
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--border);
+    border-top-color: var(--running-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .running-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--running-color);
+    font-size: 11px;
+  }
+
+  /* event log strip at bottom */
+  .event-strip {
+    border-top: 1px solid var(--border);
+    padding: 0;
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    overflow: hidden;
+    height: 30px;
+    align-items: center;
+  }
+
+  .event-strip-inner {
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+    padding: 0 16px;
+    gap: 16px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    animation: scrollStrip linear infinite;
+  }
+
+  .event-strip-item { color: var(--accent); }
+  .event-strip-item span { color: var(--muted); margin-left: 4px; }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--border);
+  }
+
+  .empty-text {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .task-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AI Workflow</h1>
+  <span class="subtitle">Trinity SDK · Deterministic AI execution log</span>
+</header>
+
+<div class="main">
+  <!-- Left: prompt builder -->
+  <div class="left-panel">
+    <div class="panel-header">New Task</div>
+
+    <div class="form-area">
+      <label>
+        System Prompt (optional)
+        <textarea id="system-prompt" placeholder="You are a helpful assistant..."></textarea>
+      </label>
+
+      <label>
+        Prompt
+        <textarea id="prompt" placeholder="Ask anything..." style="height:120px"></textarea>
+      </label>
+
+      <label>
+        API Key
+        <div class="api-key-row">
+          <input type="password" id="api-key" placeholder="sk-ant-..." />
+          <button class="run-btn" id="run-btn" onclick="runTask()">Run</button>
+        </div>
+      </label>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 14px; display:flex; flex-direction:column; gap:6px;">
+        <span style="font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);">Quick Prompts</span>
+        <button class="preset-chip" onclick="setPreset('Summarize the key principles of functional programming in 3 bullet points.', 'You are a concise technical writer.')">
+          → Summarize functional programming
+        </button>
+        <button class="preset-chip" onclick="setPreset('Write a haiku about distributed systems.', 'You are a poet.')">
+          → Haiku about distributed systems
+        </button>
+        <button class="preset-chip" onclick="setPreset('Explain event sourcing in one paragraph, no jargon.', '')">
+          → Explain event sourcing
+        </button>
+        <button class="preset-chip" onclick="setPreset('List 5 use cases for offline-first apps.', 'You are a product manager.')">
+          → Offline-first use cases
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: workflow log -->
+  <div class="right-panel">
+    <div class="log-toolbar">
+      <span>Workflow Log (<span id="task-count">0</span> tasks)</span>
+      <button class="clear-btn" onclick="clearLog()">CLEAR LOG</button>
+    </div>
+
+    <div class="tasks-list" id="tasks-list">
+      <div class="empty-state">
+        <div class="empty-icon">∅</div>
+        <div class="empty-text">No tasks yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ─── SDK imports ──────────────────────────────────────────────
+import { createApp }      from "../../core/createApp.js"
+import { persist }        from "../../core/persist.js"
+import { attachAIRunner, aiReducer, aiInitialState } from "../../ai/runner.js"
+import { localTransport } from "../../transport/local.js"
+import { attachSync }     from "../../core/sync.js"
+
+// ─── App ──────────────────────────────────────────────────────
+const app = createApp({
+  init: { ...aiInitialState },
+
+  reduce(state, event) {
+    return aiReducer(state, event)
+  }
+})
+
+// AI workflow is local-only by default (no real-time sync needed
+// for solo workflows; extend with WebRTC transport for team use).
+attachSync(app, localTransport)
+
+// Persist so tasks survive page refresh
+persist(app, "trinity-ai-workflow")
+
+// ─── Globals (exposed to onclick handlers) ────────────────────
+window.runTask = function() {
+  const prompt = document.getElementById("prompt").value.trim()
+  const systemPrompt = document.getElementById("system-prompt").value.trim()
+  const apiKey = document.getElementById("api-key").value.trim()
+
+  if (!prompt) return alert("Enter a prompt first.")
+  if (!apiKey) return alert("Enter your Anthropic API key.")
+
+  // Attach runner with the key from the form
+  attachAIRunner(app, { apiKey, onError: console.error })
+
+  const taskId = crypto.randomUUID()
+
+  app.emit({
+    type: "ai.run",
+    id: taskId,
+    prompt,
+    systemPrompt: systemPrompt || undefined,
+  })
+
+  document.getElementById("prompt").value = ""
+}
+
+window.setPreset = function(prompt, system) {
+  document.getElementById("prompt").value = prompt
+  document.getElementById("system-prompt").value = system
+}
+
+window.clearLog = function() {
+  if (!confirm("Clear the full event log? This cannot be undone.")) return
+  import("../../core/persist.js").then(m => m.clearPersisted("trinity-ai-workflow"))
+  location.reload()
+}
+
+// ─── Render ───────────────────────────────────────────────────
+function statusBadge(status) {
+  if (status === "running") {
+    return `<span class="task-status running"><span class="spinner"></span></span>`
+  }
+  return `<span class="task-status ${status}">${status}</span>`
+}
+
+function renderTasks(state) {
+  const tasks = Object.values(state.tasks).reverse()
+  const list = document.getElementById("tasks-list")
+  const countEl = document.getElementById("task-count")
+
+  countEl.textContent = tasks.length
+
+  if (tasks.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">∅</div>
+        <div class="empty-text">No tasks yet</div>
+      </div>`
+    return
+  }
+
+  list.innerHTML = tasks.map(task => `
+    <div class="task-card" id="task-${task.id}">
+      <div class="task-header">
+        <span class="task-id">${task.id.slice(0, 14)}…</span>
+        ${statusBadge(task.status)}
+      </div>
+      <div class="task-body">
+        <div class="task-prompt">&gt; ${escHtml(task.prompt)}</div>
+        ${task.status === "running" ? `
+          <div class="running-indicator">
+            <div class="spinner"></div>
+            Calling AI model…
+          </div>
+        ` : ""}
+        ${task.output ? `<div class="task-output">${escHtml(task.output)}</div>` : ""}
+        ${task.error  ? `<div class="task-error">Error: ${escHtml(task.error)}</div>` : ""}
+        <div class="task-meta">
+          <span>model: ${task.model || "—"}</span>
+          <span>${new Date(task.createdAt).toLocaleTimeString()}</span>
+        </div>
+      </div>
+    </div>
+  `).join("")
+}
+
+function escHtml(str) {
+  if (!str) return ""
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+}
+
+app.subscribe((state) => renderTasks(state))
+
+// Initial render
+renderTasks(app.getState())
+
+console.log("[trinity] AI Workflow ready.")
+</script>
+</body>
+</html>
