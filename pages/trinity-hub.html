@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity File Hub — Sovereign Share</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0d0e;
+  --bg2: #131517;
+  --bg3: #1a1c20;
+  --bg4: #22252a;
+  --line: rgba(255,255,255,0.06);
+  --line2: rgba(255,255,255,0.11);
+  --ink: #ede9e0;
+  --ink2: #8d8a82;
+  --ink3: #4a4842;
+  --cyan: #00e5cc;
+  --cyan2: rgba(0,229,204,0.12);
+  --cyan3: rgba(0,229,204,0.05);
+  --orange: #ff6b35;
+  --purple: #9d7bff;
+  --green: #52e87a;
+  --yellow: #ffd166;
+  --red: #ff4757;
+  --font-disp: 'Syne', sans-serif;
+  --font-mono: 'Syne Mono', monospace;
+  --font-serif: 'Playfair Display', serif;
+  --r: 6px;
+  --r2: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font-disp);
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* ── HEADER ── */
+header {
+  height: 58px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 20px;
+  flex-shrink: 0;
+  z-index: 50;
+}
+.logo {
+  font-family: var(--font-disp);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-sub {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink3);
+  letter-spacing: 2px;
+  border-left: 1px solid var(--line2);
+  padding-left: 12px;
+  margin-left: 4px;
+  display: none;
+}
+@media (min-width:600px) { .logo-sub { display: block; } }
+
+.header-search {
+  flex: 1;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.header-search input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--ink); font-family: var(--font-mono); font-size: 13px;
+  padding: 8px 12px;
+}
+.header-search input::placeholder { color: var(--ink3); }
+.header-search button {
+  background: transparent; border: none; border-left: 1px solid var(--line);
+  color: var(--ink2); padding: 8px 12px; cursor: pointer; font-size: 14px;
+  transition: color 0.15s;
+}
+.header-search button:hover { color: var(--cyan); }
+
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.btn-primary {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--cyan); color: #000;
+  border: none; border-radius: var(--r);
+  font-family: var(--font-disp); font-weight: 700; font-size: 12px;
+  padding: 7px 14px; cursor: pointer; letter-spacing: 1px;
+  transition: opacity 0.15s; white-space: nowrap;
+}
+.btn-primary:hover { opacity: 0.85; }
+.self-badge {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: 20px; padding: 5px 12px 5px 5px;
+  font-size: 12px; color: var(--ink2); cursor: pointer;
+}
+.self-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; }
+.online-indicator { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+/* ── LAYOUT ── */
+#layout { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 240px; min-width: 240px;
+  background: var(--bg2);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  overflow-y: auto; padding: 16px 0;
+}
+.sidebar-section { margin-bottom: 4px; }
+.sidebar-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--ink3); padding: 10px 18px 6px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer; font-size: 13px; font-weight: 600;
+  color: var(--ink2); border-left: 2px solid transparent;
+  transition: all 0.15s; border-radius: 0;
+}
+.sidebar-item:hover { background: var(--bg3); color: var(--ink); }
+.sidebar-item.active { background: var(--cyan2); border-left-color: var(--cyan); color: var(--cyan); }
+.sidebar-icon { width: 18px; font-size: 14px; text-align: center; flex-shrink: 0; }
+.sidebar-count {
+  margin-left: auto;
+  font-size: 11px; font-weight: 700;
+  color: var(--ink3);
+  font-family: var(--font-mono);
+}
+.sidebar-divider { height: 1px; background: var(--line); margin: 8px 16px; }
+
+/* Storage bar */
+.storage-widget {
+  padding: 14px 18px;
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+}
+.storage-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px; color: var(--ink2); margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+.storage-bar-wrap { height: 4px; background: var(--bg4); border-radius: 2px; }
+.storage-bar { height: 100%; background: var(--cyan); border-radius: 2px; transition: width 0.5s; }
+.storage-meta { font-size: 10px; color: var(--ink3); margin-top: 5px; font-family: var(--font-mono); }
+
+/* ── MAIN ── */
+#main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* ── VIEWS ── */
+.view { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
+.view.active { display: flex; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  background: var(--bg);
+  position: sticky; top: 0; z-index: 10;
+  flex-wrap: wrap;
+}
+.toolbar-title {
+  font-weight: 800; font-size: 16px; letter-spacing: 1px;
+  color: var(--ink);
+}
+.filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 4px 12px; border-radius: 14px;
+  border: 1px solid var(--line2); font-size: 11px; font-weight: 700;
+  color: var(--ink2); cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-mono); letter-spacing: 0.5px;
+  background: transparent; white-space: nowrap;
+}
+.chip:hover { border-color: var(--cyan); color: var(--ink); }
+.chip.active { background: var(--cyan); border-color: var(--cyan); color: #000; }
+.view-toggle {
+  margin-left: auto; display: flex; gap: 2px;
+  background: var(--bg3); border-radius: var(--r); padding: 3px; border: 1px solid var(--line);
+}
+.view-btn {
+  padding: 4px 8px; border-radius: 4px; border: none;
+  background: transparent; color: var(--ink3); cursor: pointer; font-size: 13px;
+  transition: all 0.15s;
+}
+.view-btn.active { background: var(--bg4); color: var(--ink); }
+.sort-sel {
+  background: var(--bg3); border: 1px solid var(--line); color: var(--ink2);
+  font-family: var(--font-mono); font-size: 11px; padding: 5px 8px;
+  border-radius: var(--r); outline: none; cursor: pointer;
+}
+
+/* ── FILE GRID ── */
+.file-grid {
+  padding: 20px 24px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.file-list-view .file-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 0;
+}
+
+/* ── FILE CARD ── */
+.file-card {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: var(--r2); overflow: hidden;
+  cursor: pointer; transition: border-color 0.2s, transform 0.2s;
+}
+.file-card:hover { border-color: var(--cyan); transform: translateY(-1px); }
+.file-card-thumb {
+  aspect-ratio: 4/3;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px; position: relative;
+  overflow: hidden;
+}
+.file-card-thumb img { width:100%; height:100%; object-fit:cover; }
+.file-type-tag {
+  position: absolute; top: 8px; left: 8px;
+  font-size: 9px; font-weight: 700; font-family: var(--font-mono);
+  padding: 3px 7px; border-radius: 3px; letter-spacing: 1px;
+  backdrop-filter: blur(4px);
+}
+.file-card-body { padding: 10px 12px; }
+.file-card-name {
+  font-size: 13px; font-weight: 700; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.file-card-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; font-family: var(--font-mono); color: var(--ink3);
+}
+.file-card-uploader {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--ink2); margin-top: 6px;
+}
+.mini-avatar {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 700;
+}
+.file-card-actions {
+  display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--line);
+}
+.file-action-btn {
+  flex: 1; background: transparent; border: 1px solid var(--line);
+  border-radius: var(--r); color: var(--ink2); font-family: var(--font-mono);
+  font-size: 11px; padding: 5px; cursor: pointer; transition: all 0.15s;
+  text-align: center;
+}
+.file-action-btn:hover { background: var(--bg3); color: var(--ink); border-color: var(--line2); }
+.file-action-btn.download { border-color: var(--cyan); color: var(--cyan); }
+.file-action-btn.download:hover { background: var(--cyan2); }
+
+/* ── LIST ROW ── */
+.file-list-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 24px; border-bottom: 1px solid var(--line);
+  cursor: pointer; transition: background 0.15s;
+}
+.file-list-row:hover { background: var(--bg2); }
+.file-list-icon {
+  width: 38px; height: 38px; border-radius: var(--r);
+  background: var(--bg3); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.file-list-name {
+  flex: 1; font-size: 14px; font-weight: 700; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-list-type { font-size: 11px; font-family: var(--font-mono); width: 70px; flex-shrink: 0; }
+.file-list-size { font-size: 11px; font-family: var(--font-mono); color: var(--ink3); width: 70px; flex-shrink: 0; }
+.file-list-author { font-size: 11px; color: var(--ink2); width: 120px; flex-shrink: 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-list-date { font-size: 11px; font-family: var(--font-mono); color: var(--ink3); width: 100px; flex-shrink: 0; text-align: right; }
+.file-list-dl {
+  background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
+  border-radius: var(--r); font-size: 12px; padding: 4px 10px;
+  cursor: pointer; font-family: var(--font-mono); transition: background 0.15s;
+  flex-shrink: 0;
+}
+.file-list-dl:hover { background: var(--cyan2); }
+
+/* ── UPLOAD VIEW ── */
+.upload-container {
+  max-width: 720px; margin: 0 auto; padding: 36px 28px; width: 100%;
+}
+.upload-h1 {
+  font-size: 38px; font-weight: 800; letter-spacing: 2px;
+  color: var(--ink); margin-bottom: 4px;
+}
+.upload-h1 span { color: var(--cyan); }
+.upload-sub { font-size: 12px; color: var(--ink3); letter-spacing: 2px; margin-bottom: 32px; font-family: var(--font-mono); }
+
+.drop-zone {
+  border: 2px dashed var(--line2);
+  border-radius: var(--r2);
+  padding: 52px 32px;
+  text-align: center; cursor: pointer;
+  transition: all 0.2s;
+  position: relative; margin-bottom: 28px;
+  background: var(--bg2);
+}
+.drop-zone input[type="file"] {
+  position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+}
+.drop-zone:hover, .drop-zone.drag { border-color: var(--cyan); background: var(--cyan3); }
+.drop-icon { font-size: 52px; opacity: 0.3; margin-bottom: 14px; }
+.drop-main { font-size: 20px; font-weight: 700; color: var(--ink2); margin-bottom: 6px; }
+.drop-hint { font-size: 12px; color: var(--ink3); font-family: var(--font-mono); letter-spacing: 0.5px; }
+.drop-accepted { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+.drop-badge {
+  padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700;
+  font-family: var(--font-mono); letter-spacing: 1px;
+}
+
+.selected-files { margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
+.selected-file {
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: var(--r); padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.sf-icon { font-size: 26px; flex-shrink: 0; }
+.sf-info { flex: 1; min-width: 0; }
+.sf-name { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sf-size { font-size: 11px; font-family: var(--font-mono); color: var(--ink3); margin-top: 2px; }
+.sf-remove {
+  background: transparent; border: 1px solid var(--line2); color: var(--ink3);
+  border-radius: var(--r); padding: 4px 8px; cursor: pointer; font-size: 12px;
+  transition: all 0.15s;
+}
+.sf-remove:hover { border-color: var(--red); color: var(--red); }
+.sf-prog-wrap { height: 2px; background: var(--bg4); border-radius: 1px; margin-top: 6px; }
+.sf-prog { height: 100%; background: var(--cyan); border-radius: 1px; width: 0%; transition: width 0.3s; }
+
+.upload-fields { display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--ink3); }
+.field input, .field select, .field textarea {
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r); color: var(--ink);
+  font-family: var(--font-mono); font-size: 13px;
+  padding: 9px 12px; outline: none; transition: border-color 0.2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: rgba(0,229,204,0.4);
+}
+.field textarea { resize: vertical; min-height: 70px; font-family: var(--font-disp); }
+.share-options {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.share-opt {
+  flex: 1; min-width: 130px;
+  background: var(--bg3); border: 2px solid var(--line);
+  border-radius: var(--r); padding: 12px;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+  position: relative;
+}
+.share-opt.selected { border-color: var(--cyan); background: var(--cyan3); }
+.share-opt-icon { font-size: 24px; margin-bottom: 4px; }
+.share-opt-label { font-size: 12px; font-weight: 700; }
+.share-opt-hint { font-size: 10px; color: var(--ink3); font-family: var(--font-mono); margin-top: 2px; }
+.upload-submit {
+  background: var(--cyan); color: #000;
+  border: none; border-radius: var(--r);
+  font-family: var(--font-disp); font-weight: 800; font-size: 14px;
+  padding: 13px 32px; cursor: pointer; letter-spacing: 1.5px;
+  align-self: flex-start; transition: opacity 0.15s;
+}
+.upload-submit:hover { opacity: 0.85; }
+
+/* ── DETAIL PANEL ── */
+#detail-panel {
+  position: fixed; top: 58px; right: 0; bottom: 0;
+  width: 380px;
+  background: var(--bg2);
+  border-left: 1px solid var(--line2);
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 80;
+  overflow-y: auto;
+}
+#detail-panel.open { transform: translateX(0); }
+.panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 12px;
+}
+.panel-close {
+  background: var(--bg3); border: 1px solid var(--line2); color: var(--ink2);
+  border-radius: var(--r); padding: 5px 10px; cursor: pointer; font-size: 13px;
+  transition: all 0.15s;
+}
+.panel-close:hover { color: var(--ink); }
+.panel-file-icon { font-size: 36px; flex-shrink: 0; }
+.panel-file-name { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; word-break: break-word; }
+.panel-section { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.panel-section-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--ink3); margin-bottom: 10px; font-family: var(--font-mono); }
+.detail-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--line);
+}
+.detail-row:last-child { border: none; }
+.detail-key { color: var(--ink3); font-family: var(--font-mono); font-size: 11px; }
+.detail-val { color: var(--ink); font-family: var(--font-mono); font-size: 11px; }
+.panel-actions { padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
+.panel-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r); color: var(--ink); font-family: var(--font-mono);
+  font-size: 13px; padding: 10px 14px; cursor: pointer; transition: all 0.15s;
+  text-align: left;
+}
+.panel-btn:hover { background: var(--bg4); border-color: var(--cyan); color: var(--cyan); }
+.panel-btn.primary-btn { background: var(--cyan); border-color: var(--cyan); color: #000; font-weight: 700; }
+.panel-btn.primary-btn:hover { opacity: 0.85; color: #000; }
+
+/* ── ACTIVITY FEED ── */
+.activity-feed { padding: 20px 24px; flex: 1; }
+.activity-title { font-size: 20px; font-weight: 800; letter-spacing: 1px; margin-bottom: 16px; }
+.activity-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.activity-icon {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.activity-body { flex: 1; }
+.activity-text { font-size: 13px; color: var(--ink2); line-height: 1.5; }
+.activity-text strong { color: var(--ink); }
+.activity-time { font-size: 11px; font-family: var(--font-mono); color: var(--ink3); margin-top: 2px; }
+
+/* ── STATS STRIP ── */
+.stats-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px; background: var(--line);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.stat-box {
+  background: var(--bg); padding: 14px 20px;
+  text-align: center;
+}
+.stat-num {
+  font-size: 28px; font-weight: 800; color: var(--cyan);
+  font-family: var(--font-mono); line-height: 1;
+}
+.stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); margin-top: 3px; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-left: 3px solid var(--cyan);
+  padding: 10px 16px; font-size: 13px; border-radius: var(--r);
+  opacity: 0; transform: translateY(6px); transition: all 0.2s;
+  pointer-events: none; z-index: 999; max-width: 280px;
+  font-family: var(--font-mono);
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── EMPTY ── */
+.empty-state {
+  padding: 60px 24px; display: flex; flex-direction: column;
+  align-items: center; gap: 10px; color: var(--ink3);
+  font-size: 13px; text-align: center;
+}
+.empty-icon { font-size: 54px; opacity: 0.15; margin-bottom: 8px; }
+.empty-title { font-size: 22px; font-weight: 800; color: var(--ink2); letter-spacing: 2px; }
+
+/* Grid col span fix */
+.empty-state { grid-column: 1/-1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polygon points="10,2 18,6 18,14 10,18 2,14 2,6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="10" cy="10" r="2.5" fill="currentColor"/></svg>
+    TRINITY HUB
+    <span class="logo-sub">FILE FABRIC</span>
+  </div>
+  <div class="header-search">
+    <input type="text" id="search-input" placeholder="search files, types, authors…">
+    <button onclick="renderFiles()">⌕</button>
+  </div>
+  <div class="header-right">
+    <button class="btn-primary" onclick="showView('upload')">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3 4l3.5-3 3.5 3M2 10h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Share File
+    </button>
+    <div class="self-badge" id="self-badge">
+      <div class="self-dot" id="self-dot"></div>
+      <span id="self-name">—</span>
+      <div class="online-indicator"></div>
+    </div>
+  </div>
+</header>
+
+<div id="layout">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Browse</div>
+      <div class="sidebar-item active" onclick="showView('files',this)">
+        <span class="sidebar-icon">⊞</span> All Files
+        <span class="sidebar-count" id="count-all">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterCat('video',this)">
+        <span class="sidebar-icon">▶</span> Video
+        <span class="sidebar-count" id="count-video">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterCat('audio',this)">
+        <span class="sidebar-icon">♪</span> Audio
+        <span class="sidebar-count" id="count-audio">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterCat('image',this)">
+        <span class="sidebar-icon">◻</span> Images
+        <span class="sidebar-count" id="count-image">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterCat('document',this)">
+        <span class="sidebar-icon">≡</span> Documents
+        <span class="sidebar-count" id="count-document">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterCat('archive',this)">
+        <span class="sidebar-icon">◈</span> Archives
+        <span class="sidebar-count" id="count-archive">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterCat('other',this)">
+        <span class="sidebar-icon">·</span> Other
+        <span class="sidebar-count" id="count-other">0</span>
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">My Files</div>
+      <div class="sidebar-item" onclick="showMyFiles()">
+        <span class="sidebar-icon">◉</span> Uploaded
+      </div>
+      <div class="sidebar-item" onclick="showDownloaded()">
+        <span class="sidebar-icon">↓</span> Downloaded
+      </div>
+      <div class="sidebar-item" onclick="showStarred()">
+        <span class="sidebar-icon">★</span> Starred
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Activity</div>
+      <div class="sidebar-item" onclick="showView('activity',this)">
+        <span class="sidebar-icon">◑</span> Event Log
+        <span class="sidebar-count" id="log-count">0</span>
+      </div>
+    </div>
+    <div class="storage-widget">
+      <div class="storage-label">
+        <span>Local Storage</span>
+        <span id="storage-pct">0%</span>
+      </div>
+      <div class="storage-bar-wrap">
+        <div class="storage-bar" id="storage-bar" style="width:0%"></div>
+      </div>
+      <div class="storage-meta" id="storage-meta">— used of local quota</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- FILES VIEW -->
+    <div id="files-view" class="view active">
+      <div class="stats-strip">
+        <div class="stat-box"><div class="stat-num" id="s-files">0</div><div class="stat-lbl">Files</div></div>
+        <div class="stat-box"><div class="stat-num" id="s-size">0</div><div class="stat-lbl">Total Size</div></div>
+        <div class="stat-box"><div class="stat-num" id="s-downloads">0</div><div class="stat-lbl">Downloads</div></div>
+        <div class="stat-box"><div class="stat-num" id="s-events">0</div><div class="stat-lbl">Log Events</div></div>
+      </div>
+      <div class="toolbar" id="files-toolbar">
+        <div class="filter-chips" id="filter-chips">
+          <div class="chip active" onclick="setFilter('all',this)">All</div>
+          <div class="chip" onclick="setFilter('video',this)">▶ Video</div>
+          <div class="chip" onclick="setFilter('audio',this)">♪ Audio</div>
+          <div class="chip" onclick="setFilter('image',this)">◻ Image</div>
+          <div class="chip" onclick="setFilter('document',this)">≡ Doc</div>
+          <div class="chip" onclick="setFilter('archive',this)">◈ Archive</div>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="grid-btn" onclick="setViewMode('grid')">⊞</button>
+          <button class="view-btn" id="list-btn" onclick="setViewMode('list')">≡</button>
+        </div>
+        <select class="sort-sel" id="sort-sel" onchange="renderFiles()">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="name">Name A-Z</option>
+          <option value="size">Largest</option>
+          <option value="downloads">Most Downloaded</option>
+        </select>
+      </div>
+      <div id="file-grid-container">
+        <div class="file-grid" id="file-grid"></div>
+      </div>
+    </div>
+
+    <!-- UPLOAD VIEW -->
+    <div id="upload-view" class="view">
+      <div class="upload-container">
+        <div class="upload-h1">SHARE A <span>FILE</span></div>
+        <div class="upload-sub">trinity event log · sovereign p2p fabric · your data stays yours</div>
+
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" multiple>
+          <div class="drop-icon">⬆</div>
+          <div class="drop-main">Drop files here or click to select</div>
+          <div class="drop-hint">Any file type · stored locally as object URL · metadata in event log</div>
+          <div class="drop-accepted">
+            <span class="drop-badge" style="background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.3);color:var(--orange)">VIDEO</span>
+            <span class="drop-badge" style="background:rgba(0,229,204,0.1);border:1px solid rgba(0,229,204,0.3);color:var(--cyan)">AUDIO</span>
+            <span class="drop-badge" style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.3);color:var(--yellow)">IMAGE</span>
+            <span class="drop-badge" style="background:rgba(157,123,255,0.1);border:1px solid rgba(157,123,255,0.3);color:var(--purple)">DOCUMENT</span>
+            <span class="drop-badge" style="background:rgba(82,232,122,0.1);border:1px solid rgba(82,232,122,0.3);color:var(--green)">ARCHIVE</span>
+            <span class="drop-badge" style="background:rgba(255,255,255,0.05);border:1px solid var(--line2);color:var(--ink2)">ANY</span>
+          </div>
+        </div>
+
+        <div id="selected-files" class="selected-files"></div>
+
+        <div class="upload-fields">
+          <div class="field">
+            <label>Description / Notes (optional)</label>
+            <textarea id="up-desc" placeholder="Describe this file, add context, notes…"></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Category</label>
+              <select id="up-cat">
+                <option value="auto">Auto-detect</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+                <option value="image">Image</option>
+                <option value="document">Document</option>
+                <option value="archive">Archive</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tags</label>
+              <input type="text" id="up-tags" placeholder="design, work, personal…">
+            </div>
+          </div>
+          <div class="field">
+            <label>Visibility</label>
+            <div class="share-options">
+              <div class="share-opt selected" id="opt-public" onclick="selectShareOpt('public')">
+                <div class="share-opt-icon">◎</div>
+                <div class="share-opt-label">Public</div>
+                <div class="share-opt-hint">visible to all</div>
+              </div>
+              <div class="share-opt" id="opt-link" onclick="selectShareOpt('link')">
+                <div class="share-opt-icon">⊞</div>
+                <div class="share-opt-label">Link Only</div>
+                <div class="share-opt-hint">share link to access</div>
+              </div>
+              <div class="share-opt" id="opt-private" onclick="selectShareOpt('private')">
+                <div class="share-opt-icon">◈</div>
+                <div class="share-opt-label">Private</div>
+                <div class="share-opt-hint">only you</div>
+              </div>
+            </div>
+          </div>
+          <button class="upload-submit" id="submit-btn" onclick="submitUpload()">
+            Publish to Hub
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY VIEW -->
+    <div id="activity-view" class="view">
+      <div class="activity-feed">
+        <div class="activity-title">EVENT LOG</div>
+        <div id="activity-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div id="detail-panel">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closePanel()">✕ Close</button>
+    <div class="panel-file-icon" id="panel-icon">📄</div>
+    <div class="panel-file-name" id="panel-name">—</div>
+  </div>
+  <div class="panel-section" id="panel-preview-section">
+    <div class="panel-section-title">Preview</div>
+    <div id="panel-preview" style="border-radius:var(--r);overflow:hidden;background:var(--bg3);min-height:80px;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:12px;"></div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-section-title">Details</div>
+    <div id="panel-details"></div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-section-title">Tags</div>
+    <div id="panel-tags" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  </div>
+  <div class="panel-actions" id="panel-actions"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// TRINITY SDK
+// ══════════════════════════════════════════
+function createApp({ init, reduce }) {
+  let state = init;
+  const listeners = [];
+  const log = [];
+  function emit(event) {
+    const stamped = { ...event, _seq: log.length, _ts: event._ts ?? Date.now(), _id: event._id ?? crypto.randomUUID() };
+    log.push(stamped);
+    state = reduce(state, stamped);
+    listeners.forEach(l => l(state, stamped));
+  }
+  function subscribe(fn) {
+    listeners.push(fn);
+    return () => { const i = listeners.indexOf(fn); if(i!==-1) listeners.splice(i,1); };
+  }
+  function getState() { return state; }
+  function replay(events) {
+    const seen = new Set(log.map(e => e._id));
+    events.filter(e => !seen.has(e._id)).forEach(e => emit(e));
+  }
+  return { emit, subscribe, getState, replay, get log() { return log; } };
+}
+function persist(app, key) {
+  try { const s = JSON.parse(localStorage.getItem(key)||'[]'); if(s.length) app.replay(s); } catch(e){}
+  app.subscribe(() => { try { localStorage.setItem(key, JSON.stringify(app.log)); } catch(e){} });
+}
+
+// ══════════════════════════════════════════
+// IDENTITY
+// ══════════════════════════════════════════
+const NAMES = ['Amber Narwhal','Cobalt Lemur','Crimson Gecko','Emerald Meerkat','Fern Capybara','Golden Axolotl','Indigo Quokka','Jade Pangolin'];
+const COLORS = ['#e8b84b','#60a5fa','#f87171','#4ade80','#2dd4bf','#fbbf24','#a855f7','#34d399'];
+let SELF = (() => {
+  try { const s = JSON.parse(localStorage.getItem('trinity-hub-identity')); if(s) return s; } catch(e){}
+  const i = Math.floor(Math.random()*NAMES.length);
+  const id = { name: NAMES[i], color: COLORS[i], id: crypto.randomUUID() };
+  localStorage.setItem('trinity-hub-identity', JSON.stringify(id));
+  return id;
+})();
+function initials(n) { return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+
+// ══════════════════════════════════════════
+// HUB APP
+// ══════════════════════════════════════════
+const hubApp = createApp({
+  init: { files: {}, downloads: {}, stars: {} },
+  reduce(state, event) {
+    if (event.type === 'file.share') {
+      return { ...state, files: { ...state.files, [event.fileId]: {
+        id: event.fileId, name: event.name, desc: event.desc,
+        category: event.category, tags: event.tags,
+        size: event.size, mimeType: event.mimeType,
+        objectUrl: event.objectUrl,
+        visibility: event.visibility,
+        authorId: event.authorId, authorName: event.authorName, authorColor: event.authorColor,
+        ts: event._ts,
+      }}};
+    }
+    if (event.type === 'file.download') {
+      const d = state.downloads[event.fileId] || 0;
+      return { ...state, downloads: { ...state.downloads, [event.fileId]: d + 1 }};
+    }
+    if (event.type === 'file.star') {
+      const starred = state.stars[event.fileId] || [];
+      const is = starred.includes(event.userId);
+      return { ...state, stars: { ...state.stars, [event.fileId]: is ? starred.filter(x=>x!==event.userId) : [...starred, event.userId] }};
+    }
+    if (event.type === 'file.delete') {
+      const files = { ...state.files };
+      delete files[event.fileId];
+      return { ...state, files };
+    }
+    return state;
+  }
+});
+
+persist(hubApp, 'trinity-hub-v1');
+
+// ══════════════════════════════════════════
+// SEED DEMO DATA
+// ══════════════════════════════════════════
+function seedDemo() {
+  const state = hubApp.getState();
+  if (Object.keys(state.files).length > 0) return;
+  const demos = [
+    { name:'project-brief-q2.pdf', cat:'document', size:847392, mime:'application/pdf', tags:['work','q2','planning'], desc:'Full Q2 project brief and roadmap for the distributed systems team.' },
+    { name:'ambient-set-01.mp3', cat:'audio', size:42381920, mime:'audio/mpeg', tags:['music','ambient'], desc:'3-hour ambient session recorded live with hardware synths.' },
+    { name:'design-system-v3.zip', cat:'archive', size:18274610, mime:'application/zip', tags:['design','assets','ui'], desc:'Full design system export with components, tokens, and documentation.' },
+    { name:'prototype-demo.mp4', cat:'video', size:128740210, mime:'video/mp4', tags:['demo','product'], desc:'Walkthrough of the latest prototype build. Internal use.' },
+    { name:'brand-assets-2026.zip', cat:'archive', size:58471920, mime:'application/zip', tags:['brand','design'], desc:'Official brand kit: logos, type specimens, color swatches.' },
+    { name:'cover-photo.jpg', cat:'image', size:4827300, mime:'image/jpeg', tags:['photography','cover'], desc:'High resolution cover image for the main project page.' },
+    { name:'architecture-spec.md', cat:'document', size:48203, mime:'text/markdown', tags:['architecture','docs','technical'], desc:'Full system architecture specification with diagrams and decision records.' },
+    { name:'session-recording.wav', cat:'audio', size:284729100, mime:'audio/wav', tags:['recording','raw'], desc:'Uncompressed session recording from the studio. 24bit/48kHz.' },
+  ];
+  demos.forEach((d, i) => {
+    const id = `demo-${i}`;
+    hubApp.emit({ type:'file.share', fileId:id, name:d.name, desc:d.desc, category:d.cat, tags:d.tags, size:d.size, mimeType:d.mime, objectUrl:null, visibility:'public', authorId:`demo${i%3}`, authorName:NAMES[i%NAMES.length], authorColor:COLORS[i%COLORS.length] });
+    for(let v=0;v<(i+1)*2;v++) hubApp.emit({ type:'file.download', fileId:id, userId:`u${v}` });
+  });
+}
+
+// ══════════════════════════════════════════
+// FILE UTILS
+// ══════════════════════════════════════════
+function formatBytes(b) {
+  if (!b) return '—';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
+  return (b/1073741824).toFixed(1) + ' GB';
+}
+const CAT_ICONS = { video:'🎬', audio:'🎵', image:'🖼', document:'📄', archive:'📦', other:'📎' };
+const CAT_COLORS = { video:'#ff6b35', audio:'#00e5cc', image:'#ffd166', document:'#9d7bff', archive:'#52e87a', other:'#8d8a82' };
+const CAT_BG = { video:'rgba(255,107,53,0.1)', audio:'rgba(0,229,204,0.08)', image:'rgba(255,209,102,0.08)', document:'rgba(157,123,255,0.08)', archive:'rgba(82,232,122,0.08)', other:'rgba(255,255,255,0.04)' };
+
+function detectCategory(mimeType, name) {
+  if (mimeType.startsWith('video/')) return 'video';
+  if (mimeType.startsWith('audio/')) return 'audio';
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType === 'application/pdf' || mimeType.includes('text') || mimeType.includes('document') || /\.(md|txt|doc|docx|csv|xlsx)$/i.test(name)) return 'document';
+  if (mimeType.includes('zip') || mimeType.includes('tar') || mimeType.includes('rar') || /\.(zip|tar|gz|7z|rar)$/i.test(name)) return 'archive';
+  return 'other';
+}
+
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'just now';
+  if (d < 3600000) return Math.floor(d/60000) + 'm ago';
+  if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+  return Math.floor(d/86400000) + 'd ago';
+}
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentFilter = 'all';
+let viewMode = 'grid';
+let shareOpt = 'public';
+let selectedFiles = [];
+let objectUrls = [];
+let openFileId = null;
+
+// ══════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════
+function getFilteredFiles() {
+  const state = hubApp.getState();
+  let files = Object.values(state.files);
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  if (currentFilter !== 'all') files = files.filter(f => f.category === currentFilter);
+  if (q) files = files.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    (f.desc||'').toLowerCase().includes(q) ||
+    f.tags.some(t=>t.toLowerCase().includes(q)) ||
+    f.authorName.toLowerCase().includes(q)
+  );
+  const sort = document.getElementById('sort-sel').value;
+  if (sort==='newest') files.sort((a,b)=>b.ts-a.ts);
+  else if (sort==='oldest') files.sort((a,b)=>a.ts-b.ts);
+  else if (sort==='name') files.sort((a,b)=>a.name.localeCompare(b.name));
+  else if (sort==='size') files.sort((a,b)=>(b.size||0)-(a.size||0));
+  else if (sort==='downloads') files.sort((a,b)=>(state.downloads[b.id]||0)-(state.downloads[a.id]||0));
+  return files;
+}
+
+function renderFiles() {
+  const files = getFilteredFiles();
+  const state = hubApp.getState();
+  const container = document.getElementById('file-grid-container');
+  const grid = document.getElementById('file-grid');
+
+  container.className = viewMode === 'list' ? 'file-list-view' : '';
+  grid.className = 'file-grid';
+  grid.innerHTML = '';
+
+  updateCounts();
+  updateStats();
+
+  if (files.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">NO FILES FOUND</div><div>Share a file or adjust your filters</div></div>`;
+    return;
+  }
+
+  files.forEach(f => {
+    const downloads = state.downloads[f.id] || 0;
+    const stars = (state.stars[f.id] || []).length;
+    const isStarred = (state.stars[f.id] || []).includes(SELF.id);
+    const color = CAT_COLORS[f.category] || 'var(--ink2)';
+    const bg = CAT_BG[f.category] || 'var(--bg3)';
+    const icon = CAT_ICONS[f.category] || '📎';
+
+    if (viewMode === 'list') {
+      const row = document.createElement('div');
+      row.className = 'file-list-row';
+      row.innerHTML = `
+        <div class="file-list-icon" style="background:${bg};font-size:20px;">${icon}</div>
+        <div class="file-list-name" title="${f.name}">${f.name}</div>
+        <div class="file-list-type" style="color:${color};font-weight:700;font-size:10px;letter-spacing:1px;">${f.category.toUpperCase()}</div>
+        <div class="file-list-size">${formatBytes(f.size)}</div>
+        <div class="file-list-author" style="color:${f.authorColor}">${f.authorName}</div>
+        <div class="file-list-date">${timeAgo(f.ts)}</div>
+        <button class="file-list-dl" onclick="event.stopPropagation();downloadFile('${f.id}')">↓ ${downloads}</button>
+      `;
+      row.addEventListener('click', () => openPanel(f.id));
+      grid.appendChild(row);
+    } else {
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      card.innerHTML = `
+        <div class="file-card-thumb" style="background:${bg}">
+          <span style="font-size:44px;z-index:1;">${icon}</span>
+          <div class="file-type-tag" style="background:rgba(0,0,0,0.7);border:1px solid ${color}44;color:${color};">${f.category.toUpperCase()}</div>
+        </div>
+        <div class="file-card-body">
+          <div class="file-card-name" title="${f.name}">${f.name}</div>
+          <div class="file-card-meta">
+            <span>${formatBytes(f.size)}</span>
+            <span style="margin-left:auto;">↓ ${downloads}</span>
+            <span style="color:${isStarred?'var(--yellow)':'inherit'}">★ ${stars}</span>
+          </div>
+          <div class="file-card-uploader">
+            <div class="mini-avatar" style="background:${f.authorColor}22;color:${f.authorColor};border:1px solid ${f.authorColor}44;">${initials(f.authorName)}</div>
+            <span style="color:${f.authorColor}">${f.authorName}</span>
+            <span style="margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--ink3);">${timeAgo(f.ts)}</span>
+          </div>
+        </div>
+        <div class="file-card-actions">
+          <button class="file-action-btn download" onclick="event.stopPropagation();downloadFile('${f.id}')">↓ Download</button>
+          <button class="file-action-btn" onclick="event.stopPropagation();starFile('${f.id}')" style="${isStarred?'color:var(--yellow);border-color:var(--yellow);':''}">★</button>
+          <button class="file-action-btn" onclick="event.stopPropagation();openPanel('${f.id}')">⋯</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  });
+}
+
+function updateCounts() {
+  const state = hubApp.getState();
+  const files = Object.values(state.files);
+  const cats = ['video','audio','image','document','archive','other'];
+  document.getElementById('count-all').textContent = files.length;
+  cats.forEach(c => {
+    const el = document.getElementById(`count-${c}`);
+    if (el) el.textContent = files.filter(f=>f.category===c).length;
+  });
+}
+
+function updateStats() {
+  const state = hubApp.getState();
+  const files = Object.values(state.files);
+  const totalSize = files.reduce((a,f)=>a+(f.size||0),0);
+  const totalDl = Object.values(state.downloads).reduce((a,b)=>a+b,0);
+  document.getElementById('s-files').textContent = files.length;
+  document.getElementById('s-size').textContent = formatBytes(totalSize);
+  document.getElementById('s-downloads').textContent = totalDl;
+  document.getElementById('s-events').textContent = hubApp.log.length;
+  document.getElementById('log-count').textContent = hubApp.log.length;
+
+  // Storage estimate
+  try {
+    const logSize = JSON.stringify(hubApp.log).length;
+    const pct = Math.min(100, (logSize / 5000000) * 100);
+    document.getElementById('storage-bar').style.width = pct + '%';
+    document.getElementById('storage-pct').textContent = pct.toFixed(1) + '%';
+    document.getElementById('storage-meta').textContent = formatBytes(logSize) + ' metadata used';
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+// DETAIL PANEL
+// ══════════════════════════════════════════
+function openPanel(fileId) {
+  const state = hubApp.getState();
+  const f = state.files[fileId];
+  if (!f) return;
+  openFileId = fileId;
+
+  document.getElementById('panel-icon').textContent = CAT_ICONS[f.category] || '📎';
+  document.getElementById('panel-name').textContent = f.name;
+
+  // Preview
+  const preview = document.getElementById('panel-preview');
+  if (f.objectUrl) {
+    if (f.category === 'image') {
+      preview.innerHTML = `<img src="${f.objectUrl}" style="max-width:100%;max-height:200px;border-radius:var(--r);display:block;margin:0 auto;">`;
+    } else if (f.category === 'audio') {
+      preview.innerHTML = `<audio controls style="width:100%;margin:8px 0"><source src="${f.objectUrl}"></audio>`;
+    } else if (f.category === 'video') {
+      preview.innerHTML = `<video controls style="width:100%;border-radius:var(--r)"><source src="${f.objectUrl}"></video>`;
+    } else {
+      preview.innerHTML = `<div style="padding:20px;font-size:12px;color:var(--ink3);text-align:center;">No visual preview available</div>`;
+    }
+  } else {
+    preview.innerHTML = `<div style="padding:20px;font-size:12px;color:var(--ink3);text-align:center;letter-spacing:1px;">DEMO FILE — no actual content</div>`;
+  }
+
+  // Details
+  const downloads = state.downloads[fileId] || 0;
+  const stars = (state.stars[fileId] || []).length;
+  document.getElementById('panel-details').innerHTML = `
+    <div class="detail-row"><span class="detail-key">size</span><span class="detail-val">${formatBytes(f.size)}</span></div>
+    <div class="detail-row"><span class="detail-key">type</span><span class="detail-val" style="color:${CAT_COLORS[f.category]}">${f.category}</span></div>
+    <div class="detail-row"><span class="detail-key">visibility</span><span class="detail-val">${f.visibility}</span></div>
+    <div class="detail-row"><span class="detail-key">uploaded by</span><span class="detail-val" style="color:${f.authorColor}">${f.authorName}</span></div>
+    <div class="detail-row"><span class="detail-key">uploaded</span><span class="detail-val">${new Date(f.ts).toLocaleDateString()}</span></div>
+    <div class="detail-row"><span class="detail-key">downloads</span><span class="detail-val">${downloads}</span></div>
+    <div class="detail-row"><span class="detail-key">stars</span><span class="detail-val">★ ${stars}</span></div>
+    ${f.desc ? `<div style="margin-top:10px;font-size:12px;color:var(--ink2);line-height:1.6;">${f.desc}</div>` : ''}
+  `;
+
+  // Tags
+  const tagsEl = document.getElementById('panel-tags');
+  tagsEl.innerHTML = f.tags.map(t=>`<span style="padding:3px 10px;border-radius:10px;background:var(--bg4);border:1px solid var(--line2);font-size:11px;font-family:var(--font-mono);color:var(--ink2);">#${t}</span>`).join('');
+
+  // Actions
+  const isStarred = (state.stars[fileId] || []).includes(SELF.id);
+  document.getElementById('panel-actions').innerHTML = `
+    <button class="panel-btn primary-btn" onclick="downloadFile('${fileId}')">↓ Download File</button>
+    <button class="panel-btn" onclick="starFile('${fileId}')" style="${isStarred?'border-color:var(--yellow);color:var(--yellow);':''}">★ ${isStarred?'Unstar':'Star'} this file</button>
+    <button class="panel-btn" onclick="copyLink('${fileId}')">⎘ Copy Share Link</button>
+    ${f.authorId === SELF.id ? `<button class="panel-btn" onclick="deleteFile('${fileId}')" style="color:var(--red);border-color:rgba(255,71,87,0.3);">✕ Remove from Hub</button>` : ''}
+  `;
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  openFileId = null;
+}
+
+// ══════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════
+function downloadFile(fileId) {
+  const state = hubApp.getState();
+  const f = state.files[fileId];
+  if (!f) return;
+  hubApp.emit({ type:'file.download', fileId, userId:SELF.id });
+  if (f.objectUrl) {
+    const a = document.createElement('a');
+    a.href = f.objectUrl; a.download = f.name; a.click();
+    showToast(`Downloading: ${f.name}`);
+  } else {
+    showToast('Demo file — no real download available');
+  }
+  renderFiles();
+}
+
+function starFile(fileId) {
+  hubApp.emit({ type:'file.star', fileId, userId:SELF.id });
+  renderFiles();
+  if (openFileId === fileId) openPanel(fileId);
+}
+
+function deleteFile(fileId) {
+  hubApp.emit({ type:'file.delete', fileId });
+  closePanel();
+  renderFiles();
+  showToast('File removed from hub');
+}
+
+function copyLink(fileId) {
+  showToast('Share link copied (simulated)');
+}
+
+// ══════════════════════════════════════════
+// UPLOAD
+// ══════════════════════════════════════════
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+fileInput.addEventListener('change', e => Array.from(e.target.files).forEach(handleFile));
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); Array.from(e.dataTransfer.files).forEach(handleFile); });
+
+function handleFile(file) {
+  if (selectedFiles.find(f=>f.name===file.name)) return;
+  selectedFiles.push(file);
+  const url = URL.createObjectURL(file);
+  objectUrls.push(url);
+  renderSelectedFiles();
+}
+
+function renderSelectedFiles() {
+  const container = document.getElementById('selected-files');
+  container.innerHTML = '';
+  selectedFiles.forEach((f, i) => {
+    const cat = detectCategory(f.type, f.name);
+    const icon = CAT_ICONS[cat] || '📎';
+    const el = document.createElement('div');
+    el.className = 'selected-file';
+    el.innerHTML = `
+      <div class="sf-icon">${icon}</div>
+      <div class="sf-info">
+        <div class="sf-name">${f.name}</div>
+        <div class="sf-size">${formatBytes(f.size)} · ${cat}</div>
+        <div class="sf-prog-wrap"><div class="sf-prog" id="prog-${i}"></div></div>
+      </div>
+      <button class="sf-remove" onclick="removeFile(${i})">✕</button>
+    `;
+    container.appendChild(el);
+    // Fake progress
+    let p = 0;
+    const prog = document.getElementById(`prog-${i}`);
+    const iv = setInterval(() => {
+      p = Math.min(100, p + Math.random()*20);
+      if (prog) prog.style.width = p + '%';
+      if (p >= 100) clearInterval(iv);
+    }, 80);
+  });
+}
+
+function removeFile(idx) {
+  selectedFiles.splice(idx, 1);
+  objectUrls.splice(idx, 1);
+  renderSelectedFiles();
+}
+
+function selectShareOpt(opt) {
+  shareOpt = opt;
+  ['public','link','private'].forEach(o => {
+    document.getElementById(`opt-${o}`)?.classList.toggle('selected', o === opt);
+  });
+}
+
+function submitUpload() {
+  if (selectedFiles.length === 0) { showToast('Select at least one file'); return; }
+  const desc = document.getElementById('up-desc').value.trim();
+  const catSel = document.getElementById('up-cat').value;
+  const tagsRaw = document.getElementById('up-tags').value;
+  const tags = tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+
+  selectedFiles.forEach((file, i) => {
+    const cat = catSel === 'auto' ? detectCategory(file.type, file.name) : catSel;
+    hubApp.emit({
+      type: 'file.share',
+      fileId: crypto.randomUUID(),
+      name: file.name, desc, category: cat,
+      tags: tags.length ? tags : [cat],
+      size: file.size, mimeType: file.type,
+      objectUrl: objectUrls[i] || null,
+      visibility: shareOpt,
+      authorId: SELF.id, authorName: SELF.name, authorColor: SELF.color,
+    });
+  });
+
+  showToast(`${selectedFiles.length} file${selectedFiles.length>1?'s':''} published to hub`);
+  selectedFiles = [];
+  objectUrls = [];
+  document.getElementById('selected-files').innerHTML = '';
+  document.getElementById('up-desc').value = '';
+  document.getElementById('up-tags').value = '';
+  setTimeout(() => { showView('files'); renderFiles(); }, 700);
+}
+
+// ══════════════════════════════════════════
+// ACTIVITY LOG
+// ══════════════════════════════════════════
+function renderActivity() {
+  const list = document.getElementById('activity-list');
+  const log = [...hubApp.log].reverse().slice(0, 50);
+  list.innerHTML = '';
+  log.forEach(e => {
+    const el = document.createElement('div');
+    el.className = 'activity-item';
+    const state = hubApp.getState();
+    let icon = '◈', text = '';
+    if (e.type === 'file.share') {
+      icon = '↑'; text = `<strong>${e.authorName}</strong> shared <strong>${e.name}</strong> (${e.category})`;
+    } else if (e.type === 'file.download') {
+      const f = state.files[e.fileId];
+      icon = '↓'; text = `Download registered for <strong>${f ? f.name : e.fileId.slice(0,8)}</strong>`;
+    } else if (e.type === 'file.star') {
+      const f = state.files[e.fileId];
+      icon = '★'; text = `File starred: <strong>${f ? f.name : e.fileId.slice(0,8)}</strong>`;
+    } else if (e.type === 'file.delete') {
+      icon = '✕'; text = `File removed from hub`;
+    } else { text = `Event: ${e.type}`; }
+    el.innerHTML = `
+      <div class="activity-icon" style="background:var(--bg3);border:1px solid var(--line2);font-size:14px;">${icon}</div>
+      <div class="activity-body">
+        <div class="activity-text">${text}</div>
+        <div class="activity-time">${new Date(e._ts).toLocaleString()} · seq #${e._seq}</div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════
+// FILTER / SORT / VIEW
+// ══════════════════════════════════════════
+function setFilter(type, el) {
+  currentFilter = type;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderFiles();
+}
+
+function filterCat(cat, el) {
+  showView('files');
+  setFilter(cat, null);
+  document.querySelectorAll('.chip').forEach(c => {
+    if (c.textContent.toLowerCase().includes(cat)) c.classList.add('active');
+    else c.classList.remove('active');
+  });
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById('grid-btn').classList.toggle('active', mode==='grid');
+  document.getElementById('list-btn').classList.toggle('active', mode==='list');
+  renderFiles();
+}
+
+function showMyFiles() {
+  showView('files');
+  const state = hubApp.getState();
+  // just shows all — could filter by SELF.id in a real app
+}
+function showDownloaded() { showView('files'); }
+function showStarred() {
+  showView('files');
+  const state = hubApp.getState();
+  const starred = Object.entries(state.stars).filter(([,l])=>l.includes(SELF.id)).map(([id])=>id);
+  if (starred.length === 0) showToast('No starred files yet');
+}
+
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`${name}-view`)?.classList.add('active');
+  if (name === 'activity') renderActivity();
+  if (name === 'files') renderFiles();
+  closePanel();
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════
+// SUBSCRIBE
+// ══════════════════════════════════════════
+hubApp.subscribe(() => {
+  document.getElementById('log-count').textContent = hubApp.log.length;
+  document.getElementById('s-events').textContent = hubApp.log.length;
+});
+
+// ══════════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════════
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key==='Enter') renderFiles(); });
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+const sd = document.getElementById('self-dot');
+sd.textContent = initials(SELF.name);
+sd.style.cssText = `background:${SELF.color}22;color:${SELF.color};border:1.5px solid ${SELF.color}55;`;
+document.getElementById('self-name').textContent = SELF.name;
+
+seedDemo();
+renderFiles();
+</script>
+</body>
+</html>

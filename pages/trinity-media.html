@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity Media — Sovereign Stream</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0b;
+  --bg2: #111114;
+  --bg3: #18181c;
+  --bg4: #202026;
+  --line: rgba(255,255,255,0.07);
+  --line2: rgba(255,255,255,0.12);
+  --ink: #f0eee8;
+  --ink2: #9994a4;
+  --ink3: #524e5e;
+  --accent: #ff4f1f;
+  --accent2: rgba(255,79,31,0.15);
+  --accent3: rgba(255,79,31,0.06);
+  --gold: #e8b84b;
+  --gold2: rgba(232,184,75,0.12);
+  --teal: #2dd4bf;
+  --purple: #a855f7;
+  --green: #4ade80;
+  --blue: #60a5fa;
+  --font-disp: 'Bebas Neue', sans-serif;
+  --font-serif: 'DM Serif Display', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --r: 6px;
+  --r2: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* ── TOPBAR ── */
+#topbar {
+  height: 56px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: var(--font-disp);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+  white-space: nowrap;
+}
+.logo span { color: var(--ink); opacity: 0.5; font-size: 16px; vertical-align: middle; }
+.search-bar {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 8px 12px;
+}
+.search-bar input::placeholder { color: var(--ink3); }
+.search-btn {
+  background: var(--bg4);
+  border: none;
+  border-left: 1px solid var(--line);
+  color: var(--ink2);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: color 0.15s;
+}
+.search-btn:hover { color: var(--accent); }
+.topbar-actions { display: flex; gap: 10px; align-items: center; margin-left: auto; }
+.btn-upload {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--r);
+  padding: 7px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-upload:hover { opacity: 0.85; }
+.avatar-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-disp);
+  font-size: 14px;
+  cursor: pointer;
+  border: 2px solid var(--line2);
+  flex-shrink: 0;
+}
+
+/* ── LAYOUT ── */
+#app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+.nav-section-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--ink3);
+  text-transform: uppercase;
+  padding: 12px 16px 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink2);
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.nav-item:hover { background: var(--bg3); color: var(--ink); }
+.nav-item.active {
+  background: var(--accent2);
+  border-left-color: var(--accent);
+  color: var(--ink);
+}
+.nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-item .nav-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  border-radius: 10px;
+  padding: 1px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+.nav-divider { height: 1px; background: var(--line); margin: 8px 0; }
+
+/* ── CONTENT AREA ── */
+#content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── VIEWS ── */
+.view { display: none; flex-direction: column; flex: 1; }
+.view.active { display: flex; }
+
+/* ── HOME VIEW ── */
+.hero-strip {
+  background: linear-gradient(135deg, #0f0f12 0%, #1a0a06 50%, #0a0f1a 100%);
+  border-bottom: 1px solid var(--line);
+  padding: 28px 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+.hero-text h1 {
+  font-family: var(--font-disp);
+  font-size: 42px;
+  color: var(--ink);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.hero-text h1 span { color: var(--accent); }
+.hero-text p {
+  font-size: 12px;
+  color: var(--ink3);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+.hero-stats {
+  display: flex;
+  gap: 24px;
+  margin-left: auto;
+}
+.hero-stat {
+  text-align: right;
+}
+.hero-stat-num {
+  font-family: var(--font-disp);
+  font-size: 30px;
+  color: var(--accent);
+  line-height: 1;
+}
+.hero-stat-label {
+  font-size: 10px;
+  color: var(--ink3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  padding: 12px 24px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.filter-chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--line2);
+  font-size: 12px;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-mono);
+  background: transparent;
+  white-space: nowrap;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--ink); }
+.filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+.sort-select {
+  margin-left: auto;
+  background: var(--bg3);
+  border: 1px solid var(--line);
+  color: var(--ink2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: var(--r);
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── MEDIA GRID ── */
+.media-grid {
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── MEDIA CARD ── */
+.media-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.media-card:hover {
+  border-color: var(--line2);
+  transform: translateY(-2px);
+}
+.media-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.media-thumb-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  opacity: 0.12;
+}
+.media-type-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid var(--line2);
+  color: var(--ink);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  backdrop-filter: blur(4px);
+}
+.media-type-badge.video { border-color: var(--accent); color: var(--accent); }
+.media-type-badge.audio { border-color: var(--teal); color: var(--teal); }
+.media-type-badge.image { border-color: var(--gold); color: var(--gold); }
+.media-type-badge.doc { border-color: var(--blue); color: var(--blue); }
+.media-type-badge.live { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.1); }
+.media-duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.85);
+  color: var(--ink);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.play-overlay {
+  width: 52px; height: 52px;
+  background: rgba(255,79,31,0.9);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+.media-card:hover .play-overlay { opacity: 1; }
+.play-overlay svg { margin-left: 3px; }
+
+.media-info { padding: 12px 14px 14px; }
+.media-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.3;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.media-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.media-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.media-author-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  font-family: var(--font-disp);
+  flex-shrink: 0;
+}
+.media-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink3);
+}
+.media-stat {
+  display: flex; align-items: center; gap: 3px;
+}
+.media-tags {
+  display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px;
+}
+.media-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--bg4);
+  color: var(--ink3);
+  border: 1px solid var(--line);
+}
+
+/* ── PLAYER VIEW ── */
+#player-view {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+}
+#player-view.active { display: flex; }
+
+.player-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.player-main {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+}
+
+.video-wrapper {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-wrapper video, .video-wrapper audio {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--ink3);
+  font-size: 13px;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0c;
+}
+.video-placeholder-icon { font-size: 64px; opacity: 0.3; }
+
+.player-info { padding: 20px 24px; }
+.player-title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.player-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.player-author {
+  display: flex; align-items: center; gap: 8px;
+}
+.player-author-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-disp); font-size: 15px;
+}
+.player-author-name { font-size: 14px; color: var(--ink2); }
+.player-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.action-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  color: var(--ink2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.action-btn:hover { background: var(--bg4); color: var(--ink); }
+.action-btn.liked { border-color: var(--accent); color: var(--accent); }
+
+.player-desc {
+  padding: 14px 0;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.7;
+  border-bottom: 1px solid var(--line);
+}
+.player-views-date {
+  font-size: 12px;
+  color: var(--ink3);
+  margin-top: 6px;
+}
+
+/* ── COMMENTS ── */
+.comments-section { padding: 16px 0; }
+.comments-header {
+  font-family: var(--font-disp);
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.comments-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink3);
+  font-weight: 300;
+}
+.comment-input-row {
+  display: flex; gap: 10px; margin-bottom: 16px;
+}
+.comment-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s;
+}
+.comment-input:focus { border-color: rgba(255,79,31,0.4); }
+.comment-submit {
+  background: var(--accent);
+  border: none; border-radius: var(--r);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+.comment {
+  display: flex; gap: 10px; margin-bottom: 14px;
+}
+.comment-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-disp); font-size: 13px;
+  flex-shrink: 0;
+}
+.comment-body { flex: 1; }
+.comment-author-row {
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;
+}
+.comment-author { font-size: 13px; font-weight: 600; color: var(--ink); }
+.comment-time { font-size: 11px; color: var(--ink3); }
+.comment-text { font-size: 13px; color: var(--ink2); line-height: 1.6; }
+
+/* ── UP NEXT SIDEBAR ── */
+.up-next {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px;
+  gap: 12px;
+}
+.up-next-header {
+  font-family: var(--font-disp);
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--ink2);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.up-next-card {
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--r);
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+.up-next-card:hover { background: var(--bg3); border-color: var(--line); }
+.up-next-thumb {
+  width: 120px;
+  min-width: 120px;
+  aspect-ratio: 16/9;
+  background: var(--bg3);
+  border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  color: var(--ink3);
+  overflow: hidden;
+  position: relative;
+}
+.up-next-info { flex: 1; min-width: 0; }
+.up-next-title {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.up-next-author { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+
+/* ── UPLOAD VIEW ── */
+.upload-view {
+  padding: 32px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+.upload-title {
+  font-family: var(--font-disp);
+  font-size: 36px;
+  letter-spacing: 2px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.upload-subtitle { font-size: 12px; color: var(--ink3); letter-spacing: 1px; margin-bottom: 28px; }
+
+.dropzone {
+  border: 2px dashed var(--line2);
+  border-radius: var(--r2);
+  padding: 48px 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+  margin-bottom: 24px;
+}
+.dropzone:hover, .dropzone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent3);
+}
+.dropzone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.dropzone-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.dropzone-text {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--ink2);
+  margin-bottom: 6px;
+}
+.dropzone-hint { font-size: 12px; color: var(--ink3); letter-spacing: 0.5px; }
+.dropzone-types {
+  display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap;
+}
+.type-pill {
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--ink3);
+}
+
+.upload-form { display: flex; flex-direction: column; gap: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); }
+.form-input, .form-select, .form-textarea {
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: rgba(255,79,31,0.4); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select { cursor: pointer; }
+.upload-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 28px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  align-self: flex-start;
+  transition: opacity 0.15s;
+}
+.upload-btn:hover { opacity: 0.85; }
+.upload-btn:disabled { opacity: 0.4; cursor: default; }
+
+.file-preview {
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ink2);
+}
+.file-preview-icon { font-size: 28px; flex-shrink: 0; }
+.file-preview-info { flex: 1; }
+.file-preview-name { color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+.file-preview-size { font-size: 11px; color: var(--ink3); }
+.progress-bar-wrap { height: 3px; background: var(--bg4); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.3s; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-left: 3px solid var(--accent);
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: var(--r);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.2s;
+  pointer-events: none;
+  z-index: 999;
+  max-width: 300px;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── EMPTY STATE ── */
+.empty-grid {
+  padding: 60px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink3);
+  font-size: 13px;
+  text-align: center;
+}
+.empty-grid-icon { font-size: 52px; opacity: 0.2; margin-bottom: 6px; }
+.empty-grid-title { font-family: var(--font-disp); font-size: 24px; color: var(--ink2); letter-spacing: 2px; }
+
+/* ── LIVE BADGE ── */
+@keyframes livePulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+.live-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.3);
+  color: var(--green);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: livePulse 1.5s infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">TRINITY <span>MEDIA</span></div>
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="search media, creators, tags…">
+    <button class="search-btn" onclick="doSearch()">⌕</button>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-upload" onclick="showView('upload')">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3 4l3.5-3 3.5 3M2 10h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Upload
+    </button>
+    <div class="avatar-btn" id="self-avatar-btn"></div>
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="nav-section-label">Discover</div>
+    <div class="nav-item active" data-view="home" onclick="showView('home',this)">
+      <span class="nav-icon">⊞</span> Home Feed
+    </div>
+    <div class="nav-item" data-view="home" onclick="filterByType('video',this)">
+      <span class="nav-icon">▶</span> Videos
+    </div>
+    <div class="nav-item" data-view="home" onclick="filterByType('audio',this)">
+      <span class="nav-icon">♪</span> Audio / Podcasts
+    </div>
+    <div class="nav-item" data-view="home" onclick="filterByType('image',this)">
+      <span class="nav-icon">◻</span> Images
+    </div>
+    <div class="nav-item" data-view="home" onclick="filterByType('doc',this)">
+      <span class="nav-icon">≡</span> Documents
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Library</div>
+    <div class="nav-item" onclick="showView('upload')">
+      <span class="nav-icon">↑</span> Upload
+    </div>
+    <div class="nav-item" onclick="showMyUploads()">
+      <span class="nav-icon">◉</span> My Uploads
+    </div>
+    <div class="nav-item" onclick="showLiked()">
+      <span class="nav-icon">♥</span> Liked
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">System</div>
+    <div class="nav-item" id="nav-log-count">
+      <span class="nav-icon">◈</span> Event Log <span class="nav-badge" id="log-badge">0</span>
+    </div>
+  </div>
+
+  <!-- HOME VIEW -->
+  <div id="home-view" class="view active" style="overflow-y:auto;">
+    <div class="hero-strip">
+      <div class="hero-text">
+        <h1>SOVEREIGN <span>STREAM</span></h1>
+        <p>trinity event log · p2p fabric · own your media</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-media">0</div>
+          <div class="hero-stat-label">media items</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-views">0</div>
+          <div class="hero-stat-label">total views</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-likes">0</div>
+          <div class="hero-stat-label">likes</div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
+      <div class="filter-chip" onclick="setFilter('video',this)">▶ Video</div>
+      <div class="filter-chip" onclick="setFilter('audio',this)">♪ Audio</div>
+      <div class="filter-chip" onclick="setFilter('image',this)">◻ Image</div>
+      <div class="filter-chip" onclick="setFilter('doc',this)">≡ Document</div>
+      <select class="sort-select" id="sort-select" onchange="renderGrid()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="views">Most Viewed</option>
+        <option value="likes">Most Liked</option>
+      </select>
+    </div>
+    <div class="media-grid" id="media-grid"></div>
+  </div>
+
+  <!-- PLAYER VIEW (outside home-view, appended to content) -->
+  <div id="player-view">
+    <div style="padding:12px 20px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+      <button onclick="backToHome()" style="background:var(--bg3);border:1px solid var(--line2);color:var(--ink2);font-family:var(--font-mono);font-size:12px;padding:6px 12px;border-radius:var(--r);cursor:pointer;">← Back</button>
+      <span id="player-breadcrumb" style="font-size:12px;color:var(--ink3);"></span>
+    </div>
+    <div class="player-layout">
+      <div class="player-main">
+        <div class="video-wrapper" id="video-wrapper">
+          <div class="video-placeholder" id="video-placeholder">
+            <div class="video-placeholder-icon">▶</div>
+            <div>Select a media item to play</div>
+          </div>
+        </div>
+        <div class="player-info">
+          <div class="player-title" id="player-title">—</div>
+          <div class="player-meta">
+            <div class="player-author">
+              <div class="player-author-avatar" id="player-avatar"></div>
+              <div class="player-author-name" id="player-author">—</div>
+            </div>
+            <div class="player-actions">
+              <button class="action-btn" id="like-btn" onclick="toggleLike()">♥ <span id="like-count">0</span></button>
+              <button class="action-btn" onclick="shareMedia()">⎘ Share</button>
+              <button class="action-btn" onclick="downloadMedia()">↓ Save</button>
+            </div>
+          </div>
+          <div class="player-desc" id="player-desc"></div>
+          <div class="player-views-date" id="player-views-date"></div>
+          <div class="comments-section">
+            <div class="comments-header">
+              Comments <span class="comments-count" id="comments-count">0 comments</span>
+            </div>
+            <div class="comment-input-row">
+              <textarea class="comment-input" id="comment-input" rows="2" placeholder="Write a comment…"></textarea>
+              <button class="comment-submit" onclick="submitComment()">Post</button>
+            </div>
+            <div id="comments-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="up-next">
+        <div class="up-next-header">
+          Up Next
+          <span style="font-size:11px;font-weight:300;color:var(--ink3);">autoplay</span>
+        </div>
+        <div id="up-next-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD VIEW -->
+  <div id="upload-view" class="view" style="overflow-y:auto;">
+    <div class="upload-view">
+      <div class="upload-title">UPLOAD MEDIA</div>
+      <div class="upload-subtitle">sovereign · event-logged · locally persisted</div>
+
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="file-input" accept="video/*,audio/*,image/*,.pdf,.txt,.md">
+        <div class="dropzone-icon">⬆</div>
+        <div class="dropzone-text">Drop your file here, or click to browse</div>
+        <div class="dropzone-hint">Stored as object URL · metadata logged to Trinity event store</div>
+        <div class="dropzone-types">
+          <span class="type-pill" style="border-color:var(--accent);color:var(--accent);">VIDEO</span>
+          <span class="type-pill" style="border-color:var(--teal);color:var(--teal);">AUDIO</span>
+          <span class="type-pill" style="border-color:var(--gold);color:var(--gold);">IMAGE</span>
+          <span class="type-pill" style="border-color:var(--blue);color:var(--blue);">DOCUMENT</span>
+        </div>
+      </div>
+
+      <div id="file-preview-area" style="display:none;margin-bottom:20px;">
+        <div class="file-preview">
+          <div class="file-preview-icon" id="fp-icon">📄</div>
+          <div class="file-preview-info">
+            <div class="file-preview-name" id="fp-name">—</div>
+            <div class="file-preview-size" id="fp-size">—</div>
+            <div class="progress-bar-wrap"><div class="progress-bar" id="fp-progress"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="upload-form" id="upload-form">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" id="up-title" placeholder="Give your media a title…">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="up-desc" placeholder="What's this about?"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Media Type</label>
+            <select class="form-select" id="up-type">
+              <option value="video">Video</option>
+              <option value="audio">Audio / Podcast</option>
+              <option value="image">Image</option>
+              <option value="doc">Document</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input class="form-input" id="up-tags" placeholder="e.g. music, tutorial, art">
+          </div>
+        </div>
+        <button class="upload-btn" id="publish-btn" onclick="publishMedia()">
+          Publish to Stream
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// TRINITY SDK (inline)
+// ══════════════════════════════════════════
+function createApp({ init, reduce }) {
+  let state = init;
+  const listeners = [];
+  const log = [];
+  function emit(event) {
+    const stamped = { ...event, _seq: log.length, _ts: event._ts ?? Date.now(), _id: event._id ?? crypto.randomUUID() };
+    log.push(stamped);
+    state = reduce(state, stamped);
+    listeners.forEach(l => l(state, stamped));
+  }
+  function subscribe(fn) {
+    listeners.push(fn);
+    return () => { const i = listeners.indexOf(fn); if(i!==-1) listeners.splice(i,1); };
+  }
+  function getState() { return state; }
+  function replay(events) {
+    const seen = new Set(log.map(e => e._id));
+    events.filter(e => !seen.has(e._id)).forEach(e => emit(e));
+  }
+  return { emit, subscribe, getState, replay, get log() { return log; } };
+}
+function persist(app, key) {
+  try { const s = JSON.parse(localStorage.getItem(key)||'[]'); if(s.length) app.replay(s); } catch(e){}
+  app.subscribe(() => { try { localStorage.setItem(key, JSON.stringify(app.log)); } catch(e){} });
+}
+
+// ══════════════════════════════════════════
+// IDENTITY
+// ══════════════════════════════════════════
+const NAMES = ['Amber Narwhal','Cobalt Lemur','Crimson Gecko','Dusk Okapi','Emerald Meerkat','Fern Capybara','Golden Axolotl','Indigo Quokka'];
+const COLORS = ['#c8a84b','#5888b8','#c04848','#5a8a5a','#a855f7','#2dd4bf','#ff7043','#e040fb'];
+let SELF = (() => {
+  try { const s = JSON.parse(localStorage.getItem('trinity-media-identity')); if(s) return s; } catch(e){}
+  const i = Math.floor(Math.random()*NAMES.length);
+  const id = { name: NAMES[i], color: COLORS[i], id: crypto.randomUUID() };
+  localStorage.setItem('trinity-media-identity', JSON.stringify(id));
+  return id;
+})();
+function initials(name) { return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+
+// ══════════════════════════════════════════
+// MEDIA APP — TRINITY
+// ══════════════════════════════════════════
+const mediaApp = createApp({
+  init: { media: {}, likes: {}, views: {}, comments: {} },
+  reduce(state, event) {
+    if (event.type === 'media.publish') {
+      return { ...state, media: { ...state.media, [event.mediaId]: {
+        id: event.mediaId, title: event.title, desc: event.desc,
+        type: event.mediaType, tags: event.tags, authorId: event.authorId,
+        authorName: event.authorName, authorColor: event.authorColor,
+        objectUrl: event.objectUrl, fileName: event.fileName, fileSize: event.fileSize,
+        ts: event._ts,
+      }}};
+    }
+    if (event.type === 'media.view') {
+      const v = state.views[event.mediaId] || 0;
+      return { ...state, views: { ...state.views, [event.mediaId]: v + 1 }};
+    }
+    if (event.type === 'media.like') {
+      const liked = state.likes[event.mediaId] || [];
+      const already = liked.includes(event.userId);
+      const newLiked = already ? liked.filter(x=>x!==event.userId) : [...liked, event.userId];
+      return { ...state, likes: { ...state.likes, [event.mediaId]: newLiked }};
+    }
+    if (event.type === 'media.comment') {
+      const comments = state.comments[event.mediaId] || [];
+      return { ...state, comments: { ...state.comments, [event.mediaId]: [...comments, {
+        id: event._id, authorId: event.authorId, authorName: event.authorName,
+        authorColor: event.authorColor, text: event.text, ts: event._ts,
+      }]}};
+    }
+    return state;
+  }
+});
+
+persist(mediaApp, 'trinity-media-v1');
+
+// ══════════════════════════════════════════
+// SEED DEMO CONTENT (if empty)
+// ══════════════════════════════════════════
+function seedDemo() {
+  const state = mediaApp.getState();
+  if (Object.keys(state.media).length > 0) return;
+
+  const demos = [
+    { title: 'Into the Sovereign Network', type: 'video', desc: 'A deep-dive into P2P architectures and why decentralization matters for media distribution. No single point of failure, no corporate gatekeeping.', tags: ['architecture','p2p','networking'], emoji: '▶' },
+    { title: 'Ambient Frequencies Vol. 3', type: 'audio', desc: 'Slow ambient textures for focused work. Generated with analog hardware and processed through a custom signal chain.', tags: ['ambient','music','focus'], emoji: '♪' },
+    { title: 'Event Sourcing Explained', type: 'video', desc: 'How Trinity\'s append-only log gives you time-travel debugging, full auditability, and zero lost state.', tags: ['tutorial','trinity','events'], emoji: '▶' },
+    { title: 'Terminal Landscapes', type: 'image', desc: 'Photography series exploring the industrial edge of civilization. Shot on medium format film, scanned at 4800dpi.', tags: ['photography','art','film'], emoji: '◻' },
+    { title: 'Sovereign Infrastructure Guide', type: 'doc', desc: 'Complete guide to running your own P2P infrastructure stack. Covers STUN, TURN, signaling, and CRDT replication.', tags: ['guide','infrastructure','selfhost'], emoji: '≡' },
+    { title: 'Drone Sessions: Coastal', type: 'audio', desc: 'Field recordings from the northern coast mixed with drone bass and textural synthesis.', tags: ['field-recording','ambient','experimental'], emoji: '♪' },
+    { title: 'Building with CRDT Text', type: 'video', desc: 'Live coding session: building a collaborative editor from scratch using Trinity\'s CRDT primitives in under 200 lines.', tags: ['coding','crdt','tutorial'], emoji: '▶' },
+    { title: 'Neon Geometries', type: 'image', desc: 'Generative art series exploring recursive geometry at the intersection of mathematics and light.', tags: ['generative','art','geometry'], emoji: '◻' },
+  ];
+
+  demos.forEach((d, i) => {
+    const id = `demo-${i}`;
+    mediaApp.emit({
+      type: 'media.publish',
+      mediaId: id, title: d.title, desc: d.desc,
+      mediaType: d.type, tags: d.tags,
+      authorId: `demo-author-${i%3}`,
+      authorName: NAMES[i % NAMES.length],
+      authorColor: COLORS[i % COLORS.length],
+      objectUrl: null, fileName: null, fileSize: null,
+    });
+    // Add some views and likes
+    for (let v = 0; v < (i+1)*3; v++) mediaApp.emit({ type:'media.view', mediaId:id, userId:`u${v}` });
+    for (let l = 0; l < (i%4); l++) mediaApp.emit({ type:'media.like', mediaId:id, userId:`u${l}` });
+  });
+}
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentFilter = 'all';
+let currentMedia = null;
+let currentFile = null;
+let currentObjectUrl = null;
+
+// ══════════════════════════════════════════
+// GRID RENDERING
+// ══════════════════════════════════════════
+const TYPE_ICONS = { video:'▶', audio:'♪', image:'◻', doc:'≡' };
+const TYPE_EMOJI = { video:'🎬', audio:'🎵', image:'🖼', doc:'📄' };
+const TYPE_COLORS = { video:'var(--accent)', audio:'var(--teal)', image:'var(--gold)', doc:'var(--blue)' };
+const THUMB_BG = { video:'#1a0806', audio:'#061a16', image:'#1a150a', doc:'#060e1a' };
+
+function getFilteredSorted() {
+  const state = mediaApp.getState();
+  let items = Object.values(state.media);
+  const search = document.getElementById('search-input').value.trim().toLowerCase();
+
+  if (currentFilter !== 'all') items = items.filter(m => m.type === currentFilter);
+  if (search) items = items.filter(m =>
+    m.title.toLowerCase().includes(search) ||
+    m.desc.toLowerCase().includes(search) ||
+    m.tags.some(t => t.toLowerCase().includes(search)) ||
+    m.authorName.toLowerCase().includes(search)
+  );
+
+  const sort = document.getElementById('sort-select').value;
+  if (sort === 'newest') items.sort((a,b) => b.ts - a.ts);
+  else if (sort === 'oldest') items.sort((a,b) => a.ts - b.ts);
+  else if (sort === 'views') items.sort((a,b) => (state.views[b.id]||0) - (state.views[a.id]||0));
+  else if (sort === 'likes') items.sort((a,b) => (state.likes[b.id]||[]).length - (state.likes[a.id]||[]).length);
+  return items;
+}
+
+function renderGrid() {
+  const items = getFilteredSorted();
+  const state = mediaApp.getState();
+  const grid = document.getElementById('media-grid');
+
+  if (items.length === 0) {
+    grid.innerHTML = `<div class="empty-grid" style="grid-column:1/-1">
+      <div class="empty-grid-icon">◈</div>
+      <div class="empty-grid-title">NO MEDIA FOUND</div>
+      <div>Upload something or adjust your filters</div>
+    </div>`;
+    updateStats();
+    return;
+  }
+
+  grid.innerHTML = '';
+  items.forEach(m => {
+    const views = state.views[m.id] || 0;
+    const likes = (state.likes[m.id] || []).length;
+    const isLiked = (state.likes[m.id] || []).includes(SELF.id);
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.onclick = () => openMedia(m.id);
+
+    const typeColor = TYPE_COLORS[m.type] || 'var(--ink2)';
+    const thumbBg = THUMB_BG[m.type] || 'var(--bg3)';
+
+    card.innerHTML = `
+      <div class="media-thumb" style="background:${thumbBg}">
+        <div class="media-thumb-bg">${TYPE_ICONS[m.type] || '◈'}</div>
+        <div class="media-type-badge ${m.type}">${m.type.toUpperCase()}</div>
+        <div class="play-overlay">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M5 3l11 6-11 6V3z"/></svg>
+        </div>
+        ${m.type === 'video' || m.type === 'audio' ? `<div class="media-duration">${m.objectUrl ? 'local file' : 'demo'}</div>` : ''}
+      </div>
+      <div class="media-info">
+        <div class="media-title">${m.title}</div>
+        <div class="media-meta-row">
+          <div class="media-author">
+            <div class="media-author-dot" style="background:${m.authorColor}22;border:1.5px solid ${m.authorColor}55;color:${m.authorColor}">${initials(m.authorName)}</div>
+            ${m.authorName}
+          </div>
+          <div class="media-stats">
+            <div class="media-stat">▶ ${views}</div>
+            <div class="media-stat" style="${isLiked?'color:var(--accent)':''}">♥ ${likes}</div>
+          </div>
+        </div>
+        <div class="media-tags">${m.tags.slice(0,3).map(t=>`<span class="media-tag">#${t}</span>`).join('')}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  updateStats();
+}
+
+function updateStats() {
+  const state = mediaApp.getState();
+  const media = Object.values(state.media);
+  document.getElementById('stat-media').textContent = media.length;
+  document.getElementById('stat-views').textContent = Object.values(state.views).reduce((a,b)=>a+b,0);
+  document.getElementById('stat-likes').textContent = Object.values(state.likes).reduce((a,b)=>a+b.length,0);
+  document.getElementById('log-badge').textContent = mediaApp.log.length;
+}
+
+// ══════════════════════════════════════════
+// OPEN MEDIA / PLAYER
+// ══════════════════════════════════════════
+function openMedia(mediaId) {
+  const state = mediaApp.getState();
+  const m = state.media[mediaId];
+  if (!m) return;
+
+  currentMedia = mediaId;
+  mediaApp.emit({ type: 'media.view', mediaId, userId: SELF.id });
+
+  // Switch view
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('player-view').style.display = 'flex';
+  document.getElementById('upload-view').classList.remove('active');
+
+  // Breadcrumb
+  document.getElementById('player-breadcrumb').textContent = `${m.type.toUpperCase()} · ${m.title}`;
+
+  // Player content
+  document.getElementById('player-title').textContent = m.title;
+
+  const avatar = document.getElementById('player-avatar');
+  avatar.textContent = initials(m.authorName);
+  avatar.style.cssText = `background:${m.authorColor}22;border:2px solid ${m.authorColor}55;color:${m.authorColor};width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-disp);font-size:15px;`;
+
+  document.getElementById('player-author').textContent = m.authorName;
+
+  const views = (state.views[m.id] || 0) + 1;
+  const likes = (state.likes[m.id] || []).length;
+  const isLiked = (state.likes[m.id] || []).includes(SELF.id);
+
+  document.getElementById('like-count').textContent = likes;
+  document.getElementById('like-btn').className = 'action-btn' + (isLiked ? ' liked' : '');
+  document.getElementById('player-desc').innerHTML = `<p>${m.desc}</p><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${m.tags.map(t=>`<span class="media-tag">#${t}</span>`).join('')}</div>`;
+  document.getElementById('player-views-date').textContent = `${views} views · ${new Date(m.ts).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'})}`;
+
+  // Media element
+  const wrapper = document.getElementById('video-wrapper');
+  wrapper.innerHTML = '';
+
+  if (m.objectUrl) {
+    if (m.type === 'video') {
+      const v = document.createElement('video');
+      v.src = m.objectUrl; v.controls = true; v.autoplay = true;
+      wrapper.appendChild(v);
+    } else if (m.type === 'audio') {
+      const ph = document.createElement('div');
+      ph.className = 'video-placeholder';
+      ph.innerHTML = `<div style="font-size:80px;opacity:0.2">♪</div><audio controls style="margin-top:12px;width:80%"><source src="${m.objectUrl}"></audio>`;
+      wrapper.appendChild(ph);
+    } else if (m.type === 'image') {
+      const img = document.createElement('img');
+      img.src = m.objectUrl;
+      img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;';
+      wrapper.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'video-placeholder';
+      ph.innerHTML = `<div style="font-size:64px;opacity:0.2">📄</div><div style="margin-top:8px;font-size:13px;color:var(--ink2)">${m.fileName}</div><a href="${m.objectUrl}" download="${m.fileName}" style="color:var(--accent);font-size:13px;margin-top:8px;display:block">↓ Download file</a>`;
+      wrapper.appendChild(ph);
+    }
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'video-placeholder';
+    ph.innerHTML = `<div class="video-placeholder-icon">${TYPE_ICONS[m.type] || '▶'}</div><div style="font-size:12px;color:var(--ink3);letter-spacing:1px">DEMO CONTENT — Upload a real file to play</div>`;
+    wrapper.appendChild(ph);
+  }
+
+  renderComments(mediaId);
+  renderUpNext(mediaId);
+  updateStats();
+}
+
+function renderComments(mediaId) {
+  const state = mediaApp.getState();
+  const comments = state.comments[mediaId] || [];
+  document.getElementById('comments-count').textContent = `${comments.length} comment${comments.length!==1?'s':''}`;
+  const list = document.getElementById('comments-list');
+  list.innerHTML = '';
+  comments.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'comment';
+    el.innerHTML = `
+      <div class="comment-avatar" style="background:${c.authorColor}22;border:1.5px solid ${c.authorColor}55;color:${c.authorColor}">${initials(c.authorName)}</div>
+      <div class="comment-body">
+        <div class="comment-author-row">
+          <span class="comment-author" style="color:${c.authorColor}">${c.authorName}</span>
+          <span class="comment-time">${new Date(c.ts).toLocaleDateString()}</span>
+        </div>
+        <div class="comment-text">${c.text}</div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function renderUpNext(currentId) {
+  const state = mediaApp.getState();
+  const all = Object.values(state.media).filter(m => m.id !== currentId);
+  const list = document.getElementById('up-next-list');
+  list.innerHTML = '';
+  all.slice(0, 10).forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'up-next-card';
+    el.onclick = () => openMedia(m.id);
+    el.innerHTML = `
+      <div class="up-next-thumb" style="background:${THUMB_BG[m.type]||'var(--bg3)'}">
+        <span style="font-size:22px;opacity:0.2;">${TYPE_ICONS[m.type]}</span>
+        <div style="position:absolute;top:4px;left:4px;font-size:9px;padding:2px 5px;border-radius:3px;background:rgba(0,0,0,0.7);color:${TYPE_COLORS[m.type]};border:1px solid ${TYPE_COLORS[m.type]}44;">${m.type}</div>
+      </div>
+      <div class="up-next-info">
+        <div class="up-next-title">${m.title}</div>
+        <div class="up-next-author" style="color:${m.authorColor}">${m.authorName}</div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:3px">▶ ${state.views[m.id]||0} views</div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════
+// INTERACTIONS
+// ══════════════════════════════════════════
+function toggleLike() {
+  if (!currentMedia) return;
+  mediaApp.emit({ type: 'media.like', mediaId: currentMedia, userId: SELF.id });
+  const state = mediaApp.getState();
+  const likes = (state.likes[currentMedia] || []).length;
+  const isLiked = (state.likes[currentMedia] || []).includes(SELF.id);
+  document.getElementById('like-count').textContent = likes;
+  document.getElementById('like-btn').className = 'action-btn' + (isLiked ? ' liked' : '');
+  updateStats();
+}
+
+function submitComment() {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text || !currentMedia) return;
+  mediaApp.emit({ type: 'media.comment', mediaId: currentMedia, authorId: SELF.id, authorName: SELF.name, authorColor: SELF.color, text });
+  input.value = '';
+  renderComments(currentMedia);
+}
+
+function shareMedia() { showToast('Link copied to clipboard (simulated)'); }
+function downloadMedia() {
+  const state = mediaApp.getState();
+  const m = state.media[currentMedia];
+  if (m && m.objectUrl) {
+    const a = document.createElement('a');
+    a.href = m.objectUrl; a.download = m.fileName || 'media';
+    a.click();
+  } else { showToast('Demo content — no real file to download'); }
+}
+
+function backToHome() {
+  document.getElementById('player-view').style.display = 'none';
+  document.getElementById('home-view').style.display = 'flex';
+  currentMedia = null;
+  renderGrid();
+}
+
+// ══════════════════════════════════════════
+// FILTERS & SEARCH
+// ══════════════════════════════════════════
+function setFilter(type, el) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderGrid();
+}
+
+function filterByType(type, el) {
+  showView('home');
+  setFilter(type, null);
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    if (c.textContent.toLowerCase().includes(type)) c.classList.add('active');
+    else c.classList.remove('active');
+  });
+}
+
+function doSearch() { renderGrid(); }
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('search-input').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+});
+
+function showMyUploads() {
+  const state = mediaApp.getState();
+  const myMedia = Object.values(state.media).filter(m => m.authorId === SELF.id);
+  showView('home');
+  currentFilter = 'mine';
+  const grid = document.getElementById('media-grid');
+  if (myMedia.length === 0) {
+    grid.innerHTML = `<div class="empty-grid" style="grid-column:1/-1"><div class="empty-grid-icon">↑</div><div class="empty-grid-title">NO UPLOADS YET</div><div>Go to Upload to share your first media</div></div>`;
+  } else {
+    currentFilter = 'all';
+    renderGrid();
+  }
+}
+
+function showLiked() {
+  const state = mediaApp.getState();
+  showView('home');
+  const likedIds = Object.entries(state.likes)
+    .filter(([,likers]) => likers.includes(SELF.id))
+    .map(([id]) => id);
+  if (likedIds.length === 0) {
+    document.getElementById('media-grid').innerHTML = `<div class="empty-grid" style="grid-column:1/-1"><div class="empty-grid-icon">♥</div><div class="empty-grid-title">NO LIKES YET</div><div>Heart media you enjoy while watching</div></div>`;
+    return;
+  }
+  currentFilter = 'all';
+  renderGrid();
+}
+
+// ══════════════════════════════════════════
+// UPLOAD
+// ══════════════════════════════════════════
+const fileInput = document.getElementById('file-input');
+const dropzone = document.getElementById('dropzone');
+
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+const FILE_ICONS = { video:'🎬', audio:'🎵', image:'🖼', pdf:'📄', default:'📎' };
+
+function getMediaType(file) {
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  if (file.type.startsWith('image/')) return 'image';
+  return 'doc';
+}
+
+function handleFile(file) {
+  if (!file) return;
+  currentFile = file;
+  const type = getMediaType(file);
+
+  document.getElementById('up-type').value = type;
+  document.getElementById('up-title').value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+
+  const pa = document.getElementById('file-preview-area');
+  pa.style.display = 'block';
+  document.getElementById('fp-icon').textContent = FILE_ICONS[type] || FILE_ICONS.default;
+  document.getElementById('fp-name').textContent = file.name;
+  document.getElementById('fp-size').textContent = formatBytes(file.size);
+
+  // Fake progress
+  let prog = 0;
+  const bar = document.getElementById('fp-progress');
+  const interval = setInterval(() => {
+    prog = Math.min(100, prog + Math.random() * 15);
+    bar.style.width = prog + '%';
+    if (prog >= 100) clearInterval(interval);
+  }, 100);
+
+  // Create object URL
+  if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+  currentObjectUrl = URL.createObjectURL(file);
+}
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function publishMedia() {
+  const title = document.getElementById('up-title').value.trim();
+  const desc = document.getElementById('up-desc').value.trim();
+  const type = document.getElementById('up-type').value;
+  const tagsRaw = document.getElementById('up-tags').value;
+  const tags = tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+
+  if (!title) { showToast('Please add a title'); return; }
+
+  const mediaId = crypto.randomUUID();
+  mediaApp.emit({
+    type: 'media.publish', mediaId, title,
+    desc: desc || 'No description provided.',
+    mediaType: type, tags: tags.length ? tags : ['uncategorized'],
+    authorId: SELF.id, authorName: SELF.name, authorColor: SELF.color,
+    objectUrl: currentObjectUrl || null,
+    fileName: currentFile ? currentFile.name : null,
+    fileSize: currentFile ? currentFile.size : null,
+  });
+
+  showToast(`"${title}" published to stream`);
+
+  // Reset
+  document.getElementById('up-title').value = '';
+  document.getElementById('up-desc').value = '';
+  document.getElementById('up-tags').value = '';
+  document.getElementById('file-preview-area').style.display = 'none';
+  document.getElementById('fp-progress').style.width = '0%';
+  currentFile = null;
+
+  setTimeout(() => { showView('home'); renderGrid(); }, 800);
+}
+
+// ══════════════════════════════════════════
+// VIEW NAVIGATION
+// ══════════════════════════════════════════
+function showView(name, el) {
+  document.getElementById('player-view').style.display = 'none';
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('upload-view').classList.remove('active');
+
+  if (name === 'home') {
+    document.getElementById('home-view').style.display = 'flex';
+    renderGrid();
+  } else if (name === 'upload') {
+    document.getElementById('upload-view').classList.add('active');
+    document.getElementById('home-view').style.display = 'none';
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════
+// SUBSCRIBE
+// ══════════════════════════════════════════
+mediaApp.subscribe(() => {
+  document.getElementById('log-badge').textContent = mediaApp.log.length;
+});
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+const ab = document.getElementById('self-avatar-btn');
+ab.textContent = initials(SELF.name);
+ab.style.cssText += `background:${SELF.color}22;border:2px solid ${SELF.color}66;color:${SELF.color};`;
+
+seedDemo();
+renderGrid();
+</script>
+</body>
+</html>

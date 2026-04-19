@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity — Sovereign Collaboration</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --void:    #06060a;
+    --panel:   #0d0d14;
+    --card:    #12121a;
+    --card2:   #1a1a25;
+    --border:  rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.16);
+    --text:    #f0f0ff;        /* was #d4d4e8 — now near-white */
+    --muted:   #8888aa;        /* was #5a5a7a — brighter muted */
+    --electric:#00e5ff;        /* slightly brighter cyan */
+    --violet:  #a78bfa;        /* brighter purple */
+    --emerald: #34d399;
+    --amber:   #fbbf24;
+    --rose:    #fb7185;
+    --glow-blue: 0 0 24px rgba(0,229,255,0.15);
+  }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--void);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 15px;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.012) 2px, rgba(0,0,0,0.012) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    border-bottom: 1px solid var(--border2);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+
+  .logo-section {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 24px;
+    border-right: 1px solid var(--border);
+    height: 100%;
+    min-width: 220px;
+  }
+
+  .logo-hex {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--electric), var(--violet));
+    clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    color: var(--void);
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .logo-text { font-weight: 700; font-size: 17px; letter-spacing: -0.3px; color: var(--text); }
+  .logo-sub {
+    font-size: 10px; font-family: 'Space Mono', monospace; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase; display: block; line-height: 1; margin-top: 2px;
+  }
+
+  .topbar-center {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 20px; flex: 1;
+  }
+
+  .project-name { font-size: 15px; font-weight: 600; color: var(--text); cursor: pointer; }
+  .slash { color: var(--muted); margin: 0 4px; font-size: 15px; }
+
+  .view-pills {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+    margin-left: 8px;
+  }
+  .view-pill {
+    padding: 6px 16px;
+    font-size: 13px; font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-right: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .view-pill:last-child { border-right: none; }
+  .view-pill:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .view-pill.active { background: rgba(0,229,255,0.1); color: var(--electric); }
+
+  .topbar-right {
+    display: flex; align-items: center;
+    margin-left: auto;
+    border-left: 1px solid var(--border);
+    height: 100%;
+  }
+
+  .identity-section {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px;
+    border-right: 1px solid var(--border);
+    height: 100%;
+  }
+
+  .identity-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .identity-name { font-weight: 600; color: var(--text); line-height: 1.3; font-size: 14px; }
+  .identity-addr { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  .network-section {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 16px; height: 100%;
+  }
+  .net-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-family: 'Space Mono', monospace;
+    color: var(--muted); font-weight: 700;
+  }
+  .net-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── PROVIDER PILL ── */
+  .provider-pill {
+    display: flex; align-items: center; gap: 8px;
+    margin-left: 12px; margin-right: 12px;
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--electric);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .provider-pill:hover { border-color: var(--electric); background: rgba(0,229,255,0.08); }
+  .provider-pill .arrow { font-size: 10px; color: var(--muted); }
+
+  /* ── BOARD WRAP ── */
+  .board-wrap {
+    flex: 1; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  .board-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+
+  .toolbar-action {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .toolbar-action:hover { border-color: var(--border2); color: var(--text); }
+  .toolbar-action.primary {
+    background: linear-gradient(135deg, rgba(0,229,255,0.12), rgba(167,139,250,0.12));
+    border-color: rgba(0,229,255,0.35);
+    color: var(--electric);
+    font-weight: 700;
+  }
+  .toolbar-action.ai-btn {
+    background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(0,229,255,0.08));
+    border-color: rgba(167,139,250,0.4);
+    color: var(--violet);
+    font-weight: 700;
+  }
+  .toolbar-action.ai-btn:hover { border-color: var(--violet); color: #c4b5fd; }
+
+  .board-meta {
+    display: flex; align-items: center; gap: 12px;
+    margin-left: auto;
+    font-size: 13px; font-family: 'Space Mono', monospace;
+    color: var(--muted); font-weight: 700;
+  }
+
+  /* ── COLUMNS ── */
+  .board-columns {
+    flex: 1; overflow-x: auto; overflow-y: hidden;
+    display: flex; gap: 16px; padding: 20px;
+    align-items: start;
+  }
+
+  .board-col {
+    min-width: 290px; width: 290px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    max-height: calc(100vh - 210px);
+    flex-shrink: 0;
+  }
+
+  .col-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .col-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .col-title { font-size: 15px; font-weight: 700; flex: 1; color: var(--text); }
+  .col-count {
+    padding: 2px 9px;
+    background: var(--card2);
+    border-radius: 10px;
+    font-size: 12px; font-family: 'Space Mono', monospace;
+    color: var(--muted); font-weight: 700;
+  }
+
+  .col-cards {
+    flex: 1; overflow-y: auto;
+    padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .col-add-btn {
+    margin: 8px 10px;
+    padding: 8px;
+    border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 7px;
+    color: var(--muted);
+    font-size: 13px; font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .col-add-btn:hover { border-color: var(--electric); color: var(--electric); background: rgba(0,229,255,0.05); }
+
+  /* ── TASK CARDS ── */
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    animation: cardIn 0.2s ease;
+  }
+  @keyframes cardIn { from { opacity:0; transform: translateY(-4px); } }
+  .task-card:hover { border-color: var(--border2); box-shadow: var(--glow-blue); }
+
+  .task-title { font-size: 15px; font-weight: 600; line-height: 1.45; margin-bottom: 10px; color: var(--text); }
+  .task-meta  { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .task-tag {
+    padding: 3px 8px; border-radius: 5px;
+    font-size: 12px; font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+  .task-author {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-family: 'Space Mono', monospace; color: var(--muted); font-weight: 600;
+  }
+  .task-author-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700;
+  }
+  .task-log-hash {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    display: flex; align-items: center; gap: 5px;
+    font-weight: 600;
+  }
+
+  /* ── ACTIVITY FEED ── */
+  .activity-panel {
+    width: 270px;
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+  .activity-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-family: 'Space Mono', monospace;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); font-weight: 700;
+  }
+  .activity-feed {
+    flex: 1; overflow-y: auto;
+    padding: 10px; display: flex; flex-direction: column; gap: 0;
+  }
+  .activity-item {
+    padding: 9px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    animation: slideRight 0.2s ease;
+  }
+  @keyframes slideRight { from { opacity:0; transform: translateX(4px); } }
+  .activity-row {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; line-height: 1.4;
+  }
+  .activity-ts {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 600;
+  }
+  .activity-event-type {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    margin-top: 4px; display: inline-block;
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    padding: 5px 20px;
+    background: rgba(0,0,0,0.6);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+    font-size: 12px; font-family: 'Space Mono', monospace;
+    color: var(--muted); font-weight: 600;
+    flex-shrink: 0;
+  }
+  .sb-item { display: flex; align-items: center; gap: 5px; }
+  .sb-val { color: var(--electric); font-weight: 700; }
+  .sb-hash { color: var(--violet); font-size: 11px; font-weight: 700; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(6,6,10,0.88);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    width: 500px; max-width: 95vw;
+    box-shadow: 0 28px 72px rgba(0,0,0,0.75);
+  }
+
+  .modal-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; flex: 1; color: var(--text); }
+  .modal-close { color: var(--muted); cursor: pointer; font-size: 22px; line-height: 1; transition: color 0.15s; }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+
+  .field-label {
+    font-size: 12px; font-family: 'Space Mono', monospace;
+    color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 7px; font-weight: 700;
+  }
+
+  input[type="text"], input[type="password"], select, textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 500;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus { border-color: var(--electric); }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  select option { background: var(--card); }
+
+  .modal-footer {
+    padding: 16px 22px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  .modal-btn {
+    padding: 9px 20px;
+    border-radius: 7px;
+    border: 1px solid var(--border2);
+    background: var(--card2);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-btn:hover { background: var(--card); color: var(--text); }
+  .modal-btn.primary {
+    background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(167,139,250,0.15));
+    border-color: rgba(0,229,255,0.45);
+    color: var(--electric);
+  }
+  .modal-btn.primary:hover { background: rgba(0,229,255,0.22); }
+
+  /* ── AI PANEL (slide-in) ── */
+  .ai-panel {
+    position: fixed;
+    top: 56px; right: 0;
+    width: 400px;
+    height: calc(100vh - 56px - 33px);
+    background: #0a0a12;
+    border-left: 1px solid rgba(167,139,250,0.3);
+    display: flex; flex-direction: column;
+    z-index: 50;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.6);
+  }
+  .ai-panel.open { transform: translateX(0); }
+
+  .ai-panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(167,139,250,0.2);
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .ai-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--electric), var(--violet));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--void); flex-shrink: 0;
+  }
+  .ai-panel-title { font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
+  .ai-model-badge {
+    padding: 3px 10px;
+    background: var(--card2);
+    border-radius: 5px;
+    font-size: 12px; font-family: 'Space Mono', monospace; font-weight: 700;
+    color: var(--violet);
+    border: 1px solid rgba(167,139,250,0.3);
+  }
+  .ai-panel-close {
+    color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1;
+    transition: color 0.15s; margin-left: 6px;
+  }
+  .ai-panel-close:hover { color: var(--text); }
+
+  .ai-messages {
+    flex: 1; overflow-y: auto;
+    padding: 16px; display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .ai-msg { animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(4px); } }
+
+  .ai-msg-label {
+    font-size: 12px; font-family: 'Space Mono', monospace;
+    color: var(--muted); margin-bottom: 5px; font-weight: 700;
+  }
+  .ai-msg-body {
+    font-size: 15px; line-height: 1.75; color: var(--text);
+  }
+  .ai-msg-body.user {
+    background: rgba(167,139,250,0.1);
+    border-left: 3px solid var(--violet);
+    border-radius: 0 8px 8px 8px;
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+  .ai-msg-body.assistant {
+    font-weight: 400; white-space: pre-wrap;
+  }
+
+  .ai-thinking {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--amber);
+    font-family: 'Space Mono', monospace; font-weight: 700;
+    padding: 8px 0;
+  }
+  .dots span { animation: dot 1.4s infinite; opacity: 0; font-size: 16px; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  .ai-input-area {
+    padding: 14px;
+    border-top: 1px solid rgba(167,139,250,0.2);
+    display: flex; flex-direction: column; gap: 10px;
+    flex-shrink: 0;
+  }
+  .ai-textarea {
+    width: 100%; min-height: 80px;
+    background: var(--card2);
+    border: 1px solid rgba(167,139,250,0.25);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 500;
+    color: var(--text);
+    resize: none; outline: none; transition: border-color 0.15s;
+    line-height: 1.6;
+  }
+  .ai-textarea:focus { border-color: var(--violet); }
+  .ai-textarea::placeholder { color: var(--muted); }
+
+  .ai-send-row { display: flex; justify-content: space-between; align-items: center; }
+  .ai-hint { font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; font-weight: 600; }
+  .ai-send-btn {
+    padding: 9px 22px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--electric), var(--violet));
+    border: none; color: var(--void);
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .ai-send-btn:hover { opacity: 0.88; }
+  .ai-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ── PROVIDER CONFIG MODAL ── */
+  .provider-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 18px;
+  }
+  .provider-card {
+    border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    cursor: pointer; transition: all 0.15s;
+    background: var(--card);
+  }
+  .provider-card:hover { border-color: rgba(0,229,255,0.3); background: var(--card2); }
+  .provider-card.selected { border-color: var(--electric); background: rgba(0,229,255,0.08); }
+  .provider-card-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .provider-card-desc { font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; font-weight: 600; }
+  .provider-card .prov-icon { font-size: 20px; margin-bottom: 6px; }
+
+  #ollama-models-hint {
+    font-size: 12px; color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-top: 6px; min-height: 18px; font-weight: 600;
+  }
+
+  /* ── LOG / PROTOCOL VIEWS ── */
+  #log-view, #protocol-view { background: var(--void); }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- PROVIDER CONFIG MODAL -->
+<div class="modal-overlay" id="provider-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">AI Provider</div>
+      <div class="modal-close" onclick="closeProviderModal()">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="provider-grid">
+        <div class="provider-card selected" data-provider="ollama" onclick="selectProvider('ollama')">
+          <div class="prov-icon">🦙</div>
+          <div class="provider-card-name">Ollama</div>
+          <div class="provider-card-desc">Local · private · free</div>
+        </div>
+        <div class="provider-card" data-provider="anthropic" onclick="selectProvider('anthropic')">
+          <div class="prov-icon">✦</div>
+          <div class="provider-card-name">Anthropic</div>
+          <div class="provider-card-desc">Claude API · cloud</div>
+        </div>
+        <div class="provider-card" data-provider="openai" onclick="selectProvider('openai')">
+          <div class="prov-icon">⬡</div>
+          <div class="provider-card-name">OpenAI</div>
+          <div class="provider-card-desc">GPT API · cloud</div>
+        </div>
+        <div class="provider-card" data-provider="custom" onclick="selectProvider('custom')">
+          <div class="prov-icon">⚙️</div>
+          <div class="provider-card-name">Custom</div>
+          <div class="provider-card-desc">Any OpenAI-compat endpoint</div>
+        </div>
+      </div>
+
+      <div id="settings-ollama">
+        <div><div class="field-label">Ollama Base URL</div>
+          <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"/></div>
+        <div style="margin-top:14px;"><div class="field-label">Model Name</div>
+          <input type="text" id="ollama-model" value="llama3" placeholder="llama3, mistral, phi3, gemma…"/>
+          <div id="ollama-models-hint">Click "Detect" to list running models</div></div>
+      </div>
+
+      <div id="settings-anthropic" style="display:none;">
+        <div><div class="field-label">API Key</div>
+          <input type="password" id="anthropic-key" placeholder="sk-ant-…"/></div>
+        <div style="margin-top:14px;"><div class="field-label">Model</div>
+          <select id="anthropic-model">
+            <option value="claude-sonnet-4-20250514">claude-sonnet-4 (latest)</option>
+            <option value="claude-haiku-4-5-20251001" selected>claude-haiku-4-5</option>
+            <option value="claude-opus-4-5-20251101">claude-opus-4-5</option>
+          </select></div>
+      </div>
+
+      <div id="settings-openai" style="display:none;">
+        <div><div class="field-label">API Key</div>
+          <input type="password" id="openai-key" placeholder="sk-…"/></div>
+        <div style="margin-top:14px;"><div class="field-label">Model</div>
+          <select id="openai-model">
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+            <option value="gpt-4-turbo">gpt-4-turbo</option>
+            <option value="o1-mini">o1-mini</option>
+          </select></div>
+      </div>
+
+      <div id="settings-custom" style="display:none;">
+        <div><div class="field-label">Base URL (OpenAI-compat)</div>
+          <input type="text" id="custom-url" placeholder="https://your-api.example.com/v1"/></div>
+        <div style="margin-top:14px;"><div class="field-label">Model</div>
+          <input type="text" id="custom-model" placeholder="model-name"/></div>
+        <div style="margin-top:14px;"><div class="field-label">API Key (optional)</div>
+          <input type="password" id="custom-key" placeholder="leave blank if not needed"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" id="detect-btn" onclick="detectOllamaModels()">🔍 Detect</button>
+      <button class="modal-btn" onclick="closeProviderModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveProviderSettings()">→ Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW TASK MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Task</div>
+      <div class="modal-close" onclick="closeModal()">×</div>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">Title</div>
+        <input type="text" id="task-title-input" placeholder="What needs to be done?" />
+      </div>
+      <div>
+        <div class="field-label">Column</div>
+        <select id="task-col-select">
+          <option value="BACKLOG">Backlog</option>
+          <option value="TODO" selected>To Do</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="REVIEW">Review</option>
+          <option value="DONE">Done</option>
+        </select>
+      </div>
+      <div>
+        <div class="field-label">Tag</div>
+        <select id="task-tag-select">
+          <option value="feature">feature</option>
+          <option value="bug">bug</option>
+          <option value="infra">infra</option>
+          <option value="crypto">crypto</option>
+          <option value="protocol">protocol</option>
+          <option value="ui">ui</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="createTask()">→ Emit Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI PANEL -->
+<div class="ai-panel" id="ai-panel">
+  <div class="ai-panel-header">
+    <div class="ai-icon">✦</div>
+    <div class="ai-panel-title">AI Assistant</div>
+    <div class="ai-model-badge" id="ai-model-badge">llama3</div>
+    <div class="ai-panel-close" onclick="toggleAIPanel()">×</div>
+  </div>
+  <div class="ai-messages" id="ai-messages">
+    <div style="padding:20px 0;text-align:center;">
+      <div style="font-size:28px;margin-bottom:10px;">🦙</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sovereign AI</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.8;font-family:'Space Mono',monospace;">Local Ollama · or any API<br>Ask about tasks, the board, or anything.</div>
+    </div>
+  </div>
+  <div class="ai-input-area">
+    <textarea class="ai-textarea" id="ai-input" placeholder="Ask about the board, a task, protocol…" rows="3"></textarea>
+    <div class="ai-send-row">
+      <span class="ai-hint" id="ai-status">⌘↵ to send</span>
+      <button class="ai-send-btn" id="ai-send-btn" onclick="sendAI()">Send ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo-section">
+    <div class="logo-hex">T₃</div>
+    <div>
+      <div class="logo-text">Trinity</div>
+      <span class="logo-sub">Sovereign Stack</span>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <span class="project-name">Mission Alpha</span>
+    <span class="slash">/</span>
+    <span style="font-size:15px;color:var(--muted);font-weight:600;">Sprint 1</span>
+    <div class="view-pills" style="margin-left:16px;">
+      <div class="view-pill active" onclick="setView('board',this)">Board</div>
+      <div class="view-pill" onclick="setView('log',this)">Log</div>
+      <div class="view-pill" onclick="setView('protocol',this)">Protocol</div>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="provider-pill" onclick="openProviderModal()" title="Configure AI provider">
+      <span id="provider-label">🦙 Ollama</span>
+      <span class="arrow">▾</span>
+    </div>
+    <div class="identity-section">
+      <div class="identity-avatar" id="my-avatar" style="background:linear-gradient(135deg,var(--electric),var(--violet));"></div>
+      <div>
+        <div class="identity-name" id="my-name">Loading…</div>
+        <div class="identity-addr" id="my-addr">0x000000</div>
+      </div>
+    </div>
+    <div class="network-section">
+      <div class="net-indicator">
+        <div class="net-dot" style="background:var(--emerald);animation:throb 2s infinite;"></div>
+        <span>P2P</span>
+      </div>
+      <div class="net-indicator" style="margin-left:8px;">
+        <div class="net-dot" id="quorum-dot" style="background:var(--amber);"></div>
+        <span id="quorum-label">1/1</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BOARD VIEW -->
+<div id="board-view" style="display:flex;flex:1;overflow:hidden;">
+  <div class="board-wrap">
+    <div class="board-toolbar">
+      <button class="toolbar-action primary" onclick="openNewTask()">+ New Task</button>
+      <button class="toolbar-action" onclick="openNewTask('BACKLOG')">Backlog →</button>
+      <button class="toolbar-action ai-btn" onclick="toggleAIPanel()">✦ AI Assistant</button>
+      <div class="board-meta">
+        <span>quorum: <span class="sb-val" id="quorum-size">1/1</span></span>
+        <span>·</span>
+        <span>log: <span class="sb-val" id="log-size">0</span></span>
+        <span>·</span>
+        <span id="chain-hash" class="sb-hash">hash: —</span>
+      </div>
+    </div>
+    <div class="board-columns" id="board-columns"></div>
+  </div>
+  <div class="activity-panel">
+    <div class="activity-header">Activity Feed</div>
+    <div class="activity-feed" id="activity-feed">
+      <div style="padding:14px;text-align:center;color:var(--muted);font-size:13px;font-family:'Space Mono',monospace;font-weight:600;">— no events yet —</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG VIEW -->
+<div id="log-view" style="display:none;flex:1;overflow-y:auto;padding:28px 36px;">
+  <div style="max-width:920px;margin:0 auto;">
+    <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--electric);margin-bottom:22px;letter-spacing:2px;font-weight:700;">// SOVEREIGN EVENT LOG — append-only, hash-chained</div>
+    <div id="log-entries"></div>
+  </div>
+</div>
+
+<!-- PROTOCOL VIEW -->
+<div id="protocol-view" style="display:none;flex:1;overflow-y:auto;padding:28px 36px;">
+  <div style="max-width:920px;margin:0 auto;">
+    <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--violet);margin-bottom:26px;letter-spacing:2px;font-weight:700;">// TRINITY CORE — SOVEREIGN NETWORK PROTOCOL</div>
+    <div id="protocol-content"></div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-item">TRINITY <span class="sb-val" style="margin-left:4px;">v3.0</span></div>
+  <div class="sb-item">transport: <span class="sb-val">BroadcastChannel + P2P</span></div>
+  <div class="sb-item">identity: <span class="sb-val" id="sb-identity">secp256k1</span></div>
+  <div class="sb-item">log: <span class="sb-val" id="sb-events">0</span> events</div>
+  <div class="sb-item">hash: <span class="sb-hash" id="sb-hash">—</span></div>
+  <div style="margin-left:auto;" class="sb-item">AGPL-3.0-or-later · © 2026 James Chapman (XheCarpenXer)</div>
+</div>
+
+<style>
+@keyframes throb { 50% { opacity: 0.3; } }
+</style>
+
+<script>
+// ═══════════════════════════════════════
+// TRINITY CORE
+// ═══════════════════════════════════════
+
+function createApp({ init, reduce }) {
+  let state = init;
+  const listeners = [], log = [];
+  function emit(event) {
+    const stamped = { ...event, _seq: log.length, _ts: event._ts ?? Date.now(), _id: event._id ?? crypto.randomUUID() };
+    log.push(stamped);
+    state = reduce(state, stamped);
+    listeners.forEach(l => l(state, stamped));
+  }
+  function subscribe(fn) { listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i !== -1) listeners.splice(i, 1); }; }
+  function replay(events) { const seen = new Set(log.map(e => e._id)); events.filter(e => !seen.has(e._id)).forEach(e => emit(e)); }
+  return { emit, subscribe, replay, getState: () => state, get log() { return log; } };
+}
+
+// ═══════════════════════════════════════
+// IDENTITY
+// ═══════════════════════════════════════
+
+function shortAddr() {
+  const bytes = new Uint8Array(4);
+  crypto.getRandomValues(bytes);
+  return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+let myIdentity = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('trinity-identity') || 'null');
+    if (saved?.id && saved?.name) return saved;
+  } catch(e) {}
+  const names = ['Void Walker','Quorum Node','Cipher Fox','Hash Raven','Merkle Wolf','Zero Peer','Echo Shard','Block Witch'];
+  const id = { id: shortAddr(), name: names[Math.floor(Math.random()*names.length)], canSign: true };
+  localStorage.setItem('trinity-identity', JSON.stringify(id));
+  return id;
+})();
+
+// ═══════════════════════════════════════
+// COLLAB APP
+// ═══════════════════════════════════════
+
+const COLUMNS = [
+  { id: 'BACKLOG',     title: 'Backlog',      color: '#8888aa' },
+  { id: 'TODO',        title: 'To Do',        color: '#a78bfa' },
+  { id: 'IN_PROGRESS', title: 'In Progress',  color: '#00e5ff' },
+  { id: 'REVIEW',      title: 'Review',       color: '#fbbf24' },
+  { id: 'DONE',        title: 'Done',         color: '#34d399' },
+];
+
+const TAG_COLORS = {
+  feature:  { bg: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: 'rgba(167,139,250,0.3)' },
+  bug:      { bg: 'rgba(251,113,133,0.15)', color: '#fb7185', border: 'rgba(251,113,133,0.3)' },
+  infra:    { bg: 'rgba(0,229,255,0.1)',    color: '#00e5ff', border: 'rgba(0,229,255,0.25)' },
+  crypto:   { bg: 'rgba(52,211,153,0.1)',   color: '#34d399', border: 'rgba(52,211,153,0.25)' },
+  protocol: { bg: 'rgba(251,191,36,0.1)',   color: '#fbbf24', border: 'rgba(251,191,36,0.25)' },
+  ui:       { bg: 'rgba(96,165,250,0.1)',   color: '#60a5fa', border: 'rgba(96,165,250,0.25)' },
+};
+
+const colabApp = createApp({
+  init: { tasks: {}, peers: {} },
+  reduce: (state, event) => {
+    switch(event.type) {
+      case 'TASK_CREATED': return { ...state, tasks: { ...state.tasks, [event.id]: {
+        id: event.id, title: event.title, col: event.col || 'TODO', tag: event.tag || 'feature',
+        author: event.author, authorName: event.authorName, createdAt: event._ts, hash: event._id,
+      }}};
+      case 'TASK_MOVED': {
+        const t = state.tasks[event.id];
+        if (!t) return state;
+        return { ...state, tasks: { ...state.tasks, [event.id]: { ...t, col: event.toCol, movedAt: event._ts } } };
+      }
+      case 'TASK_COMPLETED': {
+        const t = state.tasks[event.id];
+        if (!t) return state;
+        return { ...state, tasks: { ...state.tasks, [event.id]: { ...t, col: 'DONE', completedAt: event._ts } } };
+      }
+      case 'PEER_JOINED': return { ...state, peers: { ...state.peers, [event.peerId]: { peerId: event.peerId, name: event.name, ts: event._ts } } };
+      default: return state;
+    }
+  }
+});
+
+// P2P via BroadcastChannel
+const bc = new BroadcastChannel('trinity-collab-v1');
+const _emit = colabApp.emit;
+bc.onmessage = (e) => { if (e.data && !e.data._ephemeral) _emit.call(colabApp, e.data); };
+colabApp.emit = (event) => { _emit.call(colabApp, event); bc.postMessage(colabApp.log[colabApp.log.length-1]); };
+
+// Persist
+try { const s = JSON.parse(localStorage.getItem('trinity-collab-log') || '[]'); if (s.length) colabApp.replay(s); } catch(e) {}
+colabApp.subscribe(() => { try { localStorage.setItem('trinity-collab-log', JSON.stringify(colabApp.log)); } catch(e) {} });
+
+function fnv32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+// ═══════════════════════════════════════
+// PROVIDER CONFIG
+// ═══════════════════════════════════════
+
+const PROV_LABELS = { ollama: '🦙 Ollama', anthropic: '✦ Anthropic', openai: '⬡ OpenAI', custom: '⚙️ Custom' };
+let activeProvider = 'ollama';
+let providerConfig = {
+  ollama:    { url: 'http://localhost:11434', model: 'llama3' },
+  anthropic: { key: '', model: 'claude-haiku-4-5-20251001' },
+  openai:    { key: '', model: 'gpt-4o-mini' },
+  custom:    { url: '', model: '', key: '' },
+};
+try {
+  const sc = JSON.parse(localStorage.getItem('trinity-provider-config') || '{}');
+  providerConfig = { ...providerConfig, ...sc };
+  activeProvider = localStorage.getItem('trinity-active-provider') || 'ollama';
+} catch(e) {}
+
+function openProviderModal() {
+  document.getElementById('ollama-url').value   = providerConfig.ollama.url;
+  document.getElementById('ollama-model').value = providerConfig.ollama.model;
+  document.getElementById('anthropic-key').value   = providerConfig.anthropic.key;
+  document.getElementById('anthropic-model').value = providerConfig.anthropic.model;
+  document.getElementById('openai-key').value   = providerConfig.openai.key;
+  document.getElementById('openai-model').value = providerConfig.openai.model;
+  document.getElementById('custom-url').value   = providerConfig.custom.url;
+  document.getElementById('custom-model').value = providerConfig.custom.model;
+  document.getElementById('custom-key').value   = providerConfig.custom.key;
+  document.getElementById('ollama-models-hint').textContent = 'Click "Detect" to list running models';
+  selectProvider(activeProvider);
+  document.getElementById('provider-modal').classList.add('open');
+}
+
+function closeProviderModal() { document.getElementById('provider-modal').classList.remove('open'); }
+
+function selectProvider(name) {
+  activeProvider = name;
+  document.querySelectorAll('.provider-card').forEach(c => c.classList.toggle('selected', c.dataset.provider === name));
+  ['ollama','anthropic','openai','custom'].forEach(p => {
+    document.getElementById('settings-' + p).style.display = p === name ? 'block' : 'none';
+  });
+  document.getElementById('detect-btn').style.display = name === 'ollama' ? '' : 'none';
+}
+
+function saveProviderSettings() {
+  providerConfig.ollama.url    = document.getElementById('ollama-url').value.trim();
+  providerConfig.ollama.model  = document.getElementById('ollama-model').value.trim();
+  providerConfig.anthropic.key   = document.getElementById('anthropic-key').value.trim();
+  providerConfig.anthropic.model = document.getElementById('anthropic-model').value;
+  providerConfig.openai.key   = document.getElementById('openai-key').value.trim();
+  providerConfig.openai.model = document.getElementById('openai-model').value;
+  providerConfig.custom.url   = document.getElementById('custom-url').value.trim();
+  providerConfig.custom.model = document.getElementById('custom-model').value.trim();
+  providerConfig.custom.key   = document.getElementById('custom-key').value.trim();
+  localStorage.setItem('trinity-provider-config', JSON.stringify(providerConfig));
+  localStorage.setItem('trinity-active-provider', activeProvider);
+  document.getElementById('provider-label').textContent = PROV_LABELS[activeProvider];
+  const model = providerConfig[activeProvider].model || activeProvider;
+  document.getElementById('ai-model-badge').textContent = model;
+  closeProviderModal();
+}
+
+async function detectOllamaModels() {
+  const url = document.getElementById('ollama-url').value.trim() || 'http://localhost:11434';
+  const hint = document.getElementById('ollama-models-hint');
+  hint.style.color = 'var(--muted)';
+  hint.textContent = 'Connecting…';
+  try {
+    const res = await fetch(url + '/api/tags');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const models = (data.models || []).map(m => m.name);
+    if (models.length === 0) {
+      hint.style.color = 'var(--amber)';
+      hint.textContent = 'No models found — run: ollama pull llama3';
+    } else {
+      hint.innerHTML = '<span style="color:var(--emerald);font-weight:700;">Found: </span>' +
+        models.map(m => `<span style="color:var(--electric);cursor:pointer;font-weight:700;" onclick="document.getElementById('ollama-model').value='${m}'">${m}</span>`).join(' · ');
+      if (!document.getElementById('ollama-model').value) document.getElementById('ollama-model').value = models[0];
+    }
+  } catch(e) {
+    hint.style.color = 'var(--rose)';
+    hint.textContent = 'Cannot reach Ollama — is it running?';
+  }
+}
+
+document.getElementById('provider-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeProviderModal(); });
+
+// ═══════════════════════════════════════
+// AI CALL — multi-provider
+// ═══════════════════════════════════════
+
+async function callAI(messages, systemPrompt) {
+  const cfg = providerConfig[activeProvider];
+
+  if (activeProvider === 'ollama') {
+    const res = await fetch((cfg.url || 'http://localhost:11434').replace(/\/$/, '') + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: cfg.model, messages: [{ role: 'system', content: systemPrompt }, ...messages], stream: false })
+    });
+    if (!res.ok) throw new Error('Ollama error ' + res.status);
+    const d = await res.json();
+    return d.message?.content || d.response || '';
+  }
+
+  if (activeProvider === 'anthropic') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      body: JSON.stringify({ model: cfg.model, max_tokens: 1024, system: systemPrompt, messages })
+    });
+    if (!res.ok) throw new Error('Anthropic error ' + res.status);
+    return (await res.json()).content?.[0]?.text || '';
+  }
+
+  if (activeProvider === 'openai' || activeProvider === 'custom') {
+    const base = activeProvider === 'openai' ? 'https://api.openai.com/v1' : cfg.url.replace(/\/$/, '');
+    const key  = cfg.key;
+    const headers = { 'Content-Type': 'application/json' };
+    if (key) headers['Authorization'] = 'Bearer ' + key;
+    const res = await fetch(base + '/chat/completions', {
+      method: 'POST', headers,
+      body: JSON.stringify({ model: cfg.model, messages: [{ role: 'system', content: systemPrompt }, ...messages], max_tokens: 1024 })
+    });
+    if (!res.ok) throw new Error((activeProvider === 'custom' ? 'Custom' : 'OpenAI') + ' error ' + res.status);
+    return (await res.json()).choices?.[0]?.message?.content || '';
+  }
+
+  throw new Error('Unknown provider');
+}
+
+// ═══════════════════════════════════════
+// AI PANEL STATE
+// ═══════════════════════════════════════
+
+let aiHistory = [];
+let aiThinking = false;
+
+function toggleAIPanel() {
+  document.getElementById('ai-panel').classList.toggle('open');
+}
+
+async function sendAI() {
+  const input = document.getElementById('ai-input');
+  const prompt = input.value.trim();
+  if (!prompt || aiThinking) return;
+  input.value = '';
+  aiThinking = true;
+  document.getElementById('ai-send-btn').disabled = true;
+  document.getElementById('ai-status').textContent = 'calling ' + activeProvider + '…';
+
+  aiHistory.push({ role: 'user', content: prompt, ts: Date.now() });
+  renderAIMessages();
+
+  const state = colabApp.getState();
+  const taskSummary = Object.values(state.tasks).slice(0,8).map(t => `- [${t.col}] ${t.title} (${t.tag})`).join('\n');
+  const systemPrompt = `You are an AI assistant embedded in Trinity, a sovereign collaborative task board. Help users manage tasks, think through protocol design, and understand the board state. Be concise and direct.\n\nCurrent board state:\n${taskSummary || 'No tasks yet.'}`;
+  const messages = aiHistory.filter(m => m.role === 'user' || m.role === 'assistant').slice(-8).map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const output = await callAI(messages, systemPrompt);
+    aiHistory.push({ role: 'assistant', content: output, ts: Date.now() });
+  } catch(err) {
+    aiHistory.push({ role: 'error', content: err.message, ts: Date.now() });
+  } finally {
+    aiThinking = false;
+    document.getElementById('ai-send-btn').disabled = false;
+    document.getElementById('ai-status').textContent = '⌘↵ to send';
+    renderAIMessages();
+  }
+}
+
+function renderAIMessages() {
+  const el = document.getElementById('ai-messages');
+  if (aiHistory.length === 0) {
+    el.innerHTML = `<div style="padding:20px 0;text-align:center;">
+      <div style="font-size:28px;margin-bottom:10px;">🦙</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Sovereign AI</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.8;font-family:'Space Mono',monospace;">Local Ollama · or any API<br>Ask about tasks, the board, or anything.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = aiHistory.map(m => {
+    if (m.role === 'user') return `
+      <div class="ai-msg">
+        <div class="ai-msg-label">you · ${relTime(m.ts)}</div>
+        <div class="ai-msg-body user">${m.content}</div>
+      </div>`;
+    if (m.role === 'assistant') return `
+      <div class="ai-msg">
+        <div class="ai-msg-label">✦ trinity ai · ${relTime(m.ts)}</div>
+        <div class="ai-msg-body assistant">${m.content}</div>
+      </div>`;
+    return `<div class="ai-msg"><div class="ai-msg-body" style="color:var(--rose);font-family:'Space Mono',monospace;font-size:13px;font-weight:700;">⚠ error: ${m.content}</div></div>`;
+  }).join('') + (aiThinking ? `<div class="ai-thinking"><div class="net-dot" style="background:var(--amber);animation:throb 0.8s infinite;"></div> thinking <div class="dots"><span>.</span><span>.</span><span>.</span></div></div>` : '');
+  el.scrollTop = el.scrollHeight;
+}
+
+document.getElementById('ai-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendAI();
+});
+
+// ═══════════════════════════════════════
+// UI
+// ═══════════════════════════════════════
+
+function updateUI(state, event) {
+  renderBoard(state);
+  if (event) addActivityItem(event, state);
+  updateStats(state);
+}
+
+function renderBoard(state) {
+  document.getElementById('board-columns').innerHTML = COLUMNS.map(c => {
+    const tasks = Object.values(state.tasks).filter(t => t.col === c.id);
+    return `
+      <div class="board-col">
+        <div class="col-header">
+          <div class="col-dot" style="background:${c.color};box-shadow:0 0 6px ${c.color}55;"></div>
+          <div class="col-title">${c.title}</div>
+          <div class="col-count">${tasks.length}</div>
+        </div>
+        <div class="col-cards">${tasks.map(t => renderTaskCard(t)).join('')}</div>
+        <div class="col-add-btn" onclick="openNewTask('${c.id}')">+ Add Task</div>
+      </div>`;
+  }).join('');
+}
+
+function renderTaskCard(t) {
+  const tc = TAG_COLORS[t.tag] || TAG_COLORS.feature;
+  const initials = t.authorName ? t.authorName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : '??';
+  const nextCol = COLUMNS[COLUMNS.findIndex(c=>c.id===t.col)+1];
+  return `
+    <div class="task-card">
+      <div class="task-title">${t.title}</div>
+      <div class="task-meta">
+        <div class="task-tag" style="background:${tc.bg};color:${tc.color};border:1px solid ${tc.border};">${t.tag}</div>
+        ${nextCol ? `<div class="task-tag" onclick="moveTask('${t.id}','${nextCol.id}')" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);cursor:pointer;font-weight:700;">→ ${nextCol.title}</div>` : ''}
+        <div class="task-author">
+          <div class="task-author-dot" style="background:${stringColor(t.author)};">${initials}</div>
+          <span>${t.authorName?.split(' ')[0] || t.author}</span>
+        </div>
+      </div>
+      <div class="task-log-hash">
+        <span style="color:var(--violet);">⬡</span>
+        ${t.hash?.slice(0,12) || '—'}
+        <span style="margin-left:auto;">${relTime(t.createdAt)}</span>
+      </div>
+    </div>`;
+}
+
+function addActivityItem(event, state) {
+  const feed = document.getElementById('activity-feed');
+  if (feed.textContent.includes('no events')) feed.innerHTML = '';
+  const colors = { TASK_CREATED:'#34d399', TASK_MOVED:'#00e5ff', TASK_COMPLETED:'#fbbf24', PEER_JOINED:'#a78bfa' };
+  const color = colors[event.type] || '#8888aa';
+  const label = { TASK_CREATED:`created "${(state.tasks[event.id]?.title||'').slice(0,20)}"`, TASK_MOVED:`moved → ${event.toCol}`, TASK_COMPLETED:`completed task`, PEER_JOINED:`joined as ${event.name}` }[event.type] || event.type;
+  const authorName = event.authorName || event.name || event.author?.slice(0,6) || '?';
+  const initials = authorName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const item = document.createElement('div');
+  item.className = 'activity-item';
+  item.innerHTML = `
+    <div class="activity-row">
+      <div class="task-author-dot" style="background:${stringColor(event.author||event.peerId||'')};flex-shrink:0;">${initials}</div>
+      <span style="color:var(--text);font-weight:600;">${authorName}</span>
+      <span style="color:var(--muted);">${label}</span>
+    </div>
+    <div class="activity-ts">#${event._seq} · ${relTime(event._ts)}</div>
+    <span class="activity-event-type" style="background:${color}18;color:${color};border:1px solid ${color}44;">${event.type}</span>`;
+  feed.insertBefore(item, feed.firstChild);
+  while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+}
+
+function updateStats(state) {
+  const hash = fnv32(JSON.stringify(colabApp.log));
+  document.getElementById('log-size').textContent = colabApp.log.length;
+  document.getElementById('chain-hash').textContent = 'hash: ' + hash;
+  document.getElementById('sb-events').textContent = colabApp.log.length;
+  document.getElementById('sb-hash').textContent = hash;
+  const pc = Object.keys(state.peers).length;
+  document.getElementById('quorum-label').textContent = `${pc}/${pc}`;
+  document.getElementById('quorum-size').textContent = `${pc}/${pc}`;
+}
+
+// ═══════════════════════════════════════
+// TASK OPERATIONS
+// ═══════════════════════════════════════
+
+function openNewTask(col) {
+  if (col) document.getElementById('task-col-select').value = col;
+  document.getElementById('task-modal').classList.add('open');
+  document.getElementById('task-title-input').focus();
+}
+
+function closeModal() {
+  document.getElementById('task-modal').classList.remove('open');
+  document.getElementById('task-title-input').value = '';
+}
+
+function createTask() {
+  const title = document.getElementById('task-title-input').value.trim();
+  if (!title) return;
+  colabApp.emit({ type:'TASK_CREATED', id:crypto.randomUUID(), title, col:document.getElementById('task-col-select').value, tag:document.getElementById('task-tag-select').value, author:myIdentity.id, authorName:myIdentity.name });
+  closeModal();
+}
+
+function moveTask(taskId, toCol) {
+  colabApp.emit({ type:'TASK_MOVED', id:taskId, toCol, author:myIdentity.id, authorName:myIdentity.name });
+}
+
+document.getElementById('task-title-input').addEventListener('keydown', e => { if(e.key==='Enter') createTask(); if(e.key==='Escape') closeModal(); });
+document.getElementById('task-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+// ═══════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════
+
+function setView(view, el) {
+  document.getElementById('board-view').style.display   = view === 'board'    ? 'flex' : 'none';
+  document.getElementById('log-view').style.display     = view === 'log'      ? 'flex' : 'none';
+  document.getElementById('protocol-view').style.display= view === 'protocol' ? 'flex' : 'none';
+  document.querySelectorAll('.view-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  if (view === 'log') renderLogView();
+  if (view === 'protocol') renderProtocolView();
+}
+
+function renderLogView() {
+  const colors = { TASK_CREATED:'#34d399', TASK_MOVED:'#00e5ff', PEER_JOINED:'#a78bfa', TASK_COMPLETED:'#fbbf24' };
+  document.getElementById('log-entries').innerHTML = colabApp.log.slice().reverse().map(e => {
+    const c = colors[e.type] || '#8888aa';
+    return `<div style="display:flex;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-family:'Space Mono',monospace;font-size:13px;font-weight:600;">
+      <span style="color:var(--muted);min-width:32px;">#${e._seq}</span>
+      <span style="color:${c};min-width:170px;">${e.type}</span>
+      <span style="color:var(--text);flex:1;">${e.title || e.toCol || e.name || ''}</span>
+      <span style="color:var(--violet);">${e._id.slice(0,16)}</span>
+      <span style="color:var(--muted);">${new Date(e._ts).toLocaleTimeString()}</span>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);text-align:center;padding:28px;font-family:Space Mono,monospace;font-size:14px;font-weight:600;">— empty log —</div>';
+}
+
+function renderProtocolView() {
+  const state = colabApp.getState();
+  const hash = fnv32(JSON.stringify(colabApp.log));
+  document.getElementById('protocol-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px;">
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;">
+        <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'Space Mono',monospace;font-weight:700;">Log Events</div>
+        <div style="font-size:36px;font-weight:700;color:var(--electric);">${colabApp.log.length}</div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;">
+        <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'Space Mono',monospace;font-weight:700;">Tasks</div>
+        <div style="font-size:36px;font-weight:700;color:var(--violet);">${Object.keys(state.tasks).length}</div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;">
+        <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'Space Mono',monospace;font-weight:700;">Chain Hash</div>
+        <div style="font-size:16px;font-weight:700;color:var(--emerald);margin-top:8px;">${hash}</div>
+      </div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:26px;margin-bottom:20px;">
+      <div style="font-size:13px;color:var(--electric);letter-spacing:2px;margin-bottom:18px;font-family:'Space Mono',monospace;font-weight:700;">// SOVEREIGN IDENTITY</div>
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:8px;font-family:'Space Mono',monospace;font-size:13px;line-height:2.2;font-weight:600;">
+        <span style="color:var(--muted);">address</span><span style="color:var(--text);">${myIdentity.id}</span>
+        <span style="color:var(--muted);">name</span><span style="color:var(--text);">${myIdentity.name}</span>
+        <span style="color:var(--muted);">canSign</span><span style="color:var(--emerald);">${myIdentity.canSign}</span>
+        <span style="color:var(--muted);">ai provider</span><span style="color:var(--electric);">${activeProvider} · ${providerConfig[activeProvider]?.model || '—'}</span>
+      </div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:26px;margin-bottom:20px;">
+      <div style="font-size:13px;color:var(--violet);letter-spacing:2px;margin-bottom:18px;font-family:'Space Mono',monospace;font-weight:700;">// DETERMINISTIC BOUNDARY</div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;line-height:2.2;color:var(--text);font-weight:600;">
+        <div style="color:var(--emerald);">DETERMINISTIC (pure, replayable, auditable):</div>
+        <div style="padding-left:18px;color:var(--muted);">createApp() — event log + reduce</div>
+        <div style="padding-left:18px;color:var(--muted);">fnv32() — hash chain</div>
+        <div style="padding-left:18px;color:var(--muted);">replay() — state reconstruction</div>
+        <br>
+        <div style="color:var(--amber);">NON-DETERMINISTIC (isolated, enters log via emit):</div>
+        <div style="padding-left:18px;color:var(--muted);">BroadcastChannel transport</div>
+        <div style="padding-left:18px;color:var(--muted);">localStorage persistence</div>
+        <div style="padding-left:18px;color:var(--muted);">AI API calls (Ollama / cloud)</div>
+      </div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:26px;">
+      <div style="font-size:13px;color:var(--amber);letter-spacing:2px;margin-bottom:18px;font-family:'Space Mono',monospace;font-weight:700;">// INVARIANTS</div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;line-height:2.2;color:var(--text);font-weight:600;">
+        <div><span style="color:var(--emerald);">✓</span> Sₙ = deriveState(log[0..n])</div>
+        <div><span style="color:var(--emerald);">✓</span> hash(Tᵢ) = fnv32(prevHash + type + payload)</div>
+        <div><span style="color:var(--emerald);">✓</span> log is append-only — never mutate history</div>
+        <div><span style="color:var(--emerald);">✓</span> replay(log) === getState() always</div>
+        <div><span style="color:var(--emerald);">✓</span> non-deterministic I/O enters only via emit()</div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+
+function stringColor(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h<<5)-h);
+  return `hsl(${h & 360}, 65%, 60%)`;
+}
+
+function relTime(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'now';
+  if (d < 3600000) return Math.floor(d/60000) + 'm';
+  if (d < 86400000) return Math.floor(d/3600000) + 'h';
+  return Math.floor(d/86400000) + 'd';
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+
+document.getElementById('my-name').textContent = myIdentity.name;
+document.getElementById('my-addr').textContent = myIdentity.id;
+document.getElementById('my-avatar').textContent = myIdentity.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+document.getElementById('provider-label').textContent = PROV_LABELS[activeProvider];
+document.getElementById('ai-model-badge').textContent = providerConfig[activeProvider]?.model || activeProvider;
+
+if (!colabApp.getState().peers[myIdentity.id]) {
+  colabApp.emit({ type:'PEER_JOINED', peerId:myIdentity.id, name:myIdentity.name, author:myIdentity.id, authorName:myIdentity.name });
+}
+
+if (Object.keys(colabApp.getState().tasks).length === 0) {
+  const seed = [
+    { title:'Implement secp256k1 identity proofs for signaling', col:'TODO', tag:'crypto' },
+    { title:'Add IndexedDB-backed event log persistence', col:'IN_PROGRESS', tag:'infra' },
+    { title:'CRDT tombstone pruning for long-lived rooms', col:'REVIEW', tag:'protocol' },
+    { title:'P2P gossip relay for >20 peer meshes', col:'BACKLOG', tag:'protocol' },
+    { title:'Planespace UI consolidation (flatten legacy trees)', col:'BACKLOG', tag:'ui' },
+    { title:'WebRTC DataChannel backpressure monitoring', col:'DONE', tag:'infra' },
+    { title:'Token-authenticated signaling room admission', col:'DONE', tag:'feature' },
+  ];
+  const authors = ['Void Walker','Quorum Node','Cipher Fox','Hash Raven'];
+  seed.forEach(t => { const name = authors[Math.floor(Math.random()*authors.length)]; colabApp.emit({ type:'TASK_CREATED', id:crypto.randomUUID(), ...t, author:shortAddr(), authorName:name }); });
+}
+
+colabApp.subscribe(updateUI);
+updateUI(colabApp.getState(), null);
+document.getElementById('activity-feed').innerHTML = '';
+</script>
+</body>
+</html>

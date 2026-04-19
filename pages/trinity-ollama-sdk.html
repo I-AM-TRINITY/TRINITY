@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity Ollama Multiplayer SDK</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --surface2: #1a1a1a;
+    --surface3: #2a2a2a;
+    --border: rgba(255,255,255,0.25);
+    --border2: rgba(255,255,255,0.35);
+    --text: #ffffff;
+    --muted: #b0b0b0;
+    --accent: #ff0000;
+    --accent2: #ff3333;
+    --blue: #0066ff;
+    --amber: #ffff00;
+    --coral: #ff4444;
+    --code: #ffffff;
+    --glow: rgba(255, 0, 0, 0.35);
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,0,0,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,0,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* LAYOUT */
+  .shell {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 56px 1fr;
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    border-bottom: 2px solid var(--accent);
+    background: rgba(0,0,0,0.95);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--accent), #ff6666);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 0 10px var(--glow);
+  }
+
+  .badge {
+    padding: 4px 10px;
+    background: rgba(255,0,0,0.2);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 0 8px var(--glow);
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .peer-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 2px solid var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+  .peer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--glow); }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 2px solid var(--border);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--surface);
+  }
+
+  .sidebar-section {
+    padding: 12px 16px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    border-radius: 0;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover { 
+    background: var(--surface2); 
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  
+  .nav-item.active {
+    background: rgba(255,0,0,0.15);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    box-shadow: inset -2px 0 8px var(--glow);
+  }
+
+  .nav-icon {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* MAIN */
+  .main {
+    overflow-y: auto;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* SECTION HEADER */
+  .section-head {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .section-title { 
+    font-size: 28px; 
+    font-weight: 800; 
+    letter-spacing: -0.5px;
+    color: var(--accent);
+    text-shadow: 0 0 10px var(--glow);
+  }
+  .section-sub { 
+    font-size: 14px; 
+    color: var(--muted); 
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(255,0,0,0.1);
+  }
+
+  .card-header {
+    padding: 16px 18px;
+    border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    background: rgba(255,0,0,0.05);
+  }
+
+  .card-body { padding: 20px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 12px 20px;
+    border-radius: 6px;
+    border: 2px solid var(--accent);
+    background: var(--surface2);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .btn:hover { 
+    background: rgba(255,0,0,0.15);
+    box-shadow: 0 0 12px var(--glow);
+  }
+  
+  .btn.primary {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 0 15px var(--glow);
+  }
+  
+  .btn.primary:hover { 
+    background: var(--accent2);
+    box-shadow: 0 0 20px var(--glow);
+  }
+
+  .btn.danger {
+    border-color: var(--coral);
+    color: var(--coral);
+  }
+  .btn.danger:hover {
+    background: rgba(255, 68, 68, 0.15);
+  }
+
+  /* INPUTS */
+  input, textarea {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--glow);
+    background: rgba(255,0,0,0.05);
+  }
+
+  /* EVENT LOG */
+  .event-log {
+    background: var(--bg);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    height: 280px;
+    overflow-y: auto;
+    padding: 12px;
+    border: 2px solid var(--border);
+  }
+  .event-entry {
+    display: flex; gap: 12px; align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-4px); } }
+  .evt-seq { color: var(--muted); min-width: 32px; font-weight: 700; }
+  .evt-type { color: var(--accent); font-weight: 700; }
+  .evt-author { color: var(--blue); font-weight: 700; }
+  .evt-ts { color: var(--muted); margin-left: auto; font-size: 11px; }
+
+  /* CRDT EDITOR */
+  .crdt-editor {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 200px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.8;
+    position: relative;
+  }
+  .crdt-content { outline: none; min-height: 180px; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: 0 0 15px rgba(255,0,0,0.08);
+  }
+  .stat-label { 
+    font-size: 11px; 
+    letter-spacing: 2px; 
+    text-transform: uppercase; 
+    color: var(--muted); 
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    margin-bottom: 8px; 
+  }
+  .stat-value { 
+    font-size: 32px; 
+    font-weight: 800; 
+    letter-spacing: -1px;
+    color: var(--accent);
+  }
+  .stat-value.blue { color: var(--blue); }
+
+  /* COUNTER */
+  .counter-display {
+    text-align: center;
+    padding: 32px 0;
+  }
+  .counter-value {
+    font-size: 84px;
+    font-weight: 800;
+    letter-spacing: -4px;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--glow);
+  }
+  .counter-label {
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    margin-top: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .btn-row { 
+    display: flex; 
+    gap: 12px; 
+    justify-content: center; 
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .btn-row .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* AI SECTION */
+  .ai-task-list { display: flex; flex-direction: column; gap: 12px; }
+  .ai-task {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .ai-task-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+  .task-status {
+    width: 10px; 
+    height: 10px; 
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .task-status.running { background: var(--amber); color: var(--amber); animation: blink 1s infinite; }
+  .task-status.done { background: var(--blue); color: var(--blue); }
+  .task-status.error { background: var(--coral); color: var(--coral); }
+  @keyframes blink { 50% { opacity: 0.4; } }
+  .task-prompt { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .task-output { 
+    color: var(--code); 
+    margin-top: 8px; 
+    line-height: 1.6; 
+    font-size: 13px; 
+    white-space: pre-wrap;
+    padding: 12px;
+    background: rgba(255,0,0,0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+  }
+
+  /* CONFIG PANEL */
+  .config-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .form-group input {
+    width: 100%;
+  }
+
+  /* PROOF PANEL */
+  .proof-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .proof-panel {
+    background: var(--bg);
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .proof-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .proof-arrow {
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    font-size: 28px;
+    color: var(--blue);
+    margin-top: 30px;
+  }
+
+  /* TRANSPORT VIZ */
+  .transport-viz {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    gap: 10px;
+  }
+  .transport-node {
+    width: 80px; height: 70px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    gap: 6px;
+    transition: all 0.3s;
+    font-weight: 700;
+  }
+  .transport-node.active {
+    border-color: var(--accent);
+    background: rgba(255,0,0,0.1);
+    color: var(--accent);
+    box-shadow: 0 0 12px var(--glow);
+  }
+  .transport-node .icon { font-size: 20px; }
+
+  .transport-arrow {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .transport-arrow.active {
+    background: var(--accent);
+  }
+  .transport-arrow.active::after {
+    content: '';
+    position: absolute;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, white, transparent);
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse { from { left: -30%; } to { left: 100%; } }
+
+  .transport-select {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .ts-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ts-btn.active {
+    background: rgba(255,0,0,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 8px var(--glow);
+  }
+
+  /* REPLAY SLIDER */
+  .replay-bar {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 16px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .replay-label { 
+    font-size: 12px; 
+    font-family: 'JetBrains Mono', monospace; 
+    color: var(--muted);
+    font-weight: 700;
+  }
+  input[type="range"] {
+    flex: 1; 
+    accent-color: var(--accent);
+    height: 8px;
+  }
+  .replay-state {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { 
+    background: var(--accent);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+
+  /* TABS */
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* DEMO GRID */
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-mark">T</div>
+      Trinity Ollama
+    </div>
+    <div class="badge">Multiplayer</div>
+    <div class="badge">Local LLM</div>
+    <div class="topbar-right">
+      <div class="peer-pill">
+        <div class="peer-dot"></div>
+        <span id="peer-id">peer-</span>
+      </div>
+      <div class="peer-pill">
+        <span id="peer-count">1</span> peer(s)
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Apps</div>
+    <div class="nav-item active" onclick="showTab('counter', event)">
+      <div class="nav-icon">⚡</div> Multiplayer Counter
+    </div>
+    <div class="nav-item" onclick="showTab('crdt', event)">
+      <div class="nav-icon">📝</div> CRDT Notes
+    </div>
+    <div class="nav-item" onclick="showTab('chat', event)">
+      <div class="nav-icon">💬</div> Shared Chat
+    </div>
+    <div class="nav-item" onclick="showTab('ai', event)">
+      <div class="nav-icon">🤖</div> AI Workflow
+    </div>
+    <div class="sidebar-section" style="margin-top:12px;">Settings</div>
+    <div class="nav-item" onclick="showTab('config', event)">
+      <div class="nav-icon">⚙️</div> Ollama Config
+    </div>
+    <div class="sidebar-section" style="margin-top:12px;">Internals</div>
+    <div class="nav-item" onclick="showTab('log', event)">
+      <div class="nav-icon">📋</div> Event Log
+    </div>
+    <div class="nav-item" onclick="showTab('transport', event)">
+      <div class="nav-icon">📡</div> Transport
+    </div>
+    <div class="nav-item" onclick="showTab('replay', event)">
+      <div class="nav-icon">⏪</div> Replay
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Log Events</div>
+        <div class="stat-value" id="stat-events">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">State Hash</div>
+        <div class="stat-value" id="stat-hash" style="font-size:14px;font-family:'JetBrains Mono',monospace;margin-top:8px">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tabs Open</div>
+        <div class="stat-value blue" id="stat-tabs">1</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Transport</div>
+        <div class="stat-value" id="stat-transport" style="font-size:16px;font-family:'JetBrains Mono',monospace;margin-top:8px;">LOCAL</div>
+      </div>
+    </div>
+
+    <!-- COUNTER TAB -->
+    <div id="tab-counter" class="tab-content active">
+      <div class="section-head">
+        <div class="section-title">⚡ Multiplayer Counter</div>
+      </div>
+
+      <div class="demo-grid">
+        <div class="card">
+          <div class="card-header">Counter Value</div>
+          <div class="card-body">
+            <div class="counter-display">
+              <div class="counter-value" id="counter-val">0</div>
+              <div class="counter-label">Live Value</div>
+            </div>
+            <div class="btn-row">
+              <button class="btn" onclick="appEmit('dec')">Decrement</button>
+              <button class="btn primary" onclick="appEmit('inc')">Increment</button>
+              <button class="btn danger" onclick="appEmit('reset')">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Determinism Proof</div>
+          <div class="card-body">
+            <div class="proof-grid">
+              <div class="proof-panel">
+                <div class="proof-label">Live State</div>
+                <div id="proof-live" style="font-size:20px;font-weight:700;color:var(--accent);">0</div>
+              </div>
+              <div class="proof-arrow">→</div>
+              <div class="proof-panel">
+                <div class="proof-label">Replayed State</div>
+                <div id="proof-replay" style="font-size:20px;font-weight:700;color:var(--accent);">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRDT TAB -->
+    <div id="tab-crdt" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">📝 CRDT Notes</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Collaborative Text Editor</div>
+        <div class="card-body">
+          <div class="crdt-editor" id="crdt-area" contenteditable="true" onkeyup="onCrdtInput()" placeholder="Type here for collaborative editing..."></div>
+          <div style="margin-top:16px;display:flex;gap:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+            <div>Insertions: <span id="crdt-op-count" style="color:var(--accent);font-weight:700;">0</span></div>
+            <div>Tombstones: <span id="crdt-tombstones" style="color:var(--blue);font-weight:700;">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHARED CHAT TAB -->
+    <div id="tab-chat" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">💬 Shared Chat</div>
+        <div class="section-sub">All peers can see & edit messages in real-time</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Chat Messages (CRDT-Backed)</div>
+        <div class="card-body">
+          <div id="chat-display" style="background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:16px;height:400px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;">
+            <div style="color:var(--muted);text-align:center;padding:40px 20px;font-size:12px;">— No messages yet —</div>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-direction:column;">
+            <textarea id="chat-input" placeholder="Type a message... (username: author-name)" style="font-size:14px;min-height:80px;"></textarea>
+            <div style="display:flex;gap:12px;">
+              <button class="btn primary" style="flex:1;" onclick="sendChatMessage()">Send Message</button>
+              <button class="btn danger" style="flex:0;" onclick="clearChatMessages()">Clear</button>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;padding:12px;background:rgba(255,0,0,0.08);border-left:3px solid var(--accent);border-radius:4px;font-size:12px;color:var(--text-secondary);line-height:1.6;">
+            <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">How it works:</div>
+            <div>Messages are stored in a shared CRDT structure. Each peer syncs changes in real-time. Format: <span style="font-family:'JetBrains Mono',monospace;color:var(--code);">[username] message text</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI TAB -->
+    <div id="tab-ai" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">🤖 AI Workflow</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">AI Prompt Input</div>
+        <div class="card-body">
+          <textarea id="ai-prompt-input" placeholder="Enter prompt for local Ollama LLM..."></textarea>
+          <div style="display:flex;gap:12px;margin-top:12px;">
+            <button class="btn primary" style="flex:1;" onclick="submitAITask()">Send to LLM</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="ai-task-list"></div>
+    </div>
+
+    <!-- CONFIG TAB -->
+    <div id="tab-config" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">⚙️ Ollama Configuration</div>
+      </div>
+
+      <div class="demo-grid">
+        <div class="card">
+          <div class="card-header">API Settings</div>
+          <div class="card-body">
+            <div class="config-form">
+              <div class="form-group">
+                <label>API URL</label>
+                <input type="text" id="api-url" placeholder="http://localhost:11434" value="http://localhost:11434">
+              </div>
+              <div class="form-group">
+                <label>Model Name</label>
+                <input type="text" id="model-name" placeholder="mistral" value="mistral">
+              </div>
+              <div class="form-group">
+                <label>Max Tokens</label>
+                <input type="number" id="max-tokens" placeholder="200" value="200" min="50" max="4000">
+              </div>
+              <div class="form-group">
+                <label>Temperature</label>
+                <input type="number" id="temperature" placeholder="0.7" value="0.7" min="0" max="2" step="0.1">
+              </div>
+              <button class="btn primary" onclick="saveConfig()">Save Configuration</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Connection Status</div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700;">Status</div>
+                <div id="connection-status" style="font-size:16px;font-weight:700;color:var(--coral);">⚠ Disconnected</div>
+              </div>
+              <div>
+                <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700;">Current Config</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--code);background:var(--surface2);padding:12px;border-radius:4px;border:1px solid var(--border);">
+                  <div>URL: <span id="display-url">http://localhost:11434</span></div>
+                  <div>Model: <span id="display-model">mistral</span></div>
+                </div>
+              </div>
+              <button class="btn" onclick="testConnection()">Test Connection</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG TAB -->
+    <div id="tab-log" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">📋 Event Log</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Event Stream (Immutable)</div>
+        <div class="card-body">
+          <div class="event-log" id="event-log">
+            <div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;">— Awaiting events —</div>
+          </div>
+          <button class="btn danger" style="margin-top:12px;width:100%;" onclick="clearLog()">Clear Log</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT TAB -->
+    <div id="tab-transport" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">📡 Transport Layer</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Select Transport</div>
+        <div class="card-body">
+          <div class="transport-select">
+            <button class="ts-btn active" id="btn-local" onclick="setTransport('local')">Local</button>
+            <button class="ts-btn" id="btn-broadcast" onclick="setTransport('broadcast')">Broadcast</button>
+            <button class="ts-btn" id="btn-rtc" onclick="setTransport('rtc')">WebRTC</button>
+          </div>
+          <div class="transport-viz">
+            <div class="transport-node active">
+              <div class="icon">💻</div>
+              <div>This Tab</div>
+            </div>
+            <div class="transport-arrow active" id="t-arrow1"></div>
+            <div class="transport-node" id="t-relay">
+              <div class="icon" id="t-relay-icon">⚙️</div>
+              <div id="t-relay-label">—</div>
+            </div>
+            <div class="transport-arrow" id="t-arrow2"></div>
+            <div class="transport-node">
+              <div class="icon">💻</div>
+              <div>Other Tab</div>
+            </div>
+          </div>
+          <div style="margin-top:20px;padding:14px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);font-size:13px;color:var(--muted);line-height:1.6;">
+            <div id="transport-desc">LOCAL: Events stay in-process. No network traffic.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPLAY TAB -->
+    <div id="tab-replay" class="tab-content">
+      <div class="section-head">
+        <div class="section-title">⏪ Log Replay</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Event Replay Scrubber</div>
+        <div class="card-body">
+          <div class="replay-bar">
+            <span class="replay-label">Scrub:</span>
+            <input type="range" id="replay-slider" min="0" value="0" onchange="scrubReplay(this.value)">
+            <span class="replay-label"><span id="replay-max">/ 0</span></span>
+          </div>
+          <div style="margin-top:20px;">
+            <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:700;">Replayed State</div>
+            <div class="replay-state" id="replay-state-val">0</div>
+          </div>
+          <div style="margin-top:16px;">
+            <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:700;">Log Slice</div>
+            <div class="event-log" id="replay-log-slice" style="height:200px;">
+              <div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;">— start of log —</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+
+const CONFIG_KEY = 'trinity-ollama-config';
+const PEER_ID = 'peer-' + Math.random().toString(36).slice(2, 8);
+
+function loadConfig() {
+  const saved = localStorage.getItem(CONFIG_KEY);
+  if (saved) {
+    const config = JSON.parse(saved);
+    document.getElementById('api-url').value = config.apiUrl || 'http://localhost:11434';
+    document.getElementById('model-name').value = config.modelName || 'mistral';
+    document.getElementById('max-tokens').value = config.maxTokens || 200;
+    document.getElementById('temperature').value = config.temperature || 0.7;
+    updateDisplayConfig();
+  }
+  document.getElementById('peer-id').textContent = PEER_ID;
+}
+
+function saveConfig() {
+  const config = {
+    apiUrl: document.getElementById('api-url').value,
+    modelName: document.getElementById('model-name').value,
+    maxTokens: parseInt(document.getElementById('max-tokens').value),
+    temperature: parseFloat(document.getElementById('temperature').value)
+  };
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  updateDisplayConfig();
+  alert('✓ Configuration saved!');
+}
+
+function getConfig() {
+  const saved = localStorage.getItem(CONFIG_KEY);
+  if (saved) return JSON.parse(saved);
+  return {
+    apiUrl: 'http://localhost:11434',
+    modelName: 'mistral',
+    maxTokens: 200,
+    temperature: 0.7
+  };
+}
+
+function updateDisplayConfig() {
+  const config = getConfig();
+  document.getElementById('display-url').textContent = config.apiUrl;
+  document.getElementById('display-model').textContent = config.modelName;
+}
+
+async function testConnection() {
+  const config = getConfig();
+  document.getElementById('connection-status').textContent = '⟳ Testing...';
+  
+  try {
+    const res = await fetch(`${config.apiUrl}/api/tags`, { method: 'GET', mode: 'cors' });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('connection-status').textContent = `✓ Connected (${data.models?.length || 0} models)`;
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch (err) {
+    document.getElementById('connection-status').textContent = `✗ Error: ${err.message}`;
+    console.error('Connection test failed:', err);
+  }
+}
+
+// ═══════════════════════════════════════
+// EVENT STORE
+// ═══════════════════════════════════════
+
+class SimpleStore {
+  constructor(initialState) {
+    this.state = initialState;
+    this.log = [];
+    this.subscribers = [];
+  }
+
+  emit(event) {
+    this.log.push({ ...event, _ts: Date.now(), _id: crypto.randomUUID(), _seq: this.log.length + 1 });
+    this.state = this.reducer(this.state, event);
+    this.subscribers.forEach(cb => cb(this.state, event));
+  }
+
+  reducer(state, event) {
+    return state;
+  }
+
+  subscribe(fn) {
+    this.subscribers.push(fn);
+  }
+
+  getState() {
+    return this.state;
+  }
+}
+
+// COUNTER APP
+const counterApp = new SimpleStore(0);
+counterApp.reducer = (state, event) => {
+  if (event.type === 'inc') return state + 1;
+  if (event.type === 'dec') return state - 1;
+  if (event.type === 'reset') return 0;
+  return state;
+};
+
+// AI APP
+const aiApp = new SimpleStore({ tasks: {} });
+aiApp.reducer = (state, event) => {
+  if (event.type === 'ai.status') {
+    return { ...state, tasks: { ...state.tasks, [event.id]: { ...state.tasks[event.id], status: event.status, id: event.id, prompt: state.tasks[event.id]?.prompt || '' } } };
+  } else if (event.type === 'ai.result') {
+    return { ...state, tasks: { ...state.tasks, [event.id]: { ...state.tasks[event.id], status: 'done', output: event.output } } };
+  } else if (event.type === 'ai.error') {
+    if (!state.tasks[event.id]) return state;
+    return { ...state, tasks: { ...state.tasks, [event.id]: { ...state.tasks[event.id], status: 'error', error: event.error } } };
+  }
+  return state;
+};
+
+// ═══════════════════════════════════════
+// AI HANDLER
+// ═══════════════════════════════════════
+
+const aiHandled = new Set();
+aiApp.subscribe(async (_state, event) => {
+  if (event.type !== 'ai.run') return;
+  if (aiHandled.has(event.id)) return;
+  aiHandled.add(event.id);
+
+  aiApp.emit({ type: 'ai.status', id: event.id, status: 'running' });
+
+  try {
+    const config = getConfig();
+    const res = await fetch(`${config.apiUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: config.modelName,
+        prompt: event.prompt,
+        stream: false,
+        options: {
+          temperature: config.temperature,
+          num_predict: config.maxTokens
+        }
+      }),
+      mode: 'cors'
+    });
+
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    const output = data.response || '';
+    aiApp.emit({ type: 'ai.result', id: event.id, output });
+  } catch (err) {
+    aiApp.emit({ type: 'ai.error', id: event.id, error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════
+// UI BINDINGS
+// ═══════════════════════════════════════
+
+function appEmit(type) {
+  counterApp.emit({ type, author: PEER_ID });
+}
+
+function fnv32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+counterApp.subscribe((state, event) => {
+  document.getElementById('counter-val').textContent = state;
+
+  const replayState = counterApp.log.reduce((s, e) => {
+    if (e.type === 'inc') return s + 1;
+    if (e.type === 'dec') return s - 1;
+    if (e.type === 'reset') return 0;
+    return s;
+  }, 0);
+  document.getElementById('proof-live').textContent = state;
+  document.getElementById('proof-replay').textContent = replayState;
+
+  const log = document.getElementById('event-log');
+  if (log.children[0]?.style?.color === 'var(--muted)' || log.textContent.includes('awaiting')) log.innerHTML = '';
+  const entry = document.createElement('div');
+  entry.className = 'event-entry';
+  entry.innerHTML = `
+    <span class="evt-seq">#${event._seq}</span>
+    <span class="evt-type">${event.type}</span>
+    <span class="evt-author">${event.author || PEER_ID}</span>
+    <span class="evt-ts">${new Date(event._ts).toLocaleTimeString()}</span>
+  `;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+
+  document.getElementById('stat-events').textContent = counterApp.log.length;
+  document.getElementById('stat-hash').textContent = fnv32(JSON.stringify(counterApp.log));
+
+  const slider = document.getElementById('replay-slider');
+  slider.max = counterApp.log.length;
+  slider.value = counterApp.log.length;
+  document.getElementById('replay-max').textContent = '/ ' + counterApp.log.length;
+});
+
+aiApp.subscribe((state) => {
+  const list = document.getElementById('ai-task-list');
+  const tasks = Object.values(state.tasks).reverse();
+  if (tasks.length === 0) return;
+  list.innerHTML = tasks.map(task => `
+    <div class="ai-task">
+      <div class="ai-task-header">
+        <div class="task-status ${task.status}"></div>
+        <span style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${task.status.toUpperCase()}</span>
+        <span style="margin-left:auto;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">${task.id.slice(0,8)}</span>
+      </div>
+      <div class="task-prompt">Prompt: ${task.prompt}</div>
+      ${task.output ? `<div class="task-output">${task.output}</div>` : ''}
+      ${task.error ? `<div class="task-output" style="color:var(--coral);">ERROR: ${task.error}</div>` : ''}
+    </div>
+  `).join('');
+});
+
+function submitAITask() {
+  const input = document.getElementById('ai-prompt-input');
+  const prompt = input.value.trim();
+  if (!prompt) {
+    alert('Enter a prompt');
+    return;
+  }
+  input.value = '';
+  aiApp.emit({ type: 'ai.run', id: crypto.randomUUID(), prompt });
+}
+
+document.getElementById('ai-prompt-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitAITask();
+  }
+});
+
+// ═══════════════════════════════════════
+// CRDT
+// ═══════════════════════════════════════
+
+let crdtOpCount = 0, crdtTombstones = 0;
+
+function crdtInsert(op) {
+  crdtOpCount++;
+}
+
+function crdtReset() {
+  crdtOpCount = 0;
+}
+
+function onCrdtInput() {
+  const el = document.getElementById('crdt-area');
+  const newText = el.textContent;
+  
+  crdtReset();
+  let prev = 'root';
+  let seq = 0;
+  for (let i = 0; i < newText.length; i++) {
+    const id = `local:${seq++}`;
+    crdtInsert({ type: 'insert', id, value: newText[i], after: prev });
+    prev = id;
+  }
+
+  document.getElementById('crdt-op-count').textContent = crdtOpCount;
+  document.getElementById('crdt-tombstones').textContent = crdtTombstones;
+}
+
+// ═══════════════════════════════════════
+// TRANSPORT
+// ═══════════════════════════════════════
+
+const TRANSPORT_DESCS = {
+  local: 'LOCAL: Events stay in-process. No network traffic. Used for testing.',
+  broadcast: 'BROADCAST: Uses BroadcastChannel API — syncs across same-origin tabs instantly.',
+  rtc: 'WebRTC: P2P DataChannels. Zero server after STUN/TURN bootstrap. Gossip relay for >2 peers.',
+};
+
+function setTransport(type) {
+  document.querySelectorAll('.ts-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`btn-${type}`).classList.add('active');
+
+  const relay = document.getElementById('t-relay');
+  const relayIcon = document.getElementById('t-relay-icon');
+  const relayLabel = document.getElementById('t-relay-label');
+  const a1 = document.getElementById('t-arrow1');
+  const a2 = document.getElementById('t-arrow2');
+
+  document.getElementById('stat-transport').textContent = type.toUpperCase();
+
+  if (type === 'local') {
+    relay.classList.remove('active');
+    a1.classList.remove('active'); a2.classList.remove('active');
+    relayIcon.textContent = '⚙️'; relayLabel.textContent = '—';
+  } else if (type === 'broadcast') {
+    relay.classList.add('active');
+    a1.classList.add('active'); a2.classList.add('active');
+    relayIcon.textContent = '📻'; relayLabel.textContent = 'BC Chan';
+  } else {
+    relay.classList.add('active');
+    a1.classList.add('active'); a2.classList.add('active');
+    relayIcon.textContent = '⚡'; relayLabel.textContent = 'WebRTC';
+  }
+  document.getElementById('transport-desc').textContent = TRANSPORT_DESCS[type];
+}
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+
+const tabs = ['counter', 'crdt', 'chat', 'ai', 'config', 'log', 'transport', 'replay'];
+
+function showTab(tab, event) {
+  tabs.forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('active', t === tab);
+  });
+  
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  if (event && event.currentTarget) {
+    event.currentTarget.classList.add('active');
+  }
+}
+
+function clearLog() {
+  counterApp.log.length = 0;
+  document.getElementById('counter-val').textContent = '0';
+  document.getElementById('event-log').innerHTML = '';
+  document.getElementById('stat-events').textContent = '0';
+}
+
+function scrubReplay(val) {
+  const idx = parseInt(val);
+  const slice = counterApp.log.slice(0, idx);
+  const replayed = slice.reduce((s, e) => {
+    if (e.type === 'inc') return s + 1;
+    if (e.type === 'dec') return s - 1;
+    if (e.type === 'reset') return 0;
+    return s;
+  }, 0);
+  document.getElementById('replay-state-val').textContent = replayed;
+
+  const sliceEl = document.getElementById('replay-log-slice');
+  sliceEl.innerHTML = slice.map(e => `
+    <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+      <span style="color:var(--muted);">#${e._seq}</span>
+      <span style="color:var(--accent);font-weight:700;">${e.type}</span>
+      <span style="color:var(--muted);margin-left:auto;font-size:11px;">${new Date(e._ts).toLocaleTimeString()}</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);text-align:center;">— start of log —</div>';
+}
+
+// ═══════════════════════════════════════
+// CHAT SYSTEM (CRDT-Backed)
+// ═══════════════════════════════════════
+
+// Store messages as events in the app log
+class ChatMessage {
+  constructor(author, text, timestamp) {
+    this.id = crypto.randomUUID();
+    this.author = author;
+    this.text = text;
+    this.timestamp = timestamp;
+    this.deleted = false;
+  }
+}
+
+let chatMessages = [];
+let currentUsername = localStorage.getItem('trinity-chat-username') || 'peer-' + Math.random().toString(36).slice(2, 6);
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  
+  if (!text) {
+    alert('Enter a message');
+    return;
+  }
+
+  // Parse username from input if format is [username] message
+  let author = currentUsername;
+  let messageText = text;
+  
+  const match = text.match(/^\[([^\]]+)\]\s*(.+)$/);
+  if (match) {
+    author = match[1].trim();
+    messageText = match[2].trim();
+    currentUsername = author;
+    localStorage.setItem('trinity-chat-username', author);
+  }
+
+  // Emit message as event (syncs via CRDT)
+  counterApp.emit({ 
+    type: 'chat.send', 
+    id: crypto.randomUUID(),
+    author,
+    text: messageText,
+    timestamp: Date.now()
+  });
+
+  input.value = '';
+  input.focus();
+}
+
+function clearChatMessages() {
+  if (confirm('Clear all chat messages?')) {
+    chatMessages = [];
+    counterApp.emit({ type: 'chat.clear', author: PEER_ID });
+    renderChat();
+  }
+}
+
+function renderChat() {
+  const display = document.getElementById('chat-display');
+  
+  if (chatMessages.length === 0) {
+    display.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px 20px;font-size:12px;">— No messages yet —</div>';
+    return;
+  }
+
+  display.innerHTML = chatMessages.map(msg => {
+    const time = new Date(msg.timestamp).toLocaleTimeString();
+    return `
+      <div style="padding:12px;background:var(--surface2);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;line-height:1.6;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-weight:700;color:var(--accent);">${msg.author}</span>
+          <span style="color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">${time}</span>
+          <span style="color:var(--blue);font-size:10px;font-family:'JetBrains Mono',monospace;margin-left:auto;">#${msg.id.slice(0,6)}</span>
+        </div>
+        <div style="color:var(--text);">${escapeHtml(msg.text)}</div>
+      </div>
+    `;
+  }).join('');
+
+  display.scrollTop = display.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Hook into counter app to sync chat events
+counterApp.subscribe((state, event) => {
+  if (event.type === 'chat.send') {
+    chatMessages.push(new ChatMessage(event.author, event.text, event.timestamp));
+    renderChat();
+  } else if (event.type === 'chat.clear') {
+    chatMessages = [];
+    renderChat();
+  }
+});
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  updateDisplayConfig();
+  testConnection();
+
+  let otherTabCount = 0;
+  const tabChannel = new BroadcastChannel('trinity-tab-detect');
+  tabChannel.postMessage({ type: 'ping', peerId: PEER_ID });
+  tabChannel.onmessage = (e) => {
+    if (e.data.type === 'ping') {
+      tabChannel.postMessage({ type: 'pong', peerId: PEER_ID });
+      otherTabCount = Math.max(otherTabCount, 1);
+    }
+    if (e.data.type === 'pong') {
+      otherTabCount++;
+    }
+    document.getElementById('stat-tabs').textContent = 1 + otherTabCount;
+    document.getElementById('peer-count').textContent = 1 + otherTabCount;
+  };
+});
+</script>
+
+</body>
+</html>

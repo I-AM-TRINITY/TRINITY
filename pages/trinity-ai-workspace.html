@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity — Local-First AI Workspace</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper:   #0d0d0d;
+    --paper2:  #141414;
+    --surface: #1a1a1a;
+    --surface2:#222222;
+    --ink:     #f5f5f5;
+    --ink2:    #d0d0d0;
+    --ink3:    #888888;
+    --rule:    rgba(255,255,255,0.12);
+    --rule2:   rgba(255,255,255,0.07);
+    --accent:  #4f8ef7;
+    --accent-light: rgba(79,142,247,0.15);
+    --green:   #22c55e;
+    --amber:   #f59e0b;
+    --red:     #ef4444;
+    --shadow:  0 2px 8px rgba(0,0,0,0.6);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 16px;
+  }
+
+  /* ── HEADER ── */
+  .ws-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    height: 54px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .ws-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .ws-logo span { color: var(--accent); font-style: italic; font-weight: 400; }
+
+  .header-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--paper2);
+  }
+
+  .header-tab {
+    padding: 6px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink3);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-right: 1px solid var(--rule);
+    letter-spacing: 0.3px;
+  }
+  .header-tab:last-child { border-right: none; }
+  .header-tab:hover { color: var(--ink); background: rgba(255,255,255,0.06); }
+  .header-tab.active { background: var(--surface2); color: var(--accent); }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px;
+    color: var(--ink3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-dot.online  { background: var(--green); }
+  .status-dot.offline { background: var(--ink3); }
+  .status-dot.thinking { background: var(--amber); animation: throb 0.8s infinite; }
+  @keyframes throb { 50% { opacity: 0.3; } }
+
+  /* ── PROVIDER SELECTOR in header ── */
+  .provider-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--paper2);
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .provider-pill:hover { border-color: var(--accent); background: var(--accent-light); }
+  .provider-pill .arrow { font-size: 10px; color: var(--ink3); }
+
+  /* ── LAYOUT ── */
+  .ws-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── NOTES SIDEBAR ── */
+  .notes-panel {
+    width: 230px;
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    background: var(--paper2);
+    flex-shrink: 0;
+  }
+
+  .panel-header {
+    padding: 12px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .panel-add-btn {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.3);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-weight: 700;
+  }
+  .panel-add-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .note-list { flex: 1; overflow-y: auto; }
+  .note-item {
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--rule2);
+    transition: background 0.1s;
+  }
+  .note-item:hover { background: rgba(255,255,255,0.04); }
+  .note-item.active { background: var(--surface); border-left: 3px solid var(--accent); padding-left: 11px; }
+  .note-title {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ink);
+  }
+  .note-preview {
+    font-size: 13px;
+    color: var(--ink3);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .note-ts { font-size: 11px; color: var(--ink3); margin-top: 3px; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── EDITOR ── */
+  .editor-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .toolbar-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink2);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .toolbar-btn:hover { background: var(--surface2); color: var(--ink); border-color: rgba(255,255,255,0.2); }
+  .toolbar-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .toolbar-btn.primary:hover { background: #6aa0ff; }
+
+  .word-count { font-size: 13px; color: var(--ink3); font-family: 'IBM Plex Mono', monospace; margin-left: auto; font-weight: 500; }
+
+  .editor-canvas {
+    flex: 1;
+    overflow-y: auto;
+    padding: 48px 72px;
+  }
+
+  @media (max-width: 900px) {
+    .editor-canvas { padding: 32px 24px; }
+  }
+
+  #note-title-input {
+    display: block;
+    width: 100%;
+    font-family: 'DM Serif Display', serif;
+    font-size: 40px;
+    font-weight: 400;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    line-height: 1.2;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  #note-title-input::placeholder { color: var(--ink3); }
+
+  .note-meta-row {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--ink3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  #note-content {
+    min-height: 300px;
+    outline: none;
+    font-size: 18px;
+    line-height: 1.85;
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+  }
+  #note-content:empty::before {
+    content: attr(data-placeholder);
+    color: var(--ink3);
+    pointer-events: none;
+  }
+
+  /* ── AI PANEL ── */
+  .ai-panel {
+    width: 360px;
+    border-left: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .ai-panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .ai-icon {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, #4f8ef7, #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .ai-model-badge {
+    margin-left: auto;
+    padding: 3px 10px;
+    background: var(--paper2);
+    border-radius: 5px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.25);
+  }
+
+  .ai-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ai-msg { animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(4px); } }
+
+  .ai-msg-header {
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink3);
+    margin-bottom: 5px;
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 500;
+  }
+
+  .ai-msg-body {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+  .ai-msg-body.user {
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 8px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--accent);
+    color: var(--ink);
+    font-size: 15px;
+  }
+  .ai-msg-body.assistant {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+  }
+
+  .ai-thinking {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: var(--amber);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 8px 0;
+    font-weight: 500;
+  }
+  .dots span { animation: dot 1.4s infinite; opacity: 0; font-size: 16px; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  .ai-input-row {
+    padding: 12px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ai-quick-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .qa-btn {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--rule);
+    background: var(--paper2);
+    color: var(--ink2);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .qa-btn:hover { background: var(--surface2); color: var(--ink); border-color: var(--accent); }
+
+  textarea {
+    width: 100%;
+    min-height: 76px;
+    background: var(--paper2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--ink3); }
+
+  .ai-send-row { display: flex; justify-content: space-between; align-items: center; }
+
+  .ai-hint {
+    font-size: 12px;
+    color: var(--ink3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+  }
+
+  .send-btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+  }
+  .send-btn:hover { background: #6aa0ff; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── LOG INDICATOR ── */
+  .log-indicator {
+    padding: 7px 14px;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--ink3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .log-entry-flash { display: inline-block; animation: flash 0.6s ease; }
+  @keyframes flash { from { color: var(--accent); } to { color: var(--ink3); } }
+
+  /* ── PROVIDER SETTINGS MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 32px;
+    width: 480px;
+    max-width: 95vw;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+  }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .modal-sub {
+    font-size: 14px;
+    color: var(--ink3);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 28px;
+  }
+
+  .field-group { margin-bottom: 20px; }
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink2);
+    margin-bottom: 7px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .field-input {
+    width: 100%;
+    background: var(--paper2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 15px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-input:focus { border-color: var(--accent); }
+  .field-input::placeholder { color: var(--ink3); }
+
+  .provider-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .provider-card {
+    border: 2px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--paper2);
+  }
+  .provider-card:hover { border-color: rgba(79,142,247,0.4); background: var(--surface2); }
+  .provider-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .provider-card-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+  .provider-card-desc {
+    font-size: 12px;
+    color: var(--ink3);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .provider-card .prov-icon { font-size: 20px; margin-bottom: 6px; }
+
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .btn-ghost {
+    padding: 9px 20px;
+    border-radius: 7px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink2);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--ink); }
+
+  .btn-primary {
+    padding: 9px 24px;
+    border-radius: 7px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: #6aa0ff; }
+
+  .test-result {
+    padding: 10px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    margin-top: 14px;
+    display: none;
+  }
+  .test-result.ok  { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); display: block; }
+  .test-result.err { background: rgba(239,68,68,0.15);  color: var(--red);   border: 1px solid rgba(239,68,68,0.3);  display: block; }
+
+  /* ── AUDIT / MEMORY MODES ── */
+  #audit-mode, #memory-mode { background: var(--paper); }
+
+  /* ── SCROLLBARS ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+  /* ── OLLAMA MODELS LIST ── */
+  #ollama-models-hint {
+    font-size: 12px;
+    color: var(--ink3);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 6px;
+    min-height: 18px;
+  }
+  #ollama-models-hint span { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- PROVIDER SETTINGS MODAL -->
+<div class="modal-overlay" id="provider-modal">
+  <div class="modal">
+    <div class="modal-title">AI Provider</div>
+    <div class="modal-sub">Choose your backend — local or cloud</div>
+
+    <div class="provider-grid">
+      <div class="provider-card selected" data-provider="ollama" onclick="selectProvider('ollama')">
+        <div class="prov-icon">🦙</div>
+        <div class="provider-card-name">Ollama</div>
+        <div class="provider-card-desc">Local · private · free</div>
+      </div>
+      <div class="provider-card" data-provider="anthropic" onclick="selectProvider('anthropic')">
+        <div class="prov-icon">✦</div>
+        <div class="provider-card-name">Anthropic</div>
+        <div class="provider-card-desc">Claude API · cloud</div>
+      </div>
+      <div class="provider-card" data-provider="openai" onclick="selectProvider('openai')">
+        <div class="prov-icon">⬡</div>
+        <div class="provider-card-name">OpenAI</div>
+        <div class="provider-card-desc">GPT API · cloud</div>
+      </div>
+      <div class="provider-card" data-provider="custom" onclick="selectProvider('custom')">
+        <div class="prov-icon">⚙️</div>
+        <div class="provider-card-name">Custom</div>
+        <div class="provider-card-desc">Any OpenAI-compat API</div>
+      </div>
+    </div>
+
+    <!-- Ollama settings -->
+    <div id="settings-ollama">
+      <div class="field-group">
+        <label class="field-label">Ollama Base URL</label>
+        <input class="field-input" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Model Name</label>
+        <input class="field-input" id="ollama-model" value="llama3" placeholder="llama3, mistral, phi3..."/>
+        <div id="ollama-models-hint">Click "Detect Models" to list running models</div>
+      </div>
+    </div>
+
+    <!-- Anthropic settings -->
+    <div id="settings-anthropic" style="display:none;">
+      <div class="field-group">
+        <label class="field-label">API Key</label>
+        <input class="field-input" id="anthropic-key" type="password" placeholder="sk-ant-..."/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Model</label>
+        <select class="field-input" id="anthropic-model">
+          <option value="claude-sonnet-4-20250514">claude-sonnet-4 (latest)</option>
+          <option value="claude-haiku-4-5-20251001" selected>claude-haiku-4-5</option>
+          <option value="claude-opus-4-5-20251101">claude-opus-4-5</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- OpenAI settings -->
+    <div id="settings-openai" style="display:none;">
+      <div class="field-group">
+        <label class="field-label">API Key</label>
+        <input class="field-input" id="openai-key" type="password" placeholder="sk-..."/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Model</label>
+        <select class="field-input" id="openai-model">
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+          <option value="gpt-4-turbo">gpt-4-turbo</option>
+          <option value="o1-mini">o1-mini</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Custom settings -->
+    <div id="settings-custom" style="display:none;">
+      <div class="field-group">
+        <label class="field-label">Base URL (OpenAI-compatible)</label>
+        <input class="field-input" id="custom-url" placeholder="https://your-api.example.com/v1"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Model</label>
+        <input class="field-input" id="custom-model" placeholder="model-name"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">API Key (optional)</label>
+        <input class="field-input" id="custom-key" type="password" placeholder="leave blank if not needed"/>
+      </div>
+    </div>
+
+    <div id="test-result-box"></div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" id="detect-btn" onclick="detectOllamaModels()">🔍 Detect Models</button>
+      <button class="btn-ghost" onclick="closeProviderModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveProviderSettings()">Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="ws-header">
+  <div class="ws-logo">Trinity <span>workspace</span></div>
+
+  <div class="header-tabs">
+    <div class="header-tab active" onclick="switchMode('notes', event)">Notes</div>
+    <div class="header-tab" onclick="switchMode('audit', event)">Audit Log</div>
+    <div class="header-tab" onclick="switchMode('memory', event)">Memory</div>
+  </div>
+
+  <div class="header-right">
+    <div class="provider-pill" onclick="openProviderModal()" title="Configure AI provider">
+      <span id="provider-label">🦙 Ollama</span>
+      <span class="arrow">▾</span>
+    </div>
+    <div class="status-chip">
+      <div class="status-dot online" id="online-dot"></div>
+      <span id="online-label">local-first</span>
+    </div>
+    <div class="status-chip" id="event-count-badge">
+      <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;">log: 0</span>
+    </div>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="ws-body" id="notes-mode">
+
+  <!-- NOTES SIDEBAR -->
+  <div class="notes-panel">
+    <div class="panel-header">
+      Notes
+      <button class="panel-add-btn" onclick="createNote()" title="New note">+</button>
+    </div>
+    <div class="note-list" id="note-list"></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor-area">
+    <div class="editor-toolbar">
+      <button class="toolbar-btn" onclick="formatDoc('bold')"><b>B</b></button>
+      <button class="toolbar-btn" onclick="formatDoc('italic')"><i>I</i></button>
+      <button class="toolbar-btn" onclick="insertQuote()">❝</button>
+      <div style="width:1px;height:22px;background:var(--rule);margin:0 4px;"></div>
+      <button class="toolbar-btn" onclick="saveCurrentNote()">↓ Save</button>
+      <button class="toolbar-btn primary" onclick="askAIAboutNote()">✦ Ask AI</button>
+      <div class="word-count" id="word-count">0 words</div>
+    </div>
+    <div class="editor-canvas">
+      <input type="text" id="note-title-input" placeholder="Untitled Note" oninput="onNoteChange()" />
+      <div class="note-meta-row">
+        <span id="note-created">—</span>
+        <span>·</span>
+        <span id="note-events">0 events</span>
+        <span>·</span>
+        <span id="note-version">v1</span>
+      </div>
+      <div id="note-content" contenteditable="true" data-placeholder="Begin writing..."
+           oninput="onNoteChange()"></div>
+    </div>
+    <div class="log-indicator">
+      <span style="color:var(--accent);font-weight:700;">trinity-log</span>
+      <span style="opacity:0.3;">|</span>
+      <span id="log-tail">—</span>
+    </div>
+  </div>
+
+  <!-- AI ASSISTANT PANEL -->
+  <div class="ai-panel">
+    <div class="ai-panel-header">
+      <div class="ai-icon">✦</div>
+      AI Assistant
+      <div class="ai-model-badge" id="model-name">llama3</div>
+    </div>
+
+    <div class="ai-messages" id="ai-messages">
+      <div style="padding:16px 0;text-align:center;">
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--ink);font-style:italic;margin-bottom:10px;">Sovereign AI</div>
+        <div style="font-size:14px;color:var(--ink3);line-height:1.8;">Every prompt and response enters the<br>deterministic event log. Fully auditable.<br>Works offline with local Ollama.</div>
+      </div>
+    </div>
+
+    <div class="ai-input-row">
+      <div class="ai-quick-actions">
+        <button class="qa-btn" onclick="quickAction('summarize')">Summarize</button>
+        <button class="qa-btn" onclick="quickAction('expand')">Expand</button>
+        <button class="qa-btn" onclick="quickAction('critique')">Critique</button>
+        <button class="qa-btn" onclick="quickAction('continue')">Continue →</button>
+      </div>
+      <textarea id="ai-input" placeholder="Ask about your note, or anything…" rows="3"></textarea>
+      <div class="ai-send-row">
+        <span class="ai-hint" id="ai-status-text">⌘↵ to send</span>
+        <button class="send-btn" id="send-btn" onclick="sendAI()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT LOG MODE -->
+<div id="audit-mode" style="display:none;flex:1;overflow-y:auto;padding:40px 56px;">
+  <div style="max-width:820px;margin:0 auto;">
+    <h1 style="font-family:'DM Serif Display',serif;font-size:36px;margin-bottom:10px;letter-spacing:-0.5px;color:var(--ink);">Audit Log</h1>
+    <p style="font-size:15px;color:var(--ink3);margin-bottom:36px;font-family:'IBM Plex Mono',monospace;font-weight:500;">Every state change, including AI results, is an immutable event</p>
+    <div id="audit-log-entries"></div>
+  </div>
+</div>
+
+<!-- MEMORY MODE -->
+<div id="memory-mode" style="display:none;flex:1;overflow-y:auto;padding:40px 56px;">
+  <div style="max-width:720px;margin:0 auto;">
+    <h1 style="font-family:'DM Serif Display',serif;font-size:36px;margin-bottom:10px;letter-spacing:-0.5px;color:var(--ink);">Workspace Memory</h1>
+    <p style="font-size:15px;color:var(--ink3);margin-bottom:36px;font-family:'IBM Plex Mono',monospace;font-weight:500;">Derived from your event log — <span style="color:var(--green);">sovereign, never sent anywhere</span></p>
+    <div id="memory-entries"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// TRINITY CORE
+// ═══════════════════════════════════════
+
+function createApp({ init, reduce }) {
+  let state = init;
+  const listeners = [];
+  const log = [];
+  function emit(event) {
+    const stamped = { ...event, _seq: log.length, _ts: event._ts ?? Date.now(), _id: event._id ?? crypto.randomUUID() };
+    log.push(stamped);
+    state = reduce(state, stamped);
+    listeners.forEach(l => l(state, stamped));
+  }
+  function subscribe(fn) { listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i !== -1) listeners.splice(i, 1); }; }
+  function replay(events) { const seen = new Set(log.map(e => e._id)); events.filter(e => !seen.has(e._id)).forEach(e => emit(e)); }
+  return { emit, subscribe, replay, getState: () => state, get log() { return log; } };
+}
+
+const wsApp = createApp({
+  init: { notes: {}, memory: [], aiHistory: [] },
+  reduce: (state, event) => {
+    switch(event.type) {
+      case 'NOTE_CREATED': return {
+        ...state,
+        notes: { ...state.notes, [event.id]: { id: event.id, title: event.title || 'Untitled', content: event.content || '', createdAt: event._ts, updatedAt: event._ts, version: 1 } }
+      };
+      case 'NOTE_UPDATED': {
+        const note = state.notes[event.id];
+        if (!note) return state;
+        return { ...state, notes: { ...state.notes, [event.id]: { ...note, title: event.title ?? note.title, content: event.content ?? note.content, updatedAt: event._ts, version: note.version + 1 } } };
+      }
+      case 'NOTE_DELETED': {
+        const { [event.id]: _, ...rest } = state.notes;
+        return { ...state, notes: rest };
+      }
+      case 'AI_PROMPT': return {
+        ...state,
+        aiHistory: [...state.aiHistory, { id: event.id, role: 'user', content: event.prompt, noteId: event.noteId, ts: event._ts }]
+      };
+      case 'AI_RESULT': return {
+        ...state,
+        aiHistory: [...state.aiHistory, { id: event.id, role: 'assistant', content: event.output, ts: event._ts }]
+      };
+      case 'AI_ERROR': return {
+        ...state,
+        aiHistory: [...state.aiHistory, { id: event.id, role: 'error', content: event.error, ts: event._ts }]
+      };
+      case 'MEMORY_UPDATED': return { ...state, memory: event.items };
+      default: return state;
+    }
+  }
+});
+
+// Persist via localStorage
+try {
+  const saved = JSON.parse(localStorage.getItem('trinity-workspace-log') || '[]');
+  if (saved.length > 0) wsApp.replay(saved);
+} catch(e) {}
+
+wsApp.subscribe(() => {
+  try { localStorage.setItem('trinity-workspace-log', JSON.stringify(wsApp.log)); } catch(e) {}
+  updateUI();
+});
+
+// ═══════════════════════════════════════
+// PROVIDER CONFIG
+// ═══════════════════════════════════════
+
+const PROVIDERS = {
+  ollama:    { label: '🦙 Ollama',    icon: '🦙' },
+  anthropic: { label: '✦ Anthropic',  icon: '✦' },
+  openai:    { label: '⬡ OpenAI',     icon: '⬡' },
+  custom:    { label: '⚙️ Custom',     icon: '⚙️' },
+};
+
+let activeProvider = 'ollama';
+
+// Load saved provider config
+let providerConfig = {
+  ollama:    { url: 'http://localhost:11434', model: 'llama3' },
+  anthropic: { key: '', model: 'claude-haiku-4-5-20251001' },
+  openai:    { key: '', model: 'gpt-4o-mini' },
+  custom:    { url: '', model: '', key: '' },
+};
+try {
+  const saved = JSON.parse(localStorage.getItem('trinity-provider-config') || '{}');
+  providerConfig = { ...providerConfig, ...saved };
+  activeProvider = localStorage.getItem('trinity-active-provider') || 'ollama';
+} catch(e) {}
+
+function saveProviderToStorage() {
+  localStorage.setItem('trinity-provider-config', JSON.stringify(providerConfig));
+  localStorage.setItem('trinity-active-provider', activeProvider);
+}
+
+function getModelLabel() {
+  const cfg = providerConfig[activeProvider];
+  return cfg.model || activeProvider;
+}
+
+function openProviderModal() {
+  // Populate fields
+  document.getElementById('ollama-url').value   = providerConfig.ollama.url;
+  document.getElementById('ollama-model').value = providerConfig.ollama.model;
+  document.getElementById('anthropic-key').value   = providerConfig.anthropic.key;
+  document.getElementById('anthropic-model').value = providerConfig.anthropic.model;
+  document.getElementById('openai-key').value   = providerConfig.openai.key;
+  document.getElementById('openai-model').value = providerConfig.openai.model;
+  document.getElementById('custom-url').value   = providerConfig.custom.url;
+  document.getElementById('custom-model').value = providerConfig.custom.model;
+  document.getElementById('custom-key').value   = providerConfig.custom.key;
+
+  selectProvider(activeProvider, false);
+  document.getElementById('test-result-box').innerHTML = '';
+  document.getElementById('provider-modal').classList.add('open');
+}
+
+function closeProviderModal() {
+  document.getElementById('provider-modal').classList.remove('open');
+}
+
+function selectProvider(name, updateFields = true) {
+  activeProvider = name;
+  document.querySelectorAll('.provider-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.provider === name);
+  });
+  ['ollama','anthropic','openai','custom'].forEach(p => {
+    document.getElementById('settings-' + p).style.display = p === name ? 'block' : 'none';
+  });
+  const detectBtn = document.getElementById('detect-btn');
+  detectBtn.style.display = name === 'ollama' ? '' : 'none';
+}
+
+function saveProviderSettings() {
+  providerConfig.ollama.url    = document.getElementById('ollama-url').value.trim();
+  providerConfig.ollama.model  = document.getElementById('ollama-model').value.trim();
+  providerConfig.anthropic.key   = document.getElementById('anthropic-key').value.trim();
+  providerConfig.anthropic.model = document.getElementById('anthropic-model').value;
+  providerConfig.openai.key   = document.getElementById('openai-key').value.trim();
+  providerConfig.openai.model = document.getElementById('openai-model').value;
+  providerConfig.custom.url   = document.getElementById('custom-url').value.trim();
+  providerConfig.custom.model = document.getElementById('custom-model').value.trim();
+  providerConfig.custom.key   = document.getElementById('custom-key').value.trim();
+  saveProviderToStorage();
+  document.getElementById('provider-label').textContent = PROVIDERS[activeProvider].label;
+  document.getElementById('model-name').textContent = getModelLabel();
+  closeProviderModal();
+}
+
+async function detectOllamaModels() {
+  const url = document.getElementById('ollama-url').value.trim() || 'http://localhost:11434';
+  const hint = document.getElementById('ollama-models-hint');
+  hint.innerHTML = 'Connecting…';
+  try {
+    const res = await fetch(url + '/api/tags');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const models = (data.models || []).map(m => m.name);
+    if (models.length === 0) {
+      hint.innerHTML = '<span style="color:var(--amber)">No models found — run: ollama pull llama3</span>';
+    } else {
+      hint.innerHTML = '<span>Found: ' + models.map(m => `<b style="color:var(--green);cursor:pointer" onclick="document.getElementById('ollama-model').value='${m}'">${m}</b>`).join(' · ') + '</span>';
+      if (!document.getElementById('ollama-model').value) {
+        document.getElementById('ollama-model').value = models[0];
+      }
+    }
+  } catch(e) {
+    hint.innerHTML = '<span style="color:var(--red)">Cannot reach Ollama — is it running?</span>';
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('provider-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeProviderModal();
+});
+
+// ═══════════════════════════════════════
+// AI CALL — multi-provider
+// ═══════════════════════════════════════
+
+async function callAI(messages, systemPrompt) {
+  const cfg = providerConfig[activeProvider];
+
+  if (activeProvider === 'ollama') {
+    const url = cfg.url.replace(/\/$/, '') + '/api/chat';
+    const msgs = [{ role: 'system', content: systemPrompt }, ...messages];
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: cfg.model, messages: msgs, stream: false })
+    });
+    if (!res.ok) throw new Error('Ollama error ' + res.status);
+    const data = await res.json();
+    return data.message?.content || data.response || '';
+  }
+
+  if (activeProvider === 'anthropic') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cfg.key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true'
+      },
+      body: JSON.stringify({ model: cfg.model, max_tokens: 1024, system: systemPrompt, messages })
+    });
+    if (!res.ok) throw new Error('Anthropic error ' + res.status);
+    const data = await res.json();
+    return data.content?.[0]?.text || '';
+  }
+
+  if (activeProvider === 'openai' || activeProvider === 'custom') {
+    const baseUrl = activeProvider === 'openai'
+      ? 'https://api.openai.com/v1'
+      : cfg.url.replace(/\/$/, '');
+    const apiKey = activeProvider === 'openai' ? cfg.key : cfg.key;
+    const model  = activeProvider === 'openai' ? cfg.model : cfg.model;
+    const msgs = [{ role: 'system', content: systemPrompt }, ...messages];
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers['Authorization'] = 'Bearer ' + apiKey;
+    const res = await fetch(baseUrl + '/chat/completions', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ model, messages: msgs, max_tokens: 1024 })
+    });
+    if (!res.ok) throw new Error((activeProvider === 'custom' ? 'Custom' : 'OpenAI') + ' error ' + res.status);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
+  throw new Error('Unknown provider: ' + activeProvider);
+}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+
+let currentNoteId = null;
+let isAiThinking = false;
+let saveTimer = null;
+
+wsApp.subscribe(() => {});
+if (Object.keys(wsApp.getState().notes).length === 0) {
+  const id = crypto.randomUUID();
+  wsApp.emit({ type: 'NOTE_CREATED', id, title: 'Getting Started', content: 'Trinity Workspace is a local-first AI notepad.\n\nEvery keystroke, every AI response — all events in an append-only log.\n\nSupports Ollama (local), Anthropic, OpenAI, or any custom OpenAI-compatible API.\n\nClick the provider pill in the top-right to configure.' });
+  currentNoteId = id;
+}
+
+// ═══════════════════════════════════════
+// UI UPDATES
+// ═══════════════════════════════════════
+
+function updateUI() {
+  const state = wsApp.getState();
+  document.getElementById('event-count-badge').innerHTML =
+    `<span style="font-family:'IBM Plex Mono',monospace;font-weight:600;">log: ${wsApp.log.length}</span>`;
+  const noteList = document.getElementById('note-list');
+  const notes = Object.values(state.notes).sort((a,b) => b.updatedAt - a.updatedAt);
+  noteList.innerHTML = notes.map(n => `
+    <div class="note-item ${n.id === currentNoteId ? 'active' : ''}" onclick="openNote('${n.id}')">
+      <div class="note-title">${n.title || 'Untitled'}</div>
+      <div class="note-preview">${n.content.replace(/<[^>]*>/g,'').slice(0,40) || '—'}</div>
+      <div class="note-ts">${relTime(n.updatedAt)}</div>
+    </div>`).join('');
+  if (currentNoteId) {
+    const note = state.notes[currentNoteId];
+    if (note) {
+      document.getElementById('note-created').textContent = new Date(note.createdAt).toLocaleDateString();
+      const noteEvents = wsApp.log.filter(e => e.id === currentNoteId).length;
+      document.getElementById('note-events').textContent = `${noteEvents} events`;
+      document.getElementById('note-version').textContent = `v${note.version}`;
+    }
+  }
+  const last = wsApp.log[wsApp.log.length - 1];
+  if (last) {
+    document.getElementById('log-tail').innerHTML =
+      `<span class="log-entry-flash">#${last._seq} ${last.type} — ${last._id.slice(0,8)}</span>`;
+  }
+  const content = document.getElementById('note-content');
+  const words = content.textContent.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('word-count').textContent = `${words} word${words !== 1 ? 's' : ''}`;
+  renderAIMessages(state.aiHistory);
+}
+
+function renderAIMessages(history) {
+  const el = document.getElementById('ai-messages');
+  if (history.length === 0) {
+    el.innerHTML = `
+      <div style="padding:16px 0;text-align:center;">
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--ink);font-style:italic;margin-bottom:10px;">Sovereign AI</div>
+        <div style="font-size:14px;color:var(--ink3);line-height:1.8;">Every prompt and response enters the<br>deterministic event log. Fully auditable.<br>Works offline with local Ollama.</div>
+      </div>`;
+    return;
+  }
+  const msgs = history.map(m => {
+    if (m.role === 'user') return `
+      <div class="ai-msg">
+        <div class="ai-msg-header">you · ${relTime(m.ts)}</div>
+        <div class="ai-msg-body user">${m.content}</div>
+      </div>`;
+    if (m.role === 'assistant') return `
+      <div class="ai-msg">
+        <div class="ai-msg-header">✦ trinity ai · ${relTime(m.ts)}</div>
+        <div class="ai-msg-body assistant">${m.content}</div>
+      </div>`;
+    return `
+      <div class="ai-msg">
+        <div class="ai-msg-body" style="color:var(--red);font-size:14px;font-family:'IBM Plex Mono',monospace;font-weight:600;">⚠ error: ${m.content}</div>
+      </div>`;
+  }).join('');
+  const thinking = isAiThinking ? `
+    <div class="ai-thinking">
+      <div class="status-dot thinking"></div>
+      <span>thinking</span>
+      <div class="dots"><span>.</span><span>.</span><span>.</span></div>
+    </div>` : '';
+  el.innerHTML = msgs + thinking;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ═══════════════════════════════════════
+// NOTE OPERATIONS
+// ═══════════════════════════════════════
+
+function createNote() {
+  const id = crypto.randomUUID();
+  wsApp.emit({ type: 'NOTE_CREATED', id, title: '', content: '' });
+  openNote(id);
+}
+
+function openNote(id) {
+  currentNoteId = id;
+  const note = wsApp.getState().notes[id];
+  if (!note) return;
+  document.getElementById('note-title-input').value = note.title;
+  document.getElementById('note-content').innerHTML = note.content;
+  updateUI();
+}
+
+function onNoteChange() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveCurrentNote, 1000);
+  const content = document.getElementById('note-content');
+  const words = content.textContent.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('word-count').textContent = `${words} word${words !== 1 ? 's' : ''}`;
+}
+
+function saveCurrentNote() {
+  if (!currentNoteId) return;
+  const title = document.getElementById('note-title-input').value;
+  const content = document.getElementById('note-content').innerHTML;
+  wsApp.emit({ type: 'NOTE_UPDATED', id: currentNoteId, title, content });
+}
+
+function formatDoc(cmd) {
+  document.execCommand(cmd, false, null);
+  document.getElementById('note-content').focus();
+  onNoteChange();
+}
+
+function insertQuote() {
+  document.execCommand('insertHTML', false,
+    '<blockquote style="border-left:3px solid var(--accent);padding-left:16px;color:var(--ink2);font-style:italic;margin:14px 0;">'
+    + (window.getSelection().toString() || 'Quote') + '</blockquote>');
+  onNoteChange();
+}
+
+// ═══════════════════════════════════════
+// AI WORKFLOW
+// ═══════════════════════════════════════
+
+async function sendAI() {
+  const input = document.getElementById('ai-input');
+  const prompt = input.value.trim();
+  if (!prompt || isAiThinking) return;
+  input.value = '';
+  isAiThinking = true;
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('ai-status-text').textContent = 'calling ' + activeProvider + '…';
+  document.getElementById('online-dot').className = 'status-dot thinking';
+  document.getElementById('online-label').textContent = 'thinking…';
+
+  const msgId = crypto.randomUUID();
+  const note = wsApp.getState().notes[currentNoteId];
+  const noteContext = note ? `\nCurrent note: "${note.title}"\n${note.content.replace(/<[^>]*>/g,'').slice(0,500)}` : '';
+  wsApp.emit({ type: 'AI_PROMPT', id: msgId, prompt, noteId: currentNoteId });
+  renderAIMessages(wsApp.getState().aiHistory);
+
+  const history = wsApp.getState().aiHistory.filter(m => m.role === 'user' || m.role === 'assistant').slice(-6);
+  const messages = history.map(m => ({ role: m.role, content: m.content }));
+  const systemPrompt = `You are a helpful AI writing assistant embedded in a local-first note-taking app called Trinity Workspace. Help users think through and develop their notes. Be concise and thoughtful.${noteContext}`;
+
+  try {
+    const output = await callAI(messages, systemPrompt);
+    wsApp.emit({ type: 'AI_RESULT', id: msgId, output });
+    updateWorkspaceMemory(prompt, output, note?.title);
+  } catch(err) {
+    wsApp.emit({ type: 'AI_ERROR', id: msgId, error: err.message });
+  } finally {
+    isAiThinking = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('ai-status-text').textContent = '⌘↵ to send';
+    document.getElementById('online-dot').className = 'status-dot online';
+    document.getElementById('online-label').textContent = activeProvider;
+  }
+}
+
+function quickAction(action) {
+  const note = wsApp.getState().notes[currentNoteId];
+  const content = note?.content?.replace(/<[^>]*>/g,'') || '';
+  const prompts = {
+    summarize: `Summarize this note in 2-3 sentences:\n\n${content}`,
+    expand:    `Expand on the key ideas in this note with more detail:\n\n${content.slice(0,500)}`,
+    critique:  `What's missing or could be improved in this note?\n\n${content}`,
+    continue:  `Continue this note, following the existing style and tone:\n\n${content.slice(-400)}`
+  };
+  document.getElementById('ai-input').value = prompts[action] || '';
+  sendAI();
+}
+
+function askAIAboutNote() {
+  const note = wsApp.getState().notes[currentNoteId];
+  if (!note) return;
+  document.getElementById('ai-input').value = `What are the key ideas in "${note.title}"?`;
+  document.getElementById('ai-input').focus();
+}
+
+function updateWorkspaceMemory(prompt, response, noteTitle) {
+  const state = wsApp.getState();
+  const currentMemory = [...state.memory];
+  if (noteTitle && !currentMemory.find(m => m.key === noteTitle)) {
+    currentMemory.push({ key: noteTitle, value: `Active note: "${noteTitle}"`, ts: Date.now() });
+  }
+  wsApp.emit({ type: 'MEMORY_UPDATED', items: currentMemory.slice(-10) });
+}
+
+document.getElementById('ai-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendAI();
+});
+
+// ═══════════════════════════════════════
+// AUDIT LOG VIEW
+// ═══════════════════════════════════════
+
+function renderAuditLog() {
+  const el = document.getElementById('audit-log-entries');
+  el.innerHTML = wsApp.log.slice().reverse().map(e => {
+    const colorMap = {
+      'NOTE_CREATED': '#22c55e', 'NOTE_UPDATED': '#4f8ef7', 'NOTE_DELETED': '#ef4444',
+      'AI_PROMPT': '#a78bfa', 'AI_RESULT': '#38bdf8', 'AI_ERROR': '#ef4444', 'MEMORY_UPDATED': '#f59e0b',
+    };
+    const color = colorMap[e.type] || '#888888';
+    return `
+      <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--rule);align-items:start;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink3);min-width:36px;padding-top:2px;font-weight:600;">#${e._seq}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:${color};">${e.type}</span>
+            <span style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace;">${e._id.slice(0,12)}</span>
+            <span style="font-size:13px;color:var(--ink3);margin-left:auto;font-family:'IBM Plex Mono',monospace;">${new Date(e._ts).toLocaleString()}</span>
+          </div>
+          ${e.type === 'NOTE_UPDATED' ? `<div style="font-size:15px;color:var(--ink2);font-weight:500;">${e.title || '—'}</div>` : ''}
+          ${e.type === 'AI_PROMPT' ? `<div style="font-size:15px;color:var(--ink2);font-style:italic;">"${(e.prompt||'').slice(0,90)}${(e.prompt||'').length>90?'…':''}"</div>` : ''}
+          ${e.type === 'AI_RESULT' ? `<div style="font-size:15px;color:var(--ink2);">${(e.output||'').slice(0,110)}${(e.output||'').length>110?'…':''}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMemoryView() {
+  const state = wsApp.getState();
+  const el = document.getElementById('memory-entries');
+  const noteCount = Object.keys(state.notes).length;
+  const aiCount = state.aiHistory.filter(m => m.role === 'user').length;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:36px;">
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:22px;">
+        <div style="font-size:12px;letter-spacing:2px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);margin-bottom:10px;text-transform:uppercase;font-weight:600;">Notes</div>
+        <div style="font-size:42px;font-weight:700;color:var(--ink);">${noteCount}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:22px;">
+        <div style="font-size:12px;letter-spacing:2px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);margin-bottom:10px;text-transform:uppercase;font-weight:600;">AI Prompts</div>
+        <div style="font-size:42px;font-weight:700;color:var(--ink);">${aiCount}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:22px;">
+        <div style="font-size:12px;letter-spacing:2px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);margin-bottom:10px;text-transform:uppercase;font-weight:600;">Log Events</div>
+        <div style="font-size:42px;font-weight:700;color:var(--ink);">${wsApp.log.length}</div>
+      </div>
+    </div>
+    <h2 style="font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:18px;color:var(--ink);">Active Notes</h2>
+    ${Object.values(state.notes).map(n => `
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:22px;margin-bottom:14px;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)'" onclick="openNote('${n.id}');switchModeById('notes')">
+        <div style="font-size:17px;font-weight:700;margin-bottom:6px;color:var(--ink);">${n.title || 'Untitled'}</div>
+        <div style="font-size:14px;color:var(--ink3);">${n.content.replace(/<[^>]*>/g,'').slice(0,90)}${n.content.length>90?'…':''}</div>
+        <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);margin-top:10px;font-weight:500;">${new Date(n.updatedAt).toLocaleString()} · v${n.version}</div>
+      </div>`).join('')}`;
+}
+
+// ═══════════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════════
+
+function switchMode(mode, event) {
+  document.getElementById('notes-mode').style.display = mode === 'notes' ? 'flex' : 'none';
+  document.getElementById('audit-mode').style.display = mode === 'audit' ? 'flex' : 'none';
+  document.getElementById('memory-mode').style.display = mode === 'memory' ? 'flex' : 'none';
+  document.querySelectorAll('.header-tab').forEach(t => t.classList.remove('active'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  if (mode === 'audit') renderAuditLog();
+  if (mode === 'memory') renderMemoryView();
+}
+
+function switchModeById(mode) {
+  const tabs = document.querySelectorAll('.header-tab');
+  const map = { notes: 0, audit: 1, memory: 2 };
+  document.getElementById('notes-mode').style.display = mode === 'notes' ? 'flex' : 'none';
+  document.getElementById('audit-mode').style.display = mode === 'audit' ? 'flex' : 'none';
+  document.getElementById('memory-mode').style.display = mode === 'memory' ? 'flex' : 'none';
+  tabs.forEach(t => t.classList.remove('active'));
+  if (tabs[map[mode]]) tabs[map[mode]].classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+
+function relTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return Math.floor(diff/86400000) + 'd ago';
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+
+// Apply saved provider label
+document.getElementById('provider-label').textContent = PROVIDERS[activeProvider]?.label || activeProvider;
+document.getElementById('model-name').textContent = getModelLabel();
+document.getElementById('online-label').textContent = activeProvider;
+
+const notes = Object.values(wsApp.getState().notes);
+if (notes.length > 0 && !currentNoteId) {
+  currentNoteId = notes.sort((a,b) => b.updatedAt - a.updatedAt)[0].id;
+}
+if (currentNoteId) openNote(currentNoteId);
+else updateUI();
+</script>
+</body>
+</html>
