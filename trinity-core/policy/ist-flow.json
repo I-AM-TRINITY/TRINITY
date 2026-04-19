@@ -1,0 +1,361 @@
+{
+  "$schema": "https://sovereign-revelation.org/schema/token.schema.json",
+  "id": "iconoclast-swarm-token",
+  "title": "Iconoclast Swarm Token",
+  "type": "token",
+  "version": "1.0.0",
+
+  "network": {
+    "chainId": 42161,
+    "name": "Arbitrum One",
+    "rpc": "https://arb1.arbitrum.io/rpc",
+    "explorer": "https://arbiscan.io"
+  },
+
+  "contracts": {
+    "token": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "label": "IconoclastSwarmToken (IST)",
+      "standard": "ERC20",
+      "decimals": 18
+    },
+    "voucher": {
+      "address": "0x1Bb04906C13B7B302B4d516F3E71AEC061E0dA41",
+      "label": "PhysicalTokenTransfer"
+    },
+    "vault": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "label": "MultiAssetVault"
+    },
+    "sale": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "label": "TokenSale"
+    }
+  },
+
+  "token": {
+    "metadata": {
+      "name": "Iconoclast Swarm Token",
+      "symbol": "IST",
+      "decimals": 18,
+      "totalSupply": 1000000000,
+      "standard": "ERC20"
+    },
+
+    "balances": [],
+    "transfers": [],
+
+    "flows": {
+
+      "wallet": {
+        "label": "Wallet",
+        "description": "Create or unlock a local keypair — no MetaMask required.",
+        "states": ["none", "locked", "unlocked"],
+        "initial": "none",
+        "transitions": [
+          {
+            "id": "create",
+            "from": "none",
+            "to": "locked",
+            "label": "Create wallet",
+            "input": {
+              "password": { "type": "string", "secret": true, "minLength": 8, "description": "Encryption password (stored locally with AES-GCM/PBKDF2)" }
+            },
+            "client": {
+              "call": "TrinityWallet.generateWallet",
+              "then": "TrinityWallet.saveWallet(result.privateKey, input.password)"
+            },
+            "output": { "address": "string" }
+          },
+          {
+            "id": "import",
+            "from": "none",
+            "to": "locked",
+            "label": "Import private key",
+            "input": {
+              "privateKeyHex": { "type": "string", "secret": true, "pattern": "^(0x)?[0-9a-fA-F]{64}$" },
+              "password": { "type": "string", "secret": true, "minLength": 8 }
+            },
+            "client": {
+              "call": "TrinityWallet.importWallet(input.privateKeyHex)",
+              "then": "TrinityWallet.saveWallet(result.privateKey, input.password)"
+            },
+            "output": { "address": "string" }
+          },
+          {
+            "id": "unlock",
+            "from": "locked",
+            "to": "unlocked",
+            "label": "Unlock wallet",
+            "input": {
+              "password": { "type": "string", "secret": true }
+            },
+            "client": {
+              "call": "TrinityWallet.loadWallet(input.password)"
+            },
+            "output": { "privateKey": "bytes", "address": "string" }
+          },
+          {
+            "id": "lock",
+            "from": "unlocked",
+            "to": "locked",
+            "label": "Lock wallet",
+            "client": { "call": "TrinityWallet.forgetWallet()" }
+          }
+        ]
+      },
+
+      "auth": {
+        "label": "Sign-in with Ethereum (SIWE)",
+        "description": "Authenticate to TRINITY server using wallet signature — no MetaMask.",
+        "states": ["unauthenticated", "challenge_issued", "authenticated"],
+        "initial": "unauthenticated",
+        "transitions": [
+          {
+            "id": "request_challenge",
+            "from": "unauthenticated",
+            "to": "challenge_issued",
+            "label": "Request challenge",
+            "server": {
+              "endpoint": "POST /auth/challenge",
+              "body": { "address": "$wallet.address", "chainId": "$network.chainId", "domain": "$origin.host", "uri": "$origin.href" }
+            },
+            "output": { "message": "string", "nonce": "string" }
+          },
+          {
+            "id": "sign_and_verify",
+            "from": "challenge_issued",
+            "to": "authenticated",
+            "label": "Sign & verify",
+            "client": {
+              "call": "TrinityWallet.personalSign(challenge.message, wallet.privateKey)"
+            },
+            "server": {
+              "endpoint": "POST /auth/verify",
+              "body": { "address": "$wallet.address", "signature": "$client.result" }
+            },
+            "output": { "sessionToken": "string", "sessionId": "string" }
+          },
+          {
+            "id": "logout",
+            "from": "authenticated",
+            "to": "unauthenticated",
+            "label": "Logout",
+            "server": { "endpoint": "POST /auth/logout" }
+          }
+        ]
+      },
+
+      "voucher": {
+        "label": "Voucher",
+        "description": "Physical-transfer voucher: create with a password hash, pass by re-keying, redeem to claim funds.",
+        "states": ["idle", "deposited", "transferred", "redeemed"],
+        "initial": "idle",
+        "transitions": [
+          {
+            "id": "deposit_eth",
+            "from": "idle",
+            "to": "deposited",
+            "label": "Create ETH voucher",
+            "note": "passwordHash computed client-side — plaintext NEVER leaves the browser.",
+            "input": {
+              "password": { "type": "string", "secret": true, "description": "Secret password for the voucher" },
+              "amountEth": { "type": "number", "minimum": 0.000001 }
+            },
+            "client": {
+              "call": "TrinityWallet.hashVoucherPassword(input.password)",
+              "description": "Computes keccak256(abi.encodePacked(password)) — matches Solidity"
+            },
+            "tx": {
+              "contract": "voucher",
+              "method": "depositETH",
+              "args": ["$client.result"],
+              "value": "$input.amountEth",
+              "abi": [{"name":"depositETH","type":"function","inputs":[{"name":"passwordHash","type":"bytes32"}],"outputs":[],"stateMutability":"payable"}]
+            },
+            "output": {
+              "voucherId": "uint256",
+              "netAmount": "uint256",
+              "event": "VoucherCreated"
+            }
+          },
+          {
+            "id": "deposit_erc20",
+            "from": "idle",
+            "to": "deposited",
+            "label": "Create ERC20 voucher",
+            "input": {
+              "tokenAddress": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "amount": { "type": "number", "minimum": 0 },
+              "password": { "type": "string", "secret": true }
+            },
+            "client": {
+              "call": "TrinityWallet.hashVoucherPassword(input.password)"
+            },
+            "tx": {
+              "contract": "voucher",
+              "method": "depositERC20",
+              "args": ["$input.tokenAddress", "$input.amount", "$client.result"],
+              "abi": [{"name":"depositERC20","type":"function","inputs":[{"name":"token","type":"address"},{"name":"amount","type":"uint256"},{"name":"passwordHash","type":"bytes32"}],"outputs":[],"stateMutability":"nonpayable"}]
+            },
+            "output": { "voucherId": "uint256", "netAmount": "uint256", "event": "VoucherCreated" }
+          },
+          {
+            "id": "transfer",
+            "from": "deposited",
+            "to": "deposited",
+            "label": "Transfer voucher (re-key)",
+            "description": "Hand the voucher to a new owner by changing its password. No wallet needed by the new owner.",
+            "input": {
+              "voucherId": { "type": "uint256" },
+              "oldPassword": { "type": "string", "secret": true },
+              "newPassword": { "type": "string", "secret": true }
+            },
+            "client": {
+              "call": "TrinityWallet.hashVoucherPassword(input.newPassword)"
+            },
+            "tx": {
+              "contract": "voucher",
+              "method": "transferVoucher",
+              "args": ["$input.voucherId", "$input.oldPassword", "$client.result"],
+              "abi": [{"name":"transferVoucher","type":"function","inputs":[{"name":"voucherId","type":"uint256"},{"name":"oldPassword","type":"string"},{"name":"newPasswordHash","type":"bytes32"}],"outputs":[],"stateMutability":"nonpayable"}]
+            },
+            "output": { "transferCount": "uint256", "event": "VoucherTransferred" }
+          },
+          {
+            "id": "redeem",
+            "from": "deposited",
+            "to": "redeemed",
+            "label": "Redeem voucher",
+            "input": {
+              "voucherId": { "type": "uint256" },
+              "password": { "type": "string", "secret": true },
+              "recipient": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$", "default": "$wallet.address" }
+            },
+            "tx": {
+              "contract": "voucher",
+              "method": "redeemVoucher",
+              "args": ["$input.voucherId", "$input.password", "$input.recipient"],
+              "abi": [{"name":"redeemVoucher","type":"function","inputs":[{"name":"voucherId","type":"uint256"},{"name":"password","type":"string"},{"name":"recipient","type":"address"}],"outputs":[],"stateMutability":"nonpayable"}]
+            },
+            "output": { "amount": "uint256", "event": "VoucherRedeemed" }
+          },
+          {
+            "id": "query",
+            "from": "*",
+            "to": "*",
+            "label": "Read voucher",
+            "pure": true,
+            "input": { "voucherId": { "type": "uint256" } },
+            "eth_call": {
+              "contract": "voucher",
+              "method": "vouchers",
+              "args": ["$input.voucherId"],
+              "abi": [{"name":"vouchers","type":"function","inputs":[{"name":"","type":"uint256"}],"outputs":[{"name":"amount","type":"uint256"},{"name":"secretHash","type":"bytes32"},{"name":"transferCount","type":"uint256"},{"name":"redeemed","type":"bool"},{"name":"isEth","type":"bool"},{"name":"tokenAddress","type":"address"},{"name":"createdAt","type":"uint256"},{"name":"lastTransferAt","type":"uint256"},{"name":"depositor","type":"address"},{"name":"redeemer","type":"address"}],"stateMutability":"view"}]
+            },
+            "output": { "amount": "uint256", "redeemed": "bool", "isEth": "bool", "transferCount": "uint256" }
+          }
+        ]
+      },
+
+      "staking": {
+        "label": "Staking",
+        "description": "Stake IST tokens in MultiAssetVault to earn a share of protocol fees.",
+        "states": ["unstaked", "staked", "claiming"],
+        "initial": "unstaked",
+        "transitions": [
+          {
+            "id": "stake",
+            "from": "unstaked",
+            "to": "staked",
+            "label": "Stake IST",
+            "input": { "amount": { "type": "uint256", "minimum": 1 } },
+            "tx": {
+              "contract": "vault",
+              "method": "stake",
+              "args": ["$input.amount"],
+              "abi": [{"name":"stake","type":"function","inputs":[{"name":"amount","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable"}]
+            },
+            "output": { "event": "Staked" }
+          },
+          {
+            "id": "withdraw_stake",
+            "from": "staked",
+            "to": "unstaked",
+            "label": "Withdraw stake",
+            "input": { "amount": { "type": "uint256" } },
+            "tx": {
+              "contract": "vault",
+              "method": "withdrawStake",
+              "args": ["$input.amount"],
+              "abi": [{"name":"withdrawStake","type":"function","inputs":[{"name":"amount","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable"}]
+            },
+            "output": { "event": "Withdrawn" }
+          },
+          {
+            "id": "claim_rewards",
+            "from": "staked",
+            "to": "staked",
+            "label": "Claim rewards",
+            "tx": {
+              "contract": "vault",
+              "method": "claimRewards",
+              "args": [],
+              "abi": [{"name":"claimRewards","type":"function","inputs":[],"outputs":[],"stateMutability":"nonpayable"}]
+            },
+            "output": { "reward": "uint256", "event": "RewardClaimed" }
+          }
+        ]
+      },
+
+      "sale": {
+        "label": "Token Sale",
+        "description": "Buy IST tokens with ETH at a fixed price.",
+        "states": ["idle", "purchased"],
+        "initial": "idle",
+        "transitions": [
+          {
+            "id": "buy",
+            "from": "idle",
+            "to": "purchased",
+            "label": "Buy IST",
+            "input": {
+              "numTokens": { "type": "uint256", "minimum": 1, "description": "Number of IST tokens (whole units, no decimals)" }
+            },
+            "computed": {
+              "costEth": "$input.numTokens * 0.000003",
+              "description": "3000 IST per ETH (0.000003 ETH each)"
+            },
+            "tx": {
+              "contract": "sale",
+              "method": "buyTokens",
+              "args": ["$input.numTokens"],
+              "value": "$computed.costEth",
+              "abi": [{"name":"buyTokens","type":"function","inputs":[{"name":"_numTokens","type":"uint256"}],"outputs":[],"stateMutability":"payable"}]
+            },
+            "output": { "tokensReceived": "uint256" }
+          }
+        ]
+      },
+
+      "governance": {
+        "label": "Governance",
+        "description": "Vote on proposals using IST voting power (ERC20Votes + timestamp clock).",
+        "states": [],
+        "transitions": [],
+        "note": "Governor contract address TBD — IST implements ERC20Votes with block.timestamp clock."
+      }
+    },
+
+    "governance": {
+      "proposals": [],
+      "minVotingPower": 100,
+      "votingPeriod": 604800
+    },
+
+    "compliance": {
+      "kycRequired": false,
+      "auditLog": []
+    }
+  }
+}

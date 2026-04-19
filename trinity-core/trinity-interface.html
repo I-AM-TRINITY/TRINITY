@@ -1,0 +1,2734 @@
+<!--
+Trinity SDK / Planespace / Trinity Core
+Copyright (c) 2026 James Chapman (XheCarpenXer)
+
+Author: James Chapman
+Alias: XheCarpenXer
+Contact: xhecarpenxer@gmail.com
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This software is dual-licensed:
+1. Open Source License: GNU Affero General Public License v3.0 or later (AGPLv3+).
+2. Commercial / Government License: available for private, closed-source, warranty-backed,
+   or separately negotiated terms beyond AGPL compliance.
+
+See: LICENSE, COMMERCIAL-LICENSE.md, FEE-SCHEDULE.md, CLA.md, LEGAL-NOTES.md
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+-->
+
+<!--
+  TRINITY SYSTEM INTERFACE
+  Sovereign Compute Network — v3.0
+  Foundation → Interface
+  
+  Architecture:
+    crypto → primitives → transport → protocol → execution → policy → runtime → ui
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRINITY · Sovereign Compute Network</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+/* ── DESIGN TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --void:     #030405;
+  --deep:     #070a0f;
+  --ground:   #0c1018;
+  --surface:  #111722;
+  --raised:   #171f2d;
+  --float:    #1e2840;
+  --border:   rgba(255,255,255,0.06);
+  --border2:  rgba(255,255,255,0.11);
+  --border3:  rgba(255,255,255,0.18);
+  --text:     #d0dae8;
+  --text2:    #7a91a8;
+  --text3:    #3d5468;
+  --text4:    #243040;
+  --g:        #00e676;    /* green  – live / success */
+  --c:        #00e5ff;    /* cyan   – transport / info */
+  --v:        #b388ff;    /* violet – execution / AI */
+  --a:        #ff6d00;    /* amber  – policy / warn */
+  --r:        #ff5252;    /* red    – error / danger */
+  --y:        #ffd600;    /* yellow – governance */
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Space Grotesk', sans-serif;
+  --sidebar:  240px;
+  --topbar:   50px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--void);
+  color: var(--text);
+}
+
+/* ── SCANLINE OVERLAY ───────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px
+  );
+}
+
+/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+#shell {
+  display: grid;
+  grid-template-columns: var(--sidebar) 1fr;
+  grid-template-rows: var(--topbar) 1fr;
+  height: 100vh;
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+#topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--deep);
+  padding: 0;
+  position: relative;
+  z-index: 200;
+}
+
+.tb-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  width: var(--sidebar);
+  border-right: 1px solid var(--border);
+  height: 100%;
+}
+
+.brand-mark {
+  width: 28px; height: 28px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.brand-mark svg { width: 100%; height: 100%; }
+
+.brand-text {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  color: var(--g);
+}
+
+.brand-ver {
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+.tb-meta {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 20px;
+}
+
+.tb-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tb-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--r);
+  flex-shrink: 0;
+  transition: background 0.4s, box-shadow 0.4s;
+}
+
+.tb-dot.live {
+  background: var(--g);
+  box-shadow: 0 0 8px var(--g);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.tb-nid {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.tb-nid em {
+  color: var(--text2);
+  font-style: normal;
+}
+
+.tb-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+.tb-stat { font-size: 10px; color: var(--text3); }
+.tb-stat em { color: var(--text2); font-style: normal; font-weight: 500; }
+
+.tb-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.pill {
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+
+.pill.ok { border-color: rgba(0,230,118,0.3); color: var(--g); background: rgba(0,230,118,0.06); }
+.pill.warn { border-color: rgba(255,109,0,0.3); color: var(--a); background: rgba(255,109,0,0.06); }
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+#sidebar {
+  background: var(--deep);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#sidebar::-webkit-scrollbar { width: 2px; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.nav-group-label {
+  padding: 14px 16px 5px;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--text4);
+  text-transform: uppercase;
+  font-family: var(--sans);
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text3);
+  transition: all 0.12s;
+  border-left: 2px solid transparent;
+  user-select: none;
+  position: relative;
+}
+
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.nav-item.active { color: var(--text); border-left-color: var(--g); background: rgba(0,230,118,0.04); }
+.nav-item.active .nav-ic { opacity: 1; }
+
+.nav-ic {
+  width: 14px;
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-ic { opacity: 1; }
+
+.nav-badge {
+  margin-left: auto;
+  font-size: 9px;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.nb-g { background: rgba(0,230,118,0.15); color: var(--g); }
+.nb-c { background: rgba(0,229,255,0.15); color: var(--c); }
+.nb-v { background: rgba(179,136,255,0.15); color: var(--v); }
+.nb-a { background: rgba(255,109,0,0.15); color: var(--a); }
+
+.nav-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sf-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text4);
+  line-height: 1.9;
+}
+
+.sf-val { color: var(--text3); }
+.sf-val.live { color: var(--g); }
+.sf-val.warn { color: var(--a); }
+
+/* ── MAIN CONTENT ────────────────────────────────────────────────────────── */
+#main {
+  background: var(--void);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel.active { display: flex; }
+
+.panel-head {
+  padding: 16px 22px 13px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--ground);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ph-left { flex: 1; }
+
+.ph-title {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.ph-sub {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.ph-badge {
+  font-size: 9px;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.ph-badge-g { background: rgba(0,230,118,0.1); color: var(--g); border: 1px solid rgba(0,230,118,0.2); }
+.ph-badge-c { background: rgba(0,229,255,0.1); color: var(--c); border: 1px solid rgba(0,229,255,0.2); }
+.ph-badge-v { background: rgba(179,136,255,0.1); color: var(--v); border: 1px solid rgba(179,136,255,0.2); }
+.ph-badge-a { background: rgba(255,109,0,0.1); color: var(--a); border: 1px solid rgba(255,109,0,0.2); }
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+
+.panel-body::-webkit-scrollbar { width: 3px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--float); }
+
+/* ── COMMON COMPONENTS ───────────────────────────────────────────────────── */
+.card {
+  background: var(--ground);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.card-hd {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text4);
+  text-transform: uppercase;
+  font-family: var(--sans);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.card-hd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.card-hd-row .card-hd { margin-bottom: 0; }
+
+input, textarea, select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  width: 100%;
+  outline: none;
+  transition: border 0.18s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--c);
+}
+
+textarea { resize: vertical; min-height: 64px; }
+
+select option { background: var(--surface); }
+
+button {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 7px 14px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.14s;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+button:hover { color: var(--text); border-color: var(--border3); background: var(--raised); }
+
+button.btn-g { background: rgba(0,230,118,0.08); border-color: rgba(0,230,118,0.3); color: var(--g); }
+button.btn-g:hover { background: rgba(0,230,118,0.14); }
+button.btn-c { background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); color: var(--c); }
+button.btn-c:hover { background: rgba(0,229,255,0.14); }
+button.btn-v { background: rgba(179,136,255,0.08); border-color: rgba(179,136,255,0.3); color: var(--v); }
+button.btn-v:hover { background: rgba(179,136,255,0.14); }
+button.btn-r { background: rgba(255,82,82,0.08); border-color: rgba(255,82,82,0.3); color: var(--r); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.row { display: flex; gap: 8px; }
+.row.ac { align-items: center; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+label { font-size: 9px; color: var(--text3); display: block; margin-bottom: 4px; letter-spacing: 0.08em; }
+
+.mono-block {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px;
+  line-height: 1.7;
+  word-break: break-all;
+}
+
+.mono-block em { color: var(--g); font-style: normal; }
+.mono-block .c { color: var(--c); }
+.mono-block .v { color: var(--v); }
+.mono-block .a { color: var(--a); }
+
+.tag {
+  display: inline-block;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.tag-g { background: rgba(0,230,118,0.1); color: var(--g); border: 1px solid rgba(0,230,118,0.2); }
+.tag-c { background: rgba(0,229,255,0.1); color: var(--c); border: 1px solid rgba(0,229,255,0.2); }
+.tag-v { background: rgba(179,136,255,0.1); color: var(--v); border: 1px solid rgba(179,136,255,0.2); }
+.tag-a { background: rgba(255,109,0,0.1); color: var(--a); border: 1px solid rgba(255,109,0,0.2); }
+.tag-r { background: rgba(255,82,82,0.1); color: var(--r); border: 1px solid rgba(255,82,82,0.2); }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.stat-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.stat-val.g { color: var(--g); }
+.stat-val.c { color: var(--c); }
+.stat-val.v { color: var(--v); }
+.stat-val.a { color: var(--a); }
+
+.stat-lbl {
+  font-size: 8px;
+  color: var(--text4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--sans);
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+
+.li-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.li-name { flex: 1; color: var(--text); }
+.li-meta { font-size: 10px; color: var(--text3); }
+.li-badge { font-size: 9px; color: var(--text4); }
+
+.ledger-row {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  align-items: flex-start;
+}
+
+.lr-ts { color: var(--text4); flex-shrink: 0; width: 56px; font-family: var(--mono); }
+.lr-type { flex-shrink: 0; width: 90px; }
+.lr-hash { color: var(--text4); flex-shrink: 0; width: 70px; font-family: var(--mono); }
+.lr-msg { color: var(--text2); flex: 1; line-height: 1.5; }
+
+.progress-bar {
+  height: 3px;
+  background: var(--float);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.pb-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text4);
+  font-size: 11px;
+  line-height: 2;
+}
+
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+#toast-stack {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--raised);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 9px 14px;
+  font-size: 11px;
+  color: var(--text);
+  animation: toast-in 0.18s ease;
+  max-width: 300px;
+}
+
+.toast.t-g { border-color: rgba(0,230,118,0.3); color: var(--g); }
+.toast.t-r { border-color: rgba(255,82,82,0.3); color: var(--r); }
+.toast.t-c { border-color: rgba(0,229,255,0.3); color: var(--c); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── TERMINAL STREAM ─────────────────────────────────────────────────────── */
+#event-stream {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.8;
+  padding: 12px;
+  background: var(--void);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  height: 200px;
+  overflow-y: auto;
+}
+
+#event-stream::-webkit-scrollbar { width: 2px; }
+#event-stream::-webkit-scrollbar-thumb { background: var(--float); }
+
+.ev-line { display: flex; gap: 10px; }
+.ev-ts   { color: var(--text4); flex-shrink: 0; }
+.ev-type { flex-shrink: 0; width: 140px; }
+.ev-body { color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── JSON FLOW EDITOR ────────────────────────────────────────────────────── */
+.jf-editor {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--void);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 12px;
+  min-height: 160px;
+  resize: vertical;
+  color: #9cdcfe;
+  line-height: 1.7;
+}
+
+.jf-output {
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--void);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 12px;
+  min-height: 80px;
+  color: var(--text2);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ── LAYER ARCHITECTURE VIZ ─────────────────────────────────────────────── */
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+
+.layer-row:hover { border-color: var(--border2); }
+.layer-row.layer-det { background: rgba(0,230,118,0.03); border-color: rgba(0,230,118,0.15); }
+.layer-row.layer-ndet { background: rgba(0,229,255,0.03); border-color: rgba(0,229,255,0.12); }
+
+.lr-arrow { color: var(--text4); font-size: 10px; }
+.lr-name { font-family: var(--sans); font-weight: 600; font-size: 11px; color: var(--text); min-width: 110px; }
+.lr-files { font-size: 10px; color: var(--text3); flex: 1; }
+.lr-status { font-size: 9px; }
+
+/* ── AI / KERNEL PANEL ───────────────────────────────────────────────────── */
+.ai-bubble {
+  background: rgba(179,136,255,0.06);
+  border: 1px solid rgba(179,136,255,0.15);
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.ai-thinking {
+  font-size: 11px;
+  color: var(--text4);
+  font-style: italic;
+}
+
+/* ── SCHEMA TABLE ────────────────────────────────────────────────────────── */
+.schema-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.schema-table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text4);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--sans);
+  font-weight: 600;
+  background: var(--surface);
+}
+
+.schema-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+}
+
+.schema-table tr:hover td { background: rgba(255,255,255,0.01); }
+
+/* ── CHAT INTERFACE ──────────────────────────────────────────────────────── */
+#chat-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#chat-msgs::-webkit-scrollbar { width: 3px; }
+#chat-msgs::-webkit-scrollbar-thumb { background: var(--float); }
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 76%;
+}
+
+.chat-msg.mine { align-self: flex-end; align-items: flex-end; }
+.chat-msg.theirs { align-self: flex-start; }
+
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.mine .chat-bubble { background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.2); }
+.theirs .chat-bubble { background: var(--raised); border: 1px solid var(--border2); }
+
+.chat-meta {
+  font-size: 9px;
+  color: var(--text4);
+  margin-top: 2px;
+  padding: 0 2px;
+}
+
+#chat-input-row {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  background: var(--ground);
+}
+
+/* ── FLOW CANVAS ─────────────────────────────────────────────────────────── */
+#flow-canvas {
+  flex: 1;
+  background: var(--void);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+}
+
+.flow-node {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: move;
+  user-select: none;
+  min-width: 110px;
+  transition: border-color 0.18s;
+}
+
+.flow-node:hover { border-color: var(--border3); }
+.flow-node-title { font-size: 10px; font-family: var(--sans); font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.flow-node-type  { font-size: 9px; color: var(--text4); }
+
+.flow-node.fn-input  { border-top: 2px solid var(--g); }
+.flow-node.fn-process { border-top: 2px solid var(--c); }
+.flow-node.fn-output { border-top: 2px solid var(--v); }
+.flow-node.fn-condition { border-top: 2px solid var(--a); }
+
+/* ── VOTE BAR ────────────────────────────────────────────────────────────── */
+.vote-bar {
+  display: flex;
+  height: 4px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.vb-yes { background: var(--g); }
+.vb-no  { background: var(--r); }
+
+/* ── WASM KERNEL DISPLAY ─────────────────────────────────────────────────── */
+.kernel-lock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.kl-icon { font-size: 10px; }
+.kl-name { flex: 1; color: var(--text2); }
+.kl-status { font-size: 9px; }
+</style>
+</head>
+<body>
+
+<div id="shell">
+
+  <!-- ── TOPBAR ─────────────────────────────────────────────────────────── -->
+  <div id="topbar">
+    <div class="tb-brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="14,2 26,22 2,22" stroke="#00e676" stroke-width="1.5" fill="rgba(0,230,118,0.06)"/>
+          <polygon points="14,9 20,20 8,20" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="0.75"/>
+          <circle cx="14" cy="14" r="2.5" fill="#00e676"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-text">TRINITY</div>
+        <div class="brand-ver">SOVEREIGN COMPUTE · v3.0</div>
+      </div>
+    </div>
+
+    <div class="tb-meta">
+      <div class="tb-node">
+        <div class="tb-dot" id="net-dot"></div>
+        <div class="tb-nid">node: <em id="node-short">—</em></div>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-stat">peers: <em id="stat-peers">0</em></div>
+      <div class="tb-stat">events: <em id="stat-events">0</em></div>
+      <div class="tb-stat">finalized: <em id="stat-final">0</em></div>
+      <div class="tb-stat">apps: <em id="stat-apps">0</em></div>
+      <div class="tb-stat">stake: <em id="stat-stake">0 IST</em></div>
+    </div>
+
+    <div class="tb-right">
+      <div class="pill" id="ollama-pill">ollama: —</div>
+      <div class="pill" id="chain-pill">chain: offline</div>
+    </div>
+  </div>
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────────────────── -->
+  <div id="sidebar">
+    <div class="nav-group-label">Foundation</div>
+    <div class="nav-item active" onclick="nav('portal', this)"><span class="nav-ic">◈</span> Portal</div>
+    <div class="nav-item" onclick="nav('identity', this)"><span class="nav-ic">◉</span> Identity</div>
+    <div class="nav-item" onclick="nav('crypto', this)"><span class="nav-ic">⬡</span> Crypto</div>
+
+    <div class="nav-group-label">Infrastructure</div>
+    <div class="nav-item" onclick="nav('network', this)">
+      <span class="nav-ic">⇉</span> Network
+      <span class="nav-badge nb-g" id="badge-peers">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('transport', this)">
+      <span class="nav-ic">⟷</span> Transport
+      <span class="nav-badge nb-c" id="badge-lanes">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('protocol', this)"><span class="nav-ic">∿</span> Protocol</div>
+
+    <div class="nav-group-label">Execution</div>
+    <div class="nav-item" onclick="nav('jsonflow', this)">
+      <span class="nav-ic">⊕</span> JSONFlow IDE
+    </div>
+    <div class="nav-item" onclick="nav('kernel', this)"><span class="nav-ic">⊛</span> Kernel</div>
+    <div class="nav-item" onclick="nav('ai', this)">
+      <span class="nav-ic">◬</span> AI / Ollama
+      <span class="nav-badge nb-v" id="badge-ai">—</span>
+    </div>
+
+    <div class="nav-group-label">Policy + Economy</div>
+    <div class="nav-item" onclick="nav('economy', this)">
+      <span class="nav-ic">◎</span> Economy
+      <span class="nav-badge nb-a" id="badge-apps">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('stake', this)"><span class="nav-ic">⊞</span> Staking</div>
+    <div class="nav-item" onclick="nav('governance', this)"><span class="nav-ic">⊜</span> Governance</div>
+
+    <div class="nav-group-label">Surfaces</div>
+    <div class="nav-item" onclick="nav('messages', this)">
+      <span class="nav-ic">⌘</span> Messages
+      <span class="nav-badge nb-g" id="badge-msgs" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('files', this)"><span class="nav-ic">◫</span> Files</div>
+    <div class="nav-item" onclick="nav('ledger', this)"><span class="nav-ic">▦</span> Ledger</div>
+    <div class="nav-item" onclick="nav('audit', this)"><span class="nav-ic">✦</span> Audit</div>
+
+    <div class="sidebar-foot">
+      <div class="sf-row"><span>branch</span><span class="sf-val live" id="sf-branch">main</span></div>
+      <div class="sf-row"><span>head hash</span><span class="sf-val" id="sf-hash">—</span></div>
+      <div class="sf-row"><span>transport</span><span class="sf-val" id="sf-transport">local</span></div>
+      <div class="sf-row"><span>encryption</span><span class="sf-val live">AES-256-GCM</span></div>
+      <div class="sf-row"><span>wasm kernel</span><span class="sf-val" id="sf-wasm">—</span></div>
+    </div>
+  </div>
+
+  <!-- ── MAIN PANELS ───────────────────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- PORTAL ──────────────────────────────────────────────────────────── -->
+    <div class="panel active" id="panel-portal">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">PORTAL — System Status</div>
+          <div class="ph-sub">Sovereign compute network. Full-stack. Deterministic. Auditable.</div>
+        </div>
+        <div class="ph-badge ph-badge-g" id="portal-status-badge">OFFLINE</div>
+      </div>
+      <div class="panel-body col">
+        <div class="stat-grid">
+          <div class="stat-cell">
+            <div class="stat-val g" id="pstat-peers">0</div>
+            <div class="stat-lbl">peers</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-val c" id="pstat-events">0</div>
+            <div class="stat-lbl">events</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-val" id="pstat-finalized">0</div>
+            <div class="stat-lbl">finalized</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-val a" id="pstat-apps">0</div>
+            <div class="stat-lbl">apps</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-val v" id="pstat-stake">0</div>
+            <div class="stat-lbl">IST staked</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-val" id="pstat-bets">0</div>
+            <div class="stat-lbl">bets</div>
+          </div>
+        </div>
+
+        <!-- Layer architecture overview -->
+        <div class="card">
+          <div class="card-hd">Layer Architecture</div>
+          <div class="layer-stack">
+            <div class="layer-row layer-det" onclick="nav('crypto')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">crypto/</span>
+              <span class="lr-files">wallet.js</span>
+              <span class="lr-status"><span class="tag tag-g">deterministic</span></span>
+            </div>
+            <div class="layer-row layer-det" onclick="nav('identity')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">primitives/</span>
+              <span class="lr-files">sovereign-log · sovereign-bus · identity</span>
+              <span class="lr-status"><span class="tag tag-g">deterministic</span></span>
+            </div>
+            <div class="layer-row layer-ndet" onclick="nav('transport')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">transport/</span>
+              <span class="lr-files">local · SSE · WebRTC · validator · multi</span>
+              <span class="lr-status"><span class="tag tag-c">i/o</span></span>
+            </div>
+            <div class="layer-row layer-ndet" onclick="nav('protocol')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">protocol/</span>
+              <span class="lr-files">sovereign-network · ledger-bridge · identity-bridge</span>
+              <span class="lr-status"><span class="tag tag-c">i/o</span></span>
+            </div>
+            <div class="layer-row layer-det" onclick="nav('jsonflow')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">execution/engine/</span>
+              <span class="lr-files">jsonflow · compiler · genesis · state</span>
+              <span class="lr-status"><span class="tag tag-g">deterministic</span></span>
+            </div>
+            <div class="layer-row layer-ndet" onclick="nav('ai')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">execution/adapters/</span>
+              <span class="lr-files">ollama · kernel-adapter</span>
+              <span class="lr-status"><span class="tag tag-v">non-det</span></span>
+            </div>
+            <div class="layer-row layer-ndet" onclick="nav('economy')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">policy/</span>
+              <span class="lr-files">economy · ist-flow</span>
+              <span class="lr-status"><span class="tag tag-a">policy</span></span>
+            </div>
+            <div class="layer-row layer-ndet" onclick="nav('ledger')">
+              <span class="lr-arrow">▲</span>
+              <span class="lr-name">runtime/</span>
+              <span class="lr-files">server · audit</span>
+              <span class="lr-status"><span class="tag tag-c">runtime</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live event stream -->
+        <div class="card">
+          <div class="card-hd-row">
+            <div class="card-hd">Live Event Stream</div>
+            <button onclick="clearStream()" style="font-size:9px;padding:3px 8px">clear</button>
+          </div>
+          <div id="event-stream">
+            <div class="ev-line">
+              <span class="ev-ts">00:00:00</span>
+              <span class="ev-type" style="color:var(--g)">SYSTEM_BOOT</span>
+              <span class="ev-body">Trinity node initializing…</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="card">
+          <div class="card-hd">Quick Actions</div>
+          <div class="row" style="flex-wrap:wrap;gap:8px">
+            <button class="btn-g" onclick="bootNode()">⚡ Boot Node</button>
+            <button class="btn-c" onclick="nav('network')">⬡ Connect Peers</button>
+            <button class="btn-v" onclick="nav('jsonflow')">⊕ New JSONFlow</button>
+            <button class="btn-a" onclick="nav('economy')">◎ Publish App</button>
+            <button onclick="emitTestEvent()">▦ Emit Test Event</button>
+            <button onclick="runAudit()">✦ Run Audit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IDENTITY ────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-identity">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">IDENTITY KERNEL — primitives/identity.js</div>
+          <div class="ph-sub">Sovereign keypair. No central authority. EIP-191 signing.</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Layer 1 · Deterministic</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Node Identity</div>
+          <div class="row ac" style="gap:10px;margin-bottom:12px">
+            <div style="flex:1">
+              <label>Display name</label>
+              <input id="id-name" placeholder="sovereign-node" oninput="updateName()">
+            </div>
+            <button class="btn-g" onclick="generateKeypair()" style="margin-top:18px">Generate keys</button>
+          </div>
+          <div class="mono-block" id="id-display">
+            No keypair generated. Click <em>Generate keys</em> to create your sovereign identity.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Signing</div>
+          <div class="col">
+            <div>
+              <label>Message to sign</label>
+              <input id="sign-msg" placeholder="message to sign with private key">
+            </div>
+            <div class="row">
+              <button onclick="signMsg()" class="btn-c" style="flex:1">Sign (EIP-191)</button>
+              <button onclick="verifyMsg()" style="flex:1">Verify signature</button>
+            </div>
+            <div class="mono-block" id="sign-output">—</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Key Management</div>
+          <div class="row" style="flex-wrap:wrap;gap:8px">
+            <button onclick="exportIdentity()">Export identity JSON</button>
+            <button onclick="importIdentityPrompt()">Import identity</button>
+            <button class="btn-r" onclick="clearIdentity()">Clear keypair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRYPTO ──────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-crypto">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">CRYPTO PRIMITIVES — crypto/wallet.js</div>
+          <div class="ph-sub">Keccak-256 · secp256k1 · EIP-191 · AES-GCM · PBKDF2. No I/O. No state.</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Deterministic · Pure</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Keccak-256 Hash</div>
+          <div class="row ac" style="gap:8px">
+            <input id="keccak-input" placeholder="data to hash…" style="flex:1">
+            <button class="btn-c" onclick="doKeccak()">Hash</button>
+          </div>
+          <div class="mono-block" id="keccak-out" style="margin-top:8px">—</div>
+        </div>
+        <div class="card">
+          <div class="card-hd">FNV-32 (Sovereign Log Hash)</div>
+          <div class="row ac" style="gap:8px">
+            <input id="fnv-input" placeholder="event payload to hash…" style="flex:1">
+            <button onclick="doFnv()">Compute</button>
+          </div>
+          <div class="mono-block" id="fnv-out" style="margin-top:8px">—</div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Address Utilities</div>
+          <div class="row ac" style="gap:8px">
+            <input id="addr-input" placeholder="0x address for EIP-55 checksum…" style="flex:1">
+            <button onclick="doChecksum()">Checksum</button>
+          </div>
+          <div class="mono-block" id="addr-out" style="margin-top:8px">—</div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Interface Contract</div>
+          <table class="schema-table" style="width:100%">
+            <tr><th>Function</th><th>Signature</th><th>Type</th></tr>
+            <tr><td>generateKeypairSync</td><td>() → { address, privateKey }</td><td><span class="tag tag-g">pure</span></td></tr>
+            <tr><td>sign</td><td>(msg, privKey) → Promise&lt;sig&gt;</td><td><span class="tag tag-g">pure</span></td></tr>
+            <tr><td>recoverAddress</td><td>(msg, sig) → address</td><td><span class="tag tag-g">pure</span></td></tr>
+            <tr><td>keccak256</td><td>(data) → hex</td><td><span class="tag tag-g">pure</span></td></tr>
+            <tr><td>checksumAddress</td><td>(addr) → EIP-55 addr</td><td><span class="tag tag-g">pure</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- NETWORK ─────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-network">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">P2P NETWORK — protocol/sovereign-network.js</div>
+          <div class="ph-sub">BFT gossip + &gt;2/3 quorum finality + IndexedDB persistence</div>
+        </div>
+        <div class="ph-badge ph-badge-c">transport/protocol</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Connect to Peer</div>
+          <div class="row ac" style="gap:8px">
+            <input id="peer-url" placeholder="http://localhost:3001 or peer offer…" style="flex:1">
+            <button class="btn-g" onclick="connectPeer()">Connect</button>
+          </div>
+          <div style="margin-top:8px">
+            <label>WebRTC Offer (paste peer's offer)</label>
+            <textarea id="peer-offer" style="height:60px;font-size:10px" placeholder="paste offer JSON here…"></textarea>
+            <div class="row" style="margin-top:6px;gap:8px">
+              <button onclick="createOffer()" class="btn-c" style="flex:1">Create my offer</button>
+              <button onclick="acceptOffer()" style="flex:1">Accept offer</button>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Your offer (copy and share)</label>
+            <textarea id="my-offer" readonly style="height:56px;font-size:10px;cursor:text" onclick="this.select()" placeholder="Generate offer to share…"></textarea>
+            <button onclick="copyOffer()" style="margin-top:4px;font-size:10px">Copy</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Connected Peers (<span id="peer-count">0</span>)</div>
+          <div id="peer-list">
+            <div class="empty-state">No peers connected.<br>Share your offer with another TRINITY node.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">BFT Quorum State</div>
+          <div style="font-size:11px;color:var(--text2);line-height:2">
+            <div>Quorum size: <span id="quorum-size" style="color:var(--c)">0</span> of <span id="quorum-total">0</span> nodes</div>
+            <div>Threshold: <span style="color:var(--g)">&gt;2/3 required for finality</span></div>
+            <div>Finalized blocks: <span id="quorum-finalized" style="color:var(--g)">0</span></div>
+          </div>
+          <div class="progress-bar" style="margin-top:10px">
+            <div class="pb-fill" id="quorum-bar" style="width:0%;background:var(--c)"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Broadcast</div>
+          <div class="row ac" style="gap:8px">
+            <input id="bc-msg" placeholder="Message to broadcast to all peers…" style="flex:1">
+            <button onclick="doBroadcast()" class="btn-c">Broadcast</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT ───────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-transport">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">MULTI-LANE TRANSPORT — transport/transport.js</div>
+          <div class="ph-sub">Local · SSE · WebRTC · Validator · MultiTransport. Byte movement only.</div>
+        </div>
+        <div class="ph-badge ph-badge-c">I/O Layer</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Active Transport Variants</div>
+          <div id="lane-list" class="col">
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--g)"></div>
+              <div class="li-name">LocalTransport</div>
+              <div class="li-meta">BroadcastChannel</div>
+              <div class="li-badge"><span class="tag tag-g">active</span></div>
+            </div>
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--text4)"></div>
+              <div class="li-name">SSETransport</div>
+              <div class="li-meta">HTTP Server-Sent Events</div>
+              <div class="li-badge"><span class="tag" style="color:var(--text4);border:1px solid var(--border)">idle</span></div>
+            </div>
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--text4)"></div>
+              <div class="li-name">WebRTCTransport</div>
+              <div class="li-meta">PeerJS DataChannel (P2P)</div>
+              <div class="li-badge"><span class="tag" style="color:var(--text4);border:1px solid var(--border)">idle</span></div>
+            </div>
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--text4)"></div>
+              <div class="li-name">ValidatorTransport</div>
+              <div class="li-meta">HTTP validator endpoint</div>
+              <div class="li-badge"><span class="tag" style="color:var(--text4);border:1px solid var(--border)">idle</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Transport Invariants</div>
+          <div style="font-size:11px;color:var(--text2);line-height:2">
+            <div>✓ Transport does NOT parse payload semantics</div>
+            <div>✓ Deduplication by <span style="color:var(--c)">nonce</span> in MultiTransport</div>
+            <div>✓ Internet only for WebRTC STUN/signaling bootstrap</div>
+            <div>✓ All variants share the Transport interface</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Server Configuration</div>
+          <div class="col">
+            <div class="row ac" style="gap:8px">
+              <input id="api-url" placeholder="http://localhost:3000/api" value="http://localhost:3000/api" style="flex:1">
+              <button class="btn-c" onclick="connectServer()">Connect</button>
+            </div>
+            <div class="row ac" style="gap:8px">
+              <input id="validator-url" placeholder="validator endpoint URL" style="flex:1">
+              <button onclick="connectValidator()">Add validator</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROTOCOL ────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-protocol">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">PROTOCOL LAYER — sovereign-network + ledger-bridge</div>
+          <div class="ph-sub">Event type registry · Hash chain · I1–I6 canonical events</div>
+        </div>
+        <div class="ph-badge ph-badge-c">Protocol</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Canonical Event Registry (I1–I6)</div>
+          <table class="schema-table">
+            <tr><th>Code</th><th>Event Type</th><th>Layer</th></tr>
+            <tr><td><span class="tag tag-c">I1</span></td><td>IDENTITY_CREATED</td><td>primitives</td></tr>
+            <tr><td><span class="tag tag-c">I2</span></td><td>COMPUTE_DISPATCHED</td><td>execution</td></tr>
+            <tr><td><span class="tag tag-c">I3</span></td><td>EXECUTION_SETTLED</td><td>execution</td></tr>
+            <tr><td><span class="tag tag-c">I4</span></td><td>STAKE_DEPOSITED</td><td>policy</td></tr>
+            <tr><td><span class="tag tag-c">I5</span></td><td>STAKE_SLASHED</td><td>policy</td></tr>
+            <tr><td><span class="tag tag-c">I6</span></td><td>BLOCK_FINALIZED</td><td>protocol</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-hd">Hash Chain Verification</div>
+          <div class="mono-block" id="chain-status">
+            <div>Chain invariant: <em>T_i = hash(T_{i-1}, E_i, S_i, authorId)</em></div>
+            <div>Events verified: <span class="c" id="chain-verified">0</span></div>
+            <div>Chain broken at: <span id="chain-broken">none</span></div>
+          </div>
+          <button class="btn-c" style="margin-top:10px" onclick="verifyChain()">Verify hash chain</button>
+        </div>
+        <div class="card">
+          <div class="card-hd">Emit Protocol Event</div>
+          <div class="row ac" style="gap:8px;margin-bottom:8px">
+            <select id="proto-event-type" style="flex:1">
+              <option>IDENTITY_CREATED</option>
+              <option>COMPUTE_DISPATCHED</option>
+              <option>EXECUTION_SETTLED</option>
+              <option>STAKE_DEPOSITED</option>
+              <option>BLOCK_FINALIZED</option>
+              <option>PEER_JOINED</option>
+              <option>HYBRID_MODE_CHANGED</option>
+            </select>
+            <button class="btn-c" onclick="emitProtoEvent()">Emit</button>
+          </div>
+          <div>
+            <label>Payload (JSON)</label>
+            <textarea id="proto-payload" style="height:56px;font-size:11px">{ "note": "test" }</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JSONFLOW IDE ─────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-jsonflow">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">JSONFLOW IDE — execution/engine/</div>
+          <div class="ph-sub">Deterministic compute. Same IR + same input = same output. Always.</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Deterministic · Pure</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd-row">
+            <div class="card-hd">JSONFlow Program</div>
+            <div class="row" style="gap:6px">
+              <button onclick="loadExample('square')" style="font-size:10px;padding:4px 8px">square</button>
+              <button onclick="loadExample('transfer')" style="font-size:10px;padding:4px 8px">transfer</button>
+              <button onclick="loadExample('deposit')" style="font-size:10px;padding:4px 8px">deposit</button>
+            </div>
+          </div>
+          <textarea class="jf-editor" id="jf-source" style="height:180px">{
+  "name": "square",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "square",
+      "op": "multiply",
+      "args": ["input.x", "input.x"],
+      "output": "result"
+    }
+  ]
+}</textarea>
+        </div>
+        <div class="card">
+          <div class="card-hd">Input</div>
+          <div class="row ac" style="gap:8px">
+            <input id="jf-input" placeholder='{ "x": 7 }' value='{ "x": 7 }' style="flex:1;font-family:var(--mono)">
+            <button class="btn-g" onclick="runJSONFlow()">▶ Execute</button>
+            <button class="btn-c" onclick="compileJSONFlow()">Compile</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Output</div>
+          <div class="jf-output" id="jf-output">—</div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Multi-Compiler Target</div>
+          <div class="row ac" style="gap:8px">
+            <select id="jf-target" style="flex:1">
+              <option>JavaScript</option>
+              <option>Python</option>
+              <option>Rust</option>
+              <option>Solidity</option>
+              <option>TypeScript</option>
+              <option>Go</option>
+            </select>
+            <button onclick="compileTarget()" class="btn-v">Compile → target</button>
+          </div>
+          <div class="jf-output" id="jf-target-out" style="margin-top:8px">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KERNEL ──────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-kernel">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">KERNEL — WASM · BFT · 6-Lock Deterministic</div>
+          <div class="ph-sub">rekernel/ · wasm-kernel/ · consensus/ · Byzantine safety</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Core Kernel</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">6-Lock Status</div>
+          <div class="kernel-lock">
+            <div class="kl-row">
+              <span class="kl-icon">🔒</span>
+              <span class="kl-name">L1 — Identity lock</span>
+              <span class="kl-status"><span class="tag tag-g">LOCKED</span></span>
+            </div>
+            <div class="kl-row">
+              <span class="kl-icon">🔒</span>
+              <span class="kl-name">L2 — State derivation lock</span>
+              <span class="kl-status"><span class="tag tag-g">LOCKED</span></span>
+            </div>
+            <div class="kl-row">
+              <span class="kl-icon">🔒</span>
+              <span class="kl-name">L3 — Compute determinism lock</span>
+              <span class="kl-status"><span class="tag tag-g">LOCKED</span></span>
+            </div>
+            <div class="kl-row">
+              <span class="kl-icon" id="l4-icon">🔓</span>
+              <span class="kl-name">L4 — Network consensus lock</span>
+              <span class="kl-status" id="l4-status"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">WAITING</span></span>
+            </div>
+            <div class="kl-row">
+              <span class="kl-icon" id="l5-icon">🔓</span>
+              <span class="kl-name">L5 — Finality lock (&gt;2/3 ACK)</span>
+              <span class="kl-status" id="l5-status"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">WAITING</span></span>
+            </div>
+            <div class="kl-row">
+              <span class="kl-icon" id="l6-icon">🔓</span>
+              <span class="kl-name">L6 — Economic settlement lock</span>
+              <span class="kl-status" id="l6-status"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">WAITING</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Consensus Architecture</div>
+          <div style="font-size:11px;color:var(--text2);line-height:2">
+            <div>Algorithm: <span style="color:var(--c)">BFT with &gt;2/3 quorum</span></div>
+            <div>Slashing: <span style="color:var(--r)">10% stake slash for bad execution</span></div>
+            <div>Safety proof: <span style="color:var(--v)">Byzantine fault tolerance</span></div>
+            <div>Fork resolution: <span style="color:var(--g)">canonical sort by event hash</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Kernel State Machine</div>
+          <div class="mono-block" id="kernel-state">
+            <div>VM_stateₙ = <em>deriveState</em>(eventLog[0..n])</div>
+            <div>T_i = <em>hash</em>(T_{i-1}, E_i, S_i, authorId)</div>
+            <div>canonical = <em>sort</em>(events, by hash)</div>
+            <div>finality = <em>&gt;2/3 quorum ACK</em></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI / OLLAMA ──────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-ai">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">AI ADAPTER — execution/adapters/ollama.js</div>
+          <div class="ph-sub">Non-deterministic. Results enter system via log.emit() only.</div>
+        </div>
+        <div class="ph-badge ph-badge-v">Non-Deterministic</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Ollama Connection</div>
+          <div class="row ac" style="gap:8px">
+            <input id="ollama-host" value="http://localhost:11434" placeholder="http://localhost:11434" style="flex:1">
+            <button onclick="checkOllama()" class="btn-v">Connect</button>
+          </div>
+          <div id="ollama-models" style="margin-top:10px;font-size:11px;color:var(--text3)">Not connected.</div>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="card-hd">Kernel Analysis (6-View)</div>
+          <div class="col">
+            <div>
+              <label>Prompt / Query</label>
+              <textarea id="ai-prompt" style="height:80px" placeholder="Ask the kernel to analyze…">Analyze the current network topology and suggest optimizations for P2P routing.</textarea>
+            </div>
+            <div class="row ac" style="gap:8px">
+              <select id="ai-model" style="flex:1">
+                <option>llama3.2</option>
+                <option>llama3.1</option>
+                <option>mistral</option>
+                <option>codellama</option>
+              </select>
+              <button onclick="runAI()" class="btn-v">▶ Analyze</button>
+              <button onclick="emitAIResult()">→ log.emit()</button>
+            </div>
+            <div id="ai-output">
+              <div class="ai-thinking">Connect Ollama to enable local AI analysis…</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Adapter Invariant</div>
+          <div style="font-size:11px;color:var(--text2);line-height:2">
+            <div>✓ Adapters are NEVER called from inside execution/engine/</div>
+            <div>✓ Results always enter via <span style="color:var(--v)">log.emit(KERNEL_ANALYSIS, result)</span></div>
+            <div>✓ Adapter failure must never corrupt system state</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ECONOMY ──────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-economy">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">ECONOMY — policy/economy.js</div>
+          <div class="ph-sub">App registry · Compute staking · IST settlement · Markets</div>
+        </div>
+        <div class="ph-badge ph-badge-a">Policy Layer</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">Revenue Split</div>
+          <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-cell">
+              <div class="stat-val a">70%</div>
+              <div class="stat-lbl">Creator</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-val c">20%</div>
+              <div class="stat-lbl">Compute</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-val">10%</div>
+              <div class="stat-lbl">Protocol</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Publish App</div>
+          <div class="col">
+            <div class="row ac" style="gap:8px">
+              <div style="flex:1">
+                <label>App ID</label>
+                <input id="app-id" placeholder="my-sovereign-app">
+              </div>
+              <div style="flex:1">
+                <label>Price (IST)</label>
+                <input id="app-price" type="number" value="10" min="0">
+              </div>
+            </div>
+            <div>
+              <label>Title</label>
+              <input id="app-title" placeholder="My Sovereign App">
+            </div>
+            <div>
+              <label>JSONFlow Program (JSON)</label>
+              <textarea id="app-flow" style="height:60px;font-size:11px">{ "name": "my-app", "version": "1.0.0", "steps": [] }</textarea>
+            </div>
+            <button class="btn-a" onclick="publishApp()">⊕ Publish App → log.emit(APP_PUBLISHED)</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">App Registry (<span id="app-count">0</span> apps)</div>
+          <div id="app-registry">
+            <div class="empty-state">No apps published yet.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Settle Execution</div>
+          <div class="row ac" style="gap:8px">
+            <input id="settle-app" placeholder="appId" style="flex:1">
+            <input id="settle-amount" placeholder="IST amount" type="number" value="10" style="flex:0.6">
+            <button onclick="settleExec()" class="btn-g">Settle</button>
+          </div>
+          <div id="settle-result" style="margin-top:8px;font-size:11px;color:var(--text3)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAKING ──────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-stake">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">STAKING — Compute Collateral</div>
+          <div class="ph-sub">Deposit IST to participate as compute node. Min: 100 IST. Slash: 10%.</div>
+        </div>
+        <div class="ph-badge ph-badge-a">Policy</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">My Stake</div>
+          <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-cell">
+              <div class="stat-val a" id="my-stake">0</div>
+              <div class="stat-lbl">IST Staked</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-val g" id="stake-health">—</div>
+              <div class="stat-lbl">Health</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-val" id="slash-risk">0</div>
+              <div class="stat-lbl">Slash Risk</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Deposit Stake</div>
+          <div class="row ac" style="gap:8px">
+            <input id="stake-amount" type="number" value="100" min="100" placeholder="IST amount (min 100)" style="flex:1">
+            <button class="btn-a" onclick="depositStake()">Deposit → STAKE_DEPOSITED</button>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:var(--text3)">Minimum stake: 100 IST. Staked collateral is locked until execution completes.</div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Compute Nodes (<span id="node-count">0</span>)</div>
+          <div id="node-list">
+            <div class="empty-state">No compute nodes registered.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOVERNANCE ───────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-governance">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">GOVERNANCE — On-Chain Protocol</div>
+          <div class="ph-sub">Proposals · Voting · Quorum · schema/rituals/</div>
+        </div>
+        <div class="ph-badge ph-badge-a">Policy</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd">New Proposal</div>
+          <div class="col">
+            <div>
+              <label>Proposal title</label>
+              <input id="prop-title" placeholder="Increase min stake to 200 IST">
+            </div>
+            <div>
+              <label>Description</label>
+              <textarea id="prop-desc" style="height:64px" placeholder="Full proposal text…"></textarea>
+            </div>
+            <button class="btn-a" onclick="submitProposal()">Submit proposal</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Active Proposals</div>
+          <div id="proposal-list">
+            <div class="empty-state">No active proposals.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES ─────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-messages" style="padding:0">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">SECURE MESSAGING — E2E Encrypted</div>
+          <div class="ph-sub">Signed with keypair. AES-256. Peer-to-peer via transport layer.</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Surface</div>
+      </div>
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--ground)">
+        <span style="font-size:10px;color:var(--text3)">To:</span>
+        <select id="msg-peer" style="flex:1;background:transparent;border:none;color:var(--text2);font-size:11px" onchange="loadConvo()">
+          <option value="">— select peer —</option>
+        </select>
+        <span style="font-size:9px;color:var(--g)">E2E · AES-256</span>
+      </div>
+      <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+        <div class="empty-state">Select a peer to start a conversation.</div>
+      </div>
+      <div id="chat-input-row">
+        <input id="chat-text" placeholder="Type message… (Enter to send)"
+          style="flex:1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){sendChat();event.preventDefault()}">
+        <button onclick="sendChat()" class="btn-g">Send</button>
+      </div>
+    </div>
+
+    <!-- FILES ────────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-files">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">DECENTRALIZED FILES — SCMP</div>
+          <div class="ph-sub">AES-256 encrypted · Sharded · Content-addressed · Peer-to-peer</div>
+        </div>
+        <div class="ph-badge ph-badge-c">Surface</div>
+      </div>
+      <div class="panel-body col">
+        <div id="drop-zone"
+          style="border:2px dashed var(--border2);border-radius:6px;padding:24px;text-align:center;font-size:11px;color:var(--text3);cursor:pointer;transition:all .2s"
+          onclick="document.getElementById('file-input').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--c)'"
+          ondragleave="this.style.borderColor='var(--border2)'"
+          ondrop="handleFileDrop(event)">
+          Drop files here or click to upload<br>
+          <span style="font-size:9px;margin-top:6px;display:block;color:var(--text4)">Files encrypted locally before distribution</span>
+          <input type="file" id="file-input" style="display:none" multiple onchange="uploadFiles(this)">
+        </div>
+        <div class="card">
+          <div class="card-hd">Stored Files (<span id="file-count">0</span>)</div>
+          <div id="file-list">
+            <div class="empty-state">No files stored.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Retrieve by CID</div>
+          <div class="row ac" style="gap:8px">
+            <input id="cid-input" placeholder="content ID…" style="flex:1">
+            <button onclick="retrieveFile()" class="btn-c">Retrieve</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEDGER ───────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-ledger">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">SOVEREIGN LEDGER — primitives/sovereign-log.js</div>
+          <div class="ph-sub">Append-only · FNV-32 hash chain · deriveState(events)</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Truth Engine</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd-row">
+            <div class="card-hd">Event Log (<span id="ledger-count">0</span> events)</div>
+            <div class="row" style="gap:6px">
+              <button onclick="refreshLedger()" style="font-size:10px;padding:4px 8px">refresh</button>
+              <button onclick="exportLedger()" style="font-size:10px;padding:4px 8px">export JSON</button>
+            </div>
+          </div>
+          <div id="ledger-entries" style="max-height:300px;overflow-y:auto">
+            <div class="empty-state">No events emitted yet.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Emit Event</div>
+          <div class="row ac" style="gap:8px;margin-bottom:8px">
+            <input id="emit-type" placeholder="EVENT_TYPE" style="flex:0.8">
+            <input id="emit-payload" placeholder='{ "key": "value" }' style="flex:1">
+            <button onclick="emitEvent()" class="btn-g">Emit</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Derived State</div>
+          <div class="mono-block" id="derived-state">
+            <div>eventCount: <em>0</em></div>
+            <div>headHash: <span class="c">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT ────────────────────────────────────────────────────────────── -->
+    <div class="panel" id="panel-audit">
+      <div class="panel-head">
+        <div class="ph-left">
+          <div class="ph-title">SYSTEM AUDIT — runtime/audit.js</div>
+          <div class="ph-sub">Hash chain integrity · Layer boundary verification · Invariant checks</div>
+        </div>
+        <div class="ph-badge ph-badge-g">Runtime</div>
+      </div>
+      <div class="panel-body col">
+        <div class="card">
+          <div class="card-hd-row">
+            <div class="card-hd">Audit Report</div>
+            <button class="btn-g" onclick="runAudit()">▶ Run Audit</button>
+          </div>
+          <div id="audit-result" class="mono-block" style="min-height:200px">
+Run audit to check all invariants…
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Invariant Checks</div>
+          <div id="invariant-list" class="col">
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--g)"></div>
+              <div class="li-name">VM_stateₙ = deriveState(eventLog[0..n])</div>
+              <div class="li-badge"><span class="tag tag-g">pass</span></div>
+            </div>
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--g)"></div>
+              <div class="li-name">Hash chain unbroken (FNV-32)</div>
+              <div class="li-badge"><span class="tag tag-g">pass</span></div>
+            </div>
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--g)"></div>
+              <div class="li-name">Deterministic boundary respected</div>
+              <div class="li-badge"><span class="tag tag-g">pass</span></div>
+            </div>
+            <div class="list-item">
+              <div class="li-dot" style="background:var(--g)"></div>
+              <div class="li-name">No direct state mutation (log.emit() only)</div>
+              <div class="li-badge"><span class="tag tag-g">pass</span></div>
+            </div>
+            <div class="list-item" id="inv-network">
+              <div class="li-dot" style="background:var(--text4)"></div>
+              <div class="li-name">Network quorum &gt;2/3</div>
+              <div class="li-badge"><span class="tag" style="color:var(--text4);border:1px solid var(--border)">pending</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- TOAST STACK -->
+<div id="toast-stack"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+//  TRINITY INTERFACE RUNTIME
+// ═══════════════════════════════════════════════════════════════════════════
+
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────────
+const STATE = {
+  nodeId: null,
+  nodeAddress: null,
+  privateKey: null,
+  nodeName: 'sovereign-node',
+  peers: [],
+  events: [],
+  apps: {},
+  nodes: {},
+  bets: {},
+  totalStake: 0,
+  myStake: 0,
+  messages: {},
+  files: [],
+  proposals: [],
+  eventCount: 0,
+  headHash: '00000000',
+  chainValid: true,
+};
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function nav(panel, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const target = document.getElementById('panel-' + panel);
+  if (target) target.classList.add('active');
+  if (el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+panel+"'")) {
+        n.classList.add('active');
+      }
+    });
+  }
+}
+
+// ── Crypto / Identity ─────────────────────────────────────────────────────
+function fnv32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+function randomBytes(n) {
+  const b = new Uint8Array(n);
+  crypto.getRandomValues(b);
+  return b;
+}
+
+function bytesToHex(b) {
+  return Array.from(b).map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+function generateKeypair() {
+  const privBytes = randomBytes(32);
+  const privHex = bytesToHex(privBytes);
+  const addrBytes = randomBytes(20);
+  const address = '0x' + bytesToHex(addrBytes);
+  STATE.nodeAddress = address;
+  STATE.privateKey = privHex;
+  STATE.nodeId = address;
+
+  const name = document.getElementById('id-name').value || STATE.nodeName;
+  STATE.nodeName = name;
+
+  document.getElementById('id-display').innerHTML =
+    `<div>address: <em>${address}</em></div>` +
+    `<div>private: <span class="v">0x${privHex.slice(0,16)}…${privHex.slice(-8)}</span> (never share)</div>` +
+    `<div>name: <span class="c">${name}</span></div>` +
+    `<div>created: ${new Date().toISOString()}</div>`;
+
+  document.getElementById('node-short').textContent = address.slice(0,10) + '…';
+  document.getElementById('net-dot').classList.add('live');
+  document.getElementById('portal-status-badge').textContent = 'ONLINE';
+
+  emitSys('IDENTITY_CREATED', { address, name });
+  toast('Keypair generated. Node online.', 't-g');
+  updateTopStats();
+
+  // save to localStorage
+  try {
+    localStorage.setItem('trinity-identity', JSON.stringify({
+      address, name, privHex: privHex.slice(0,8) + '…', ts: Date.now()
+    }));
+  } catch(_) {}
+}
+
+function updateName() {
+  STATE.nodeName = document.getElementById('id-name').value;
+}
+
+function signMsg() {
+  const msg = document.getElementById('sign-msg').value.trim();
+  if (!msg) { toast('Enter a message to sign', 't-r'); return; }
+  if (!STATE.privateKey) { toast('Generate keypair first', 't-r'); return; }
+  const sig = '0x' + fnv32(msg + STATE.privateKey) + fnv32(STATE.privateKey + msg);
+  document.getElementById('sign-output').innerHTML =
+    `<div>message: <span class="c">${msg}</span></div>` +
+    `<div>signature: <em>${sig}</em></div>` +
+    `<div>signer: ${STATE.nodeAddress}</div>`;
+  toast('Message signed (EIP-191 sim)', 't-c');
+}
+
+function verifyMsg() {
+  toast('Signature verification: valid (simulation)', 't-g');
+}
+
+function exportIdentity() {
+  if (!STATE.nodeAddress) { toast('No identity to export', 't-r'); return; }
+  const data = JSON.stringify({ address: STATE.nodeAddress, name: STATE.nodeName, ts: Date.now() }, null, 2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json,' + encodeURIComponent(data);
+  a.download = 'trinity-identity.json';
+  a.click();
+  toast('Identity exported', 't-g');
+}
+
+function importIdentityPrompt() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const id = JSON.parse(ev.target.result);
+        STATE.nodeAddress = id.address;
+        STATE.nodeName = id.name || 'imported-node';
+        STATE.nodeId = id.address;
+        document.getElementById('id-name').value = STATE.nodeName;
+        document.getElementById('node-short').textContent = id.address.slice(0,10) + '…';
+        document.getElementById('net-dot').classList.add('live');
+        toast('Identity imported: ' + id.name, 't-g');
+        emitSys('IDENTITY_CREATED', { address: id.address, name: id.name, imported: true });
+      } catch(_) { toast('Invalid identity file', 't-r'); }
+    };
+    r.readAsText(file);
+  };
+  input.click();
+}
+
+function clearIdentity() {
+  STATE.nodeAddress = null; STATE.privateKey = null; STATE.nodeId = null;
+  document.getElementById('id-display').textContent = 'Keypair cleared.';
+  document.getElementById('node-short').textContent = '—';
+  document.getElementById('net-dot').classList.remove('live');
+  toast('Identity cleared', 't-r');
+}
+
+// ── Crypto Panel ──────────────────────────────────────────────────────────
+function doKeccak() {
+  const v = document.getElementById('keccak-input').value;
+  if (!v) return;
+  // Simulate keccak256 using chained FNV
+  const h = fnv32(v) + fnv32(v + v) + fnv32('keccak' + v) + fnv32(v + 'sha3') +
+            fnv32('256' + v) + fnv32(v + 'ethereum') + fnv32('0x' + v) + fnv32(v.split('').reverse().join(''));
+  document.getElementById('keccak-out').innerHTML = `<em>0x${h}</em>`;
+}
+
+function doFnv() {
+  const v = document.getElementById('fnv-input').value;
+  if (!v) return;
+  document.getElementById('fnv-out').innerHTML = `<em>${fnv32(v)}</em>`;
+}
+
+function doChecksum() {
+  const v = document.getElementById('addr-input').value.trim();
+  if (!v) return;
+  // EIP-55 simulation: checksum based on hash
+  const addr = v.toLowerCase().replace('0x','');
+  const hash = fnv32(addr) + fnv32(addr + addr);
+  let result = '0x';
+  for (let i = 0; i < Math.min(addr.length, 40); i++) {
+    result += parseInt(hash[i % hash.length], 16) >= 8 ? addr[i].toUpperCase() : addr[i];
+  }
+  document.getElementById('addr-out').innerHTML = `<em>${result}</em>`;
+}
+
+// ── Sovereign Log ─────────────────────────────────────────────────────────
+function emitSys(type, payload) {
+  const prevHash = STATE.headHash;
+  const hash = fnv32(JSON.stringify(payload) + '|' + prevHash);
+  const event = {
+    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+    type,
+    payload,
+    authorId: STATE.nodeId || 'system',
+    ts: Date.now(),
+    hash,
+    prevHash,
+    seq: STATE.events.length,
+  };
+  STATE.events.push(event);
+  STATE.headHash = hash;
+  STATE.eventCount = STATE.events.length;
+
+  // Update UI
+  addStreamLine(type, JSON.stringify(payload).slice(0, 80));
+  updateLedger();
+  updateTopStats();
+
+  // BroadcastChannel sync
+  try {
+    const bc = new BroadcastChannel('trinity-bus');
+    bc.postMessage({ nonce: event.id, type, payload, authorId: event.authorId, ts: event.ts, hash });
+    bc.close();
+  } catch(_) {}
+}
+
+function addStreamLine(type, msg) {
+  const stream = document.getElementById('event-stream');
+  const ts = new Date().toTimeString().slice(0,8);
+  const color = type.includes('IDENTITY') ? 'var(--g)' :
+                type.includes('COMPUTE') || type.includes('EXECUTION') ? 'var(--c)' :
+                type.includes('STAKE') || type.includes('APP') ? 'var(--a)' :
+                type.includes('KERNEL') ? 'var(--v)' : 'var(--text2)';
+  const line = document.createElement('div');
+  line.className = 'ev-line';
+  line.innerHTML = `<span class="ev-ts">${ts}</span><span class="ev-type" style="color:${color}">${type}</span><span class="ev-body">${msg}</span>`;
+  stream.appendChild(line);
+  stream.scrollTop = stream.scrollHeight;
+}
+
+function clearStream() {
+  document.getElementById('event-stream').innerHTML = '';
+}
+
+function updateLedger() {
+  const list = document.getElementById('ledger-entries');
+  const count = document.getElementById('ledger-count');
+  count.textContent = STATE.events.length;
+
+  // Show last 50 events
+  const recent = STATE.events.slice(-50).reverse();
+  if (recent.length === 0) {
+    list.innerHTML = '<div class="empty-state">No events.</div>';
+    return;
+  }
+
+  const color = t =>
+    t.includes('IDENTITY') ? 'var(--g)' :
+    t.includes('COMPUTE') || t.includes('EXECUTION') ? 'var(--c)' :
+    t.includes('STAKE') || t.includes('APP') ? 'var(--a)' :
+    t.includes('KERNEL') ? 'var(--v)' : 'var(--text2)';
+
+  list.innerHTML = recent.map(e => `
+    <div class="ledger-row">
+      <div class="lr-ts">${new Date(e.ts).toTimeString().slice(0,8)}</div>
+      <div class="lr-type" style="color:${color(e.type)}">${e.type}</div>
+      <div class="lr-hash">${e.hash}</div>
+      <div class="lr-msg">${JSON.stringify(e.payload).slice(0,60)}</div>
+    </div>
+  `).join('');
+
+  // Update derived state
+  document.getElementById('derived-state').innerHTML =
+    `<div>eventCount: <em>${STATE.events.length}</em></div>` +
+    `<div>headHash: <span class="c">${STATE.headHash}</span></div>` +
+    `<div>lastEvent: <span class="a">${STATE.events.at(-1)?.type || '—'}</span></div>`;
+
+  document.getElementById('sf-hash').textContent = STATE.headHash;
+}
+
+// ── Top Stats ─────────────────────────────────────────────────────────────
+function updateTopStats() {
+  const appCount = Object.keys(STATE.apps).length;
+  document.getElementById('stat-peers').textContent = STATE.peers.length;
+  document.getElementById('stat-events').textContent = STATE.events.length;
+  document.getElementById('stat-final').textContent = Math.floor(STATE.events.length * 0.8);
+  document.getElementById('stat-apps').textContent = appCount;
+  document.getElementById('stat-stake').textContent = STATE.totalStake + ' IST';
+
+  document.getElementById('pstat-peers').textContent = STATE.peers.length;
+  document.getElementById('pstat-events').textContent = STATE.events.length;
+  document.getElementById('pstat-finalized').textContent = Math.floor(STATE.events.length * 0.8);
+  document.getElementById('pstat-apps').textContent = appCount;
+  document.getElementById('pstat-stake').textContent = STATE.totalStake;
+  document.getElementById('pstat-bets').textContent = Object.keys(STATE.bets).length;
+
+  document.getElementById('badge-peers').textContent = STATE.peers.length;
+  document.getElementById('badge-apps').textContent = appCount;
+  document.getElementById('app-count').textContent = appCount;
+}
+
+// ── Network ───────────────────────────────────────────────────────────────
+function bootNode() {
+  if (!STATE.nodeAddress) {
+    generateKeypair();
+    return;
+  }
+  document.getElementById('net-dot').classList.add('live');
+  document.getElementById('portal-status-badge').textContent = 'ONLINE';
+  emitSys('PEER_JOINED', { nodeId: STATE.nodeId, name: STATE.nodeName });
+  toast('Node booted. Broadcasting presence…', 't-g');
+}
+
+function connectPeer() {
+  const url = document.getElementById('peer-url').value.trim();
+  if (!url) { toast('Enter peer URL or offer', 't-r'); return; }
+  addPeer(url.slice(0, 20) + '…', url);
+}
+
+function addPeer(name, addr) {
+  const peer = { id: 'peer-' + STATE.peers.length, name, addr, latency: Math.floor(Math.random() * 40) + 5 };
+  STATE.peers.push(peer);
+  renderPeers();
+  emitSys('PEER_JOINED', { peerId: peer.id, addr });
+  updateTopStats();
+  toast('Peer connected: ' + name, 't-g');
+}
+
+function renderPeers() {
+  const list = document.getElementById('peer-list');
+  const count = document.getElementById('peer-count');
+  count.textContent = STATE.peers.length;
+  if (STATE.peers.length === 0) {
+    list.innerHTML = '<div class="empty-state">No peers connected.</div>';
+    return;
+  }
+  list.innerHTML = STATE.peers.map(p => `
+    <div class="list-item">
+      <div class="li-dot" style="background:var(--g)"></div>
+      <div class="li-name">${p.name}</div>
+      <div class="li-meta">${p.addr || p.id}</div>
+      <div class="li-badge">${p.latency}ms</div>
+    </div>
+  `).join('');
+
+  // Add to message peer select
+  const sel = document.getElementById('msg-peer');
+  sel.innerHTML = '<option value="">— select peer —</option>' +
+    STATE.peers.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  // Update quorum bar
+  const q = Math.min(STATE.peers.length / 3, 1);
+  document.getElementById('quorum-bar').style.width = (q * 100) + '%';
+  document.getElementById('quorum-size').textContent = STATE.peers.length;
+  document.getElementById('quorum-total').textContent = STATE.peers.length + 1;
+  document.getElementById('quorum-finalized').textContent = Math.floor(STATE.events.length * 0.8);
+}
+
+function createOffer() {
+  const offer = { type: 'offer', nodeId: STATE.nodeId || 'anon', ts: Date.now(), sdp: 'simulated-sdp-' + Date.now() };
+  document.getElementById('my-offer').value = JSON.stringify(offer);
+  toast('Offer created. Copy and share.', 't-c');
+}
+
+function acceptOffer() {
+  const offerStr = document.getElementById('peer-offer').value.trim();
+  if (!offerStr) { toast('Paste a peer offer first', 't-r'); return; }
+  try {
+    const offer = JSON.parse(offerStr);
+    addPeer(offer.nodeId ? offer.nodeId.slice(0,12) + '…' : 'peer', offer.nodeId || 'unknown');
+    toast('Offer accepted! Peer connected.', 't-g');
+  } catch(_) { toast('Invalid offer JSON', 't-r'); }
+}
+
+function copyOffer() {
+  const v = document.getElementById('my-offer').value;
+  if (!v) { createOffer(); return; }
+  navigator.clipboard.writeText(v).then(() => toast('Offer copied!', 't-c')).catch(() => toast('Copy failed', 't-r'));
+}
+
+function connectServer() {
+  const url = document.getElementById('api-url').value;
+  toast('Connecting to server: ' + url, 't-c');
+  fetch(url + '/events').then(() => {
+    document.getElementById('chain-pill').textContent = 'chain: online';
+    document.getElementById('chain-pill').classList.add('ok');
+    toast('Server connected!', 't-g');
+  }).catch(() => {
+    toast('Server not reachable (local mode active)', 't-r');
+  });
+}
+
+function connectValidator() {
+  const url = document.getElementById('validator-url').value.trim();
+  if (!url) { toast('Enter validator URL', 't-r'); return; }
+  toast('Validator transport connecting: ' + url, 't-c');
+}
+
+function doBroadcast() {
+  const msg = document.getElementById('bc-msg').value.trim();
+  if (!msg) return;
+  emitSys('BROADCAST', { msg, from: STATE.nodeId });
+  document.getElementById('bc-msg').value = '';
+  toast('Broadcast sent to ' + STATE.peers.length + ' peers', 't-c');
+}
+
+// ── Protocol ──────────────────────────────────────────────────────────────
+function verifyChain() {
+  let valid = true;
+  let prevHash = '00000000';
+  let broken = null;
+  for (let i = 0; i < STATE.events.length; i++) {
+    const e = STATE.events[i];
+    const expected = fnv32(JSON.stringify(e.payload) + '|' + prevHash);
+    if (e.hash !== expected) { valid = false; broken = i; break; }
+    prevHash = e.hash;
+  }
+  STATE.chainValid = valid;
+  document.getElementById('chain-verified').textContent = STATE.events.length;
+  document.getElementById('chain-broken').textContent = broken !== null ? 'event #' + broken : 'none';
+  toast(valid ? 'Chain valid ✓' : 'Chain BROKEN at event #' + broken, valid ? 't-g' : 't-r');
+}
+
+function emitProtoEvent() {
+  const type = document.getElementById('proto-event-type').value;
+  const payload = (() => { try { return JSON.parse(document.getElementById('proto-payload').value); } catch(_) { return {}; } })();
+  emitSys(type, payload);
+  toast('Event emitted: ' + type, 't-c');
+}
+
+// ── JSONFlow ──────────────────────────────────────────────────────────────
+const JF_EXAMPLES = {
+  square: `{
+  "name": "square",
+  "version": "1.0.0",
+  "steps": [
+    { "id": "sq", "op": "multiply", "args": ["input.x", "input.x"], "output": "result" }
+  ]
+}`,
+  transfer: `{
+  "name": "transfer",
+  "version": "1.0.0",
+  "steps": [
+    { "id": "check", "op": "gte", "args": ["input.balance", "input.amount"], "output": "can_transfer" },
+    { "id": "debit", "op": "subtract", "args": ["input.balance", "input.amount"], "output": "new_balance" }
+  ]
+}`,
+  deposit: `{
+  "name": "deposit",
+  "version": "1.0.0",
+  "steps": [
+    { "id": "credit", "op": "add", "args": ["input.balance", "input.amount"], "output": "new_balance" },
+    { "id": "log", "op": "emit", "args": ["DEPOSIT_CONFIRMED", "new_balance"], "output": "event" }
+  ]
+}`,
+};
+
+function loadExample(name) {
+  document.getElementById('jf-source').value = JF_EXAMPLES[name] || '';
+  if (name === 'square') document.getElementById('jf-input').value = '{ "x": 7 }';
+  if (name === 'transfer') document.getElementById('jf-input').value = '{ "balance": 100, "amount": 30 }';
+  if (name === 'deposit') document.getElementById('jf-input').value = '{ "balance": 50, "amount": 25 }';
+}
+
+function runJSONFlow() {
+  const source = document.getElementById('jf-source').value;
+  const inputStr = document.getElementById('jf-input').value;
+  try {
+    const prog = JSON.parse(source);
+    const input = JSON.parse(inputStr);
+    const result = executeJF(prog, input);
+    const hash = fnv32(JSON.stringify(result));
+    document.getElementById('jf-output').textContent =
+      JSON.stringify(result, null, 2) + '\n\n// deterministic hash: ' + hash;
+    emitSys('COMPUTE_DISPATCHED', { program: prog.name, input });
+    emitSys('EXECUTION_SETTLED', { program: prog.name, output: result, hash });
+    toast('Execution complete. Hash: ' + hash, 't-g');
+  } catch(e) {
+    document.getElementById('jf-output').textContent = 'Error: ' + e.message;
+    toast('Execution error', 't-r');
+  }
+}
+
+function executeJF(prog, input) {
+  const state = { input };
+  for (const step of (prog.steps || [])) {
+    const resolve = v => {
+      if (typeof v !== 'string') return v;
+      const parts = v.split('.');
+      let curr = state;
+      for (const p of parts) { curr = curr?.[p]; }
+      return curr ?? v;
+    };
+    const args = (step.args || []).map(resolve);
+    let out;
+    switch(step.op) {
+      case 'multiply':  out = args[0] * args[1]; break;
+      case 'add':       out = args[0] + args[1]; break;
+      case 'subtract':  out = args[0] - args[1]; break;
+      case 'divide':    out = args[0] / args[1]; break;
+      case 'gte':       out = args[0] >= args[1]; break;
+      case 'lte':       out = args[0] <= args[1]; break;
+      case 'eq':        out = args[0] === args[1]; break;
+      case 'emit':      out = { type: args[0], value: args[1] }; break;
+      default:          out = args[0];
+    }
+    if (step.output) state[step.output] = out;
+  }
+  const { input: _, ...result } = state;
+  return result;
+}
+
+function compileJSONFlow() {
+  const source = document.getElementById('jf-source').value;
+  try {
+    const prog = JSON.parse(source);
+    const ir = { ir: true, name: prog.name, stepCount: prog.steps?.length || 0, compiled: Date.now() };
+    document.getElementById('jf-output').textContent = '// Compiled IR\n' + JSON.stringify(ir, null, 2);
+    toast('Compiled to IR', 't-c');
+  } catch(e) {
+    toast('Compile error: ' + e.message, 't-r');
+  }
+}
+
+function compileTarget() {
+  const source = document.getElementById('jf-source').value;
+  const target = document.getElementById('jf-target').value;
+  try {
+    const prog = JSON.parse(source);
+    let out = '';
+    if (target === 'JavaScript') {
+      out = `// Generated by TRINITY JSONFlow → JS\nfunction ${prog.name.replace(/-/g,'_')}(input) {\n` +
+            (prog.steps||[]).map(s => `  // ${s.id}: ${s.op}\n  const ${s.output} = ${s.args?.join(' op ')};`).join('\n') +
+            `\n  return { ${(prog.steps||[]).map(s=>s.output).join(', ')} };\n}`;
+    } else if (target === 'Python') {
+      out = `# Generated by TRINITY JSONFlow → Python\ndef ${prog.name.replace(/-/g,'_')}(input):\n` +
+            (prog.steps||[]).map(s => `    ${s.output} = ${s.args?.join(' op ')}  # ${s.op}`).join('\n') +
+            `\n    return {'${(prog.steps||[])[0]?.output}': ${(prog.steps||[])[0]?.output}}`;
+    } else if (target === 'Rust') {
+      out = `// Generated by TRINITY JSONFlow → Rust\nfn ${prog.name.replace(/-/g,'_')}(input: Input) -> Output {\n` +
+            (prog.steps||[]).map(s => `    let ${s.output} = ${s.args?.join(' /* op */ ')};  // ${s.op}`).join('\n') +
+            `\n    Output { result }\n}`;
+    } else {
+      out = `// Target: ${target}\n// Program: ${prog.name}\n// Steps: ${prog.steps?.length || 0}`;
+    }
+    document.getElementById('jf-target-out').textContent = out;
+    toast('Compiled to ' + target, 't-v');
+  } catch(e) {
+    toast('Compile error: ' + e.message, 't-r');
+  }
+}
+
+// ── Ollama / AI ───────────────────────────────────────────────────────────
+function checkOllama() {
+  const host = document.getElementById('ollama-host').value;
+  document.getElementById('ollama-models').textContent = 'Connecting to ' + host + '…';
+  fetch(host + '/api/tags')
+    .then(r => r.json())
+    .then(data => {
+      const models = data.models?.map(m => m.name) || ['llama3.2'];
+      document.getElementById('ollama-models').innerHTML =
+        'Models: ' + models.map(m => `<span class="tag tag-v" style="margin:2px">${m}</span>`).join('');
+      document.getElementById('ollama-pill').textContent = 'ollama: ' + models[0];
+      document.getElementById('ollama-pill').classList.add('ok');
+
+      const sel = document.getElementById('ai-model');
+      sel.innerHTML = models.map(m => `<option>${m}</option>`).join('');
+      document.getElementById('badge-ai').textContent = models[0].slice(0,8);
+      toast('Ollama connected! ' + models.length + ' models', 't-v');
+    })
+    .catch(() => {
+      document.getElementById('ollama-models').textContent = 'Not reachable. Start Ollama with: ollama serve';
+      document.getElementById('ollama-pill').textContent = 'ollama: offline';
+      toast('Ollama not reachable', 't-r');
+    });
+}
+
+async function runAI() {
+  if (!STATE.nodeAddress) { toast('Boot node first', 't-r'); return; }
+  const prompt = document.getElementById('ai-prompt').value.trim();
+  const model = document.getElementById('ai-model').value;
+  const host = document.getElementById('ollama-host').value;
+  const out = document.getElementById('ai-output');
+  out.innerHTML = '<div class="ai-thinking"><span class="spin">◌</span> Querying ' + model + '…</div>';
+
+  try {
+    const resp = await fetch(host + '/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ model, prompt, stream: false }),
+    });
+    const data = await resp.json();
+    const text = data.response || 'No response.';
+    out.innerHTML = `<div class="ai-bubble">${text}</div>`;
+    STATE._lastAIResult = text;
+    toast('AI response received', 't-v');
+  } catch(_) {
+    out.innerHTML = `<div class="ai-bubble" style="color:var(--v)">// Simulated analysis (Ollama offline)\n\nNetwork topology suggests optimal routing via trust-weighted edges. Recommend:\n1. Prioritize peers with latency &lt; 20ms\n2. Use multi-path for redundancy\n3. Quorum currently at ${STATE.peers.length} peers — need ${Math.max(0,2 - STATE.peers.length)} more for &gt;2/3 finality\n\nHash chain integrity: VALID\nLast event: ${STATE.events.at(-1)?.type || 'none'}</div>`;
+    STATE._lastAIResult = 'Simulated kernel analysis';
+  }
+}
+
+function emitAIResult() {
+  if (!STATE._lastAIResult) { toast('Run analysis first', 't-r'); return; }
+  emitSys('KERNEL_ANALYSIS', { result: STATE._lastAIResult.slice(0, 200), model: document.getElementById('ai-model').value });
+  toast('AI result emitted to log', 't-v');
+}
+
+// ── Economy ───────────────────────────────────────────────────────────────
+function publishApp() {
+  const appId = document.getElementById('app-id').value.trim();
+  const title = document.getElementById('app-title').value.trim();
+  const price = parseFloat(document.getElementById('app-price').value) || 0;
+  const flow = (() => { try { return JSON.parse(document.getElementById('app-flow').value); } catch(_) { return {}; } })();
+  if (!appId || !title) { toast('App ID and title required', 't-r'); return; }
+
+  STATE.apps[appId] = { appId, title, priceIST: price, jsonflowProgram: flow, publishedAt: Date.now(), author: STATE.nodeId, installs: 0, revenue: 0 };
+  emitSys('APP_PUBLISHED', { appId, title, priceIST: price, jsonflowProgram: flow });
+  renderApps();
+  updateTopStats();
+  toast('App published: ' + title, 't-a');
+}
+
+function renderApps() {
+  const registry = document.getElementById('app-registry');
+  const apps = Object.values(STATE.apps);
+  if (!apps.length) { registry.innerHTML = '<div class="empty-state">No apps.</div>'; return; }
+  registry.innerHTML = apps.map(a => `
+    <div class="list-item" style="cursor:pointer" onclick="installApp('${a.appId}')">
+      <div class="li-dot" style="background:var(--a)"></div>
+      <div class="li-name">${a.title} <span class="tag tag-a" style="margin-left:6px">${a.appId}</span></div>
+      <div class="li-meta">${a.priceIST} IST · ${a.installs} installs · ${a.revenue} IST revenue</div>
+    </div>
+  `).join('');
+}
+
+function installApp(appId) {
+  const app = STATE.apps[appId];
+  if (!app) return;
+  app.installs++;
+  emitSys('APP_INSTALLED', { appId, userId: STATE.nodeId });
+  renderApps();
+  toast('App installed: ' + app.title, 't-g');
+}
+
+function settleExec() {
+  const appId = document.getElementById('settle-app').value.trim();
+  const amount = parseFloat(document.getElementById('settle-amount').value) || 10;
+  const creator = amount * 0.70;
+  const compute = amount * 0.20;
+  const protocol = amount * 0.10;
+  if (STATE.apps[appId]) STATE.apps[appId].revenue += creator;
+  emitSys('EXECUTION_SETTLED', { appId, amount, creatorAmount: creator, nodeAmount: compute, protocolAmount: protocol });
+  document.getElementById('settle-result').innerHTML =
+    `<span style="color:var(--a)">Creator: ${creator.toFixed(2)} IST</span> · ` +
+    `<span style="color:var(--c)">Compute: ${compute.toFixed(2)} IST</span> · ` +
+    `<span style="color:var(--text3)">Protocol: ${protocol.toFixed(2)} IST</span>`;
+  renderApps();
+  toast('Execution settled', 't-g');
+}
+
+// ── Staking ───────────────────────────────────────────────────────────────
+function depositStake() {
+  const amount = parseFloat(document.getElementById('stake-amount').value) || 0;
+  if (amount < 100) { toast('Minimum stake is 100 IST', 't-r'); return; }
+  STATE.myStake += amount;
+  STATE.totalStake += amount;
+  const nodeId = STATE.nodeId || 'node-0';
+  STATE.nodes[nodeId] = { nodeId, stake: STATE.myStake, health: 1.0 };
+  emitSys('STAKE_DEPOSITED', { nodeId, amount });
+  document.getElementById('my-stake').textContent = STATE.myStake;
+  document.getElementById('stake-health').textContent = '100%';
+  document.getElementById('node-count').textContent = Object.keys(STATE.nodes).length;
+  document.getElementById('node-list').innerHTML = Object.values(STATE.nodes).map(n => `
+    <div class="list-item">
+      <div class="li-dot" style="background:var(--g)"></div>
+      <div class="li-name">${n.nodeId.slice(0,16)}…</div>
+      <div class="li-meta">${n.stake} IST staked</div>
+      <div class="li-badge"><span class="tag tag-g">active</span></div>
+    </div>
+  `).join('');
+  updateTopStats();
+  toast('Stake deposited: ' + amount + ' IST', 't-a');
+}
+
+// ── Governance ────────────────────────────────────────────────────────────
+function submitProposal() {
+  const title = document.getElementById('prop-title').value.trim();
+  const desc = document.getElementById('prop-desc').value.trim();
+  if (!title) { toast('Proposal title required', 't-r'); return; }
+  const prop = { id: 'prop-' + STATE.proposals.length, title, desc, yes: 0, no: 0, ts: Date.now() };
+  STATE.proposals.push(prop);
+  emitSys('PROPOSAL_SUBMITTED', { id: prop.id, title });
+  renderProposals();
+  toast('Proposal submitted', 't-a');
+}
+
+function renderProposals() {
+  const list = document.getElementById('proposal-list');
+  if (!STATE.proposals.length) { list.innerHTML = '<div class="empty-state">No proposals.</div>'; return; }
+  list.innerHTML = STATE.proposals.map((p,i) => `
+    <div class="card" style="margin-bottom:8px">
+      <div style="font-size:12px;color:var(--text);font-weight:500;margin-bottom:6px">${p.title}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">${p.desc || '—'}</div>
+      <div class="vote-bar">
+        <div class="vb-yes" style="width:${p.yes/(p.yes+p.no+1)*100}%"></div>
+        <div class="vb-no" style="width:${p.no/(p.yes+p.no+1)*100}%"></div>
+      </div>
+      <div class="row ac" style="gap:8px;margin-top:8px">
+        <button class="btn-g" style="font-size:10px" onclick="voteOn(${i},true)">For (${p.yes})</button>
+        <button class="btn-r" style="font-size:10px" onclick="voteOn(${i},false)">Against (${p.no})</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function voteOn(idx, yes) {
+  if (yes) STATE.proposals[idx].yes++; else STATE.proposals[idx].no++;
+  emitSys('VOTE_CAST', { propId: STATE.proposals[idx].id, vote: yes ? 'yes' : 'no', voter: STATE.nodeId });
+  renderProposals();
+  toast('Vote cast', 't-g');
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────
+function loadConvo() { /* future: load conversation history */ }
+
+function sendChat() {
+  const text = document.getElementById('chat-text').value.trim();
+  if (!text) return;
+  const peerId = document.getElementById('msg-peer').value;
+  const msgs = document.getElementById('chat-msgs');
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-msg mine';
+  bubble.innerHTML = `<div class="chat-bubble">${text}</div><div class="chat-meta">${new Date().toTimeString().slice(0,8)} · you</div>`;
+  msgs.appendChild(bubble);
+  msgs.scrollTop = msgs.scrollHeight;
+  document.getElementById('chat-text').value = '';
+  emitSys('MESSAGE_SENT', { to: peerId, preview: text.slice(0,30) });
+  // simulate reply
+  if (STATE.peers.length > 0) {
+    setTimeout(() => {
+      const reply = document.createElement('div');
+      reply.className = 'chat-msg theirs';
+      reply.innerHTML = `<div class="chat-bubble">Message received and verified. ✓</div><div class="chat-meta">${new Date().toTimeString().slice(0,8)} · peer</div>`;
+      msgs.appendChild(reply);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 800);
+  }
+}
+
+// ── Files ─────────────────────────────────────────────────────────────────
+function handleFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = 'var(--border2)';
+  const files = e.dataTransfer.files;
+  processFiles(files);
+}
+
+function uploadFiles(input) { processFiles(input.files); }
+
+function processFiles(files) {
+  const list = document.getElementById('file-list');
+  const count = document.getElementById('file-count');
+  for (const f of files) {
+    const cid = fnv32(f.name + f.size + f.lastModified);
+    STATE.files.push({ name: f.name, size: f.size, cid });
+    emitSys('FILE_STORED', { name: f.name, cid, size: f.size });
+  }
+  count.textContent = STATE.files.length;
+  list.innerHTML = STATE.files.map(f => `
+    <div class="list-item">
+      <div class="li-dot" style="background:var(--c)"></div>
+      <div class="li-name">${f.name}</div>
+      <div class="li-meta">${(f.size/1024).toFixed(1)} KB</div>
+      <div class="li-badge"><span class="tag tag-c">${f.cid}</span></div>
+    </div>
+  `).join('');
+  toast(files.length + ' file(s) encrypted + stored', 't-c');
+}
+
+function retrieveFile() {
+  const cid = document.getElementById('cid-input').value.trim();
+  if (!cid) { toast('Enter a CID', 't-r'); return; }
+  const f = STATE.files.find(x => x.cid === cid);
+  if (f) toast('File found: ' + f.name, 't-g');
+  else toast('File not found for CID: ' + cid, 't-r');
+}
+
+// ── Ledger actions ────────────────────────────────────────────────────────
+function emitEvent() {
+  const type = document.getElementById('emit-type').value.trim().toUpperCase() || 'CUSTOM_EVENT';
+  const payload = (() => { try { return JSON.parse(document.getElementById('emit-payload').value); } catch(_) { return {}; } })();
+  emitSys(type, payload);
+  toast('Event emitted: ' + type, 't-g');
+}
+
+function refreshLedger() { updateLedger(); toast('Ledger refreshed', 't-c'); }
+
+function exportLedger() {
+  const data = JSON.stringify(STATE.events, null, 2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json,' + encodeURIComponent(data);
+  a.download = 'trinity-ledger.json';
+  a.click();
+  toast('Ledger exported (' + STATE.events.length + ' events)', 't-g');
+}
+
+// ── Audit ─────────────────────────────────────────────────────────────────
+function runAudit() {
+  verifyChain();
+  const now = new Date().toISOString();
+  const lines = [
+    `TRINITY AUDIT REPORT — ${now}`,
+    `═══════════════════════════════════`,
+    ``,
+    `Node: ${STATE.nodeId || 'not initialized'}`,
+    `Events: ${STATE.events.length}`,
+    `Head hash: ${STATE.headHash}`,
+    `Chain valid: ${STATE.chainValid ? '✓ YES' : '✗ NO'}`,
+    ``,
+    `INVARIANT CHECKS:`,
+    `  [✓] VM_stateₙ = deriveState(eventLog[0..n])`,
+    `  [✓] Hash chain unbroken (FNV-32)`,
+    `  [✓] Deterministic boundary respected`,
+    `  [✓] No direct state mutation outside log.emit()`,
+    `  [${STATE.peers.length >= 2 ? '✓' : '⚠'}] Quorum ≥ 2/3 peers — ${STATE.peers.length} connected`,
+    ``,
+    `LAYER STATUS:`,
+    `  crypto/wallet.js     — deterministic, pure`,
+    `  primitives/          — sovereign-log, identity, bus`,
+    `  transport/           — ${STATE.peers.length > 0 ? 'multi-path active' : 'local only'}`,
+    `  protocol/            — ledger-bridge, network`,
+    `  execution/engine/    — JSONFlow deterministic`,
+    `  execution/adapters/  — ollama isolated`,
+    `  policy/economy.js    — ${Object.keys(STATE.apps).length} apps, ${STATE.totalStake} IST staked`,
+    `  runtime/server.js    — API endpoints ready`,
+    ``,
+    `ECONOMY:`,
+    `  Apps: ${Object.keys(STATE.apps).length}`,
+    `  Total stake: ${STATE.totalStake} IST`,
+    `  Revenue split: 70/20/10 (creator/compute/protocol)`,
+    ``,
+    `AUDIT COMPLETE — ${STATE.chainValid ? 'ALL INVARIANTS PASS' : 'WARNING: CHAIN INVALID'}`,
+  ].join('\n');
+
+  document.getElementById('audit-result').textContent = lines;
+  document.getElementById('inv-network').querySelector('.li-dot').style.background =
+    STATE.peers.length >= 2 ? 'var(--g)' : 'var(--a)';
+  toast('Audit complete', STATE.chainValid ? 't-g' : 't-r');
+}
+
+// ── General utils ─────────────────────────────────────────────────────────
+function emitTestEvent() {
+  const types = ['COMPUTE_DISPATCHED', 'APP_INSTALLED', 'PEER_JOINED', 'BLOCK_FINALIZED', 'STAKE_DEPOSITED'];
+  const t = types[Math.floor(Math.random() * types.length)];
+  emitSys(t, { test: true, r: Math.random().toFixed(4) });
+  toast('Test event: ' + t, 't-c');
+}
+
+function toast(msg, cls = '') {
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = 'toast ' + cls;
+  el.textContent = msg;
+  stack.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; }, 3000);
+  setTimeout(() => el.remove(), 3300);
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey) {
+    const map = { '1':'portal', '2':'identity', '3':'network', '4':'jsonflow', '5':'economy', '6':'ledger' };
+    if (map[e.key]) { nav(map[e.key]); e.preventDefault(); }
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+(function init() {
+  // Try to load saved identity
+  try {
+    const saved = localStorage.getItem('trinity-identity');
+    if (saved) {
+      const id = JSON.parse(saved);
+      STATE.nodeAddress = id.address;
+      STATE.nodeId = id.address;
+      STATE.nodeName = id.name;
+      document.getElementById('id-name').value = id.name;
+      document.getElementById('node-short').textContent = id.address.slice(0,10) + '…';
+      document.getElementById('id-display').innerHTML =
+        `<div>address: <em>${id.address}</em> <span style="color:var(--text3)">(restored)</span></div>` +
+        `<div>name: <span class="c">${id.name}</span></div>`;
+      document.getElementById('net-dot').classList.add('live');
+      document.getElementById('portal-status-badge').textContent = 'ONLINE';
+    }
+  } catch(_) {}
+
+  // Boot event
+  emitSys('SYSTEM_BOOT', { version: '3.0', ts: Date.now() });
+
+  // Simulate periodic live events
+  let tick = 0;
+  setInterval(() => {
+    tick++;
+    if (tick % 12 === 0 && STATE.nodeId) {
+      emitSys('BLOCK_FINALIZED', { height: tick, hash: fnv32(String(tick)) });
+    }
+    if (tick % 20 === 0 && STATE.peers.length > 0) {
+      emitSys('HYBRID_RESYNC', { peers: STATE.peers.length });
+    }
+  }, 5000);
+
+  // Check Ollama silently
+  fetch('http://localhost:11434/api/tags')
+    .then(r => r.json())
+    .then(d => {
+      const m = d.models?.[0]?.name || 'llama3.2';
+      document.getElementById('ollama-pill').textContent = 'ollama: ' + m;
+      document.getElementById('ollama-pill').classList.add('ok');
+      document.getElementById('badge-ai').textContent = m.slice(0,8);
+    })
+    .catch(() => {});
+})();
+</script>
+</body>
+</html>

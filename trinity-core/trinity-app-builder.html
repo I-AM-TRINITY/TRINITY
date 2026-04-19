@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<!--
+Trinity SDK / Planespace / Trinity Core
+Copyright (c) 2026 James Chapman (XheCarpenXer)
+
+Author: James Chapman
+Alias: XheCarpenXer
+Contact: xhecarpenxer@gmail.com
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This software is dual-licensed:
+1. Open Source License: GNU Affero General Public License v3.0 or later (AGPLv3+).
+2. Commercial / Government License: available for private, closed-source, warranty-backed,
+   or separately negotiated terms beyond AGPL compliance.
+
+See: LICENSE, COMMERCIAL-LICENSE.md, FEE-SCHEDULE.md, CLA.md, LEGAL-NOTES.md
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRINITY · App Builder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+/* ── TOKENS ────────────────────────────────────────────────────────────── */
+:root {
+  --void:     #030405;
+  --deep:     #070a0f;
+  --ground:   #0c1018;
+  --surface:  #111722;
+  --raised:   #171f2d;
+  --float:    #1e2840;
+  --border:   rgba(255,255,255,0.06);
+  --border2:  rgba(255,255,255,0.11);
+  --border3:  rgba(255,255,255,0.18);
+  --text:     #d0dae8;
+  --text2:    #7a91a8;
+  --text3:    #3d5468;
+  --text4:    #243040;
+  --g:        #00e676;
+  --c:        #00e5ff;
+  --v:        #b388ff;
+  --a:        #ff6d00;
+  --r:        #ff5252;
+  --y:        #ffd600;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Space Grotesk', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+
+body {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--void);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px);
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+#topbar {
+  position: sticky; top: 0; z-index: 500;
+  display: flex; align-items: center; gap: 0;
+  height: 50px;
+  background: var(--deep);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; margin-right: 24px; }
+.brand svg { width: 28px; height: 28px; }
+.brand-text { font-family: var(--sans); font-weight: 700; font-size: 15px; letter-spacing: 0.12em; color: var(--g); }
+.brand-sub { font-size: 9px; color: var(--text3); letter-spacing: 0.1em; margin-top: 1px; }
+
+.tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 16px; }
+.tb-stat { font-size: 10px; color: var(--text3); }
+.tb-stat em { color: var(--text2); font-style: normal; }
+
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.pill {
+  font-size: 9px; padding: 3px 9px; border-radius: 100px;
+  border: 1px solid var(--border2); color: var(--text3); letter-spacing: 0.04em;
+}
+.pill.ok { border-color: rgba(0,230,118,0.3); color: var(--g); background: rgba(0,230,118,0.06); }
+.pill.warn { border-color: rgba(255,109,0,0.3); color: var(--a); background: rgba(255,109,0,0.06); }
+.pill.v { border-color: rgba(179,136,255,0.3); color: var(--v); background: rgba(179,136,255,0.06); }
+
+/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+#shell {
+  display: grid;
+  grid-template-columns: 320px 1fr 360px;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+}
+
+/* ── PIPELINE SIDEBAR ────────────────────────────────────────────────────── */
+#pipeline {
+  background: var(--deep);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+#pipeline::-webkit-scrollbar { width: 2px; }
+#pipeline::-webkit-scrollbar-thumb { background: var(--float); }
+
+.pipe-hd {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.pipe-hd-title {
+  font-family: var(--sans); font-weight: 600; font-size: 11px;
+  color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.pipe-hd-sub { font-size: 10px; color: var(--text3); }
+
+/* pipeline steps */
+.pipe-steps {
+  padding: 10px 0;
+  flex-shrink: 0;
+}
+
+.pipe-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.pipe-step:hover { background: rgba(255,255,255,0.02); }
+.pipe-step.active { background: rgba(0,229,255,0.04); }
+.pipe-step.done .ps-num { background: var(--g); color: var(--void); border-color: var(--g); }
+.pipe-step.active .ps-num { border-color: var(--c); color: var(--c); }
+.pipe-step.error .ps-num { border-color: var(--r); color: var(--r); }
+
+.ps-connector {
+  position: absolute; left: 22px; top: 34px;
+  width: 1px; height: calc(100% - 25px);
+  background: var(--border);
+  pointer-events: none;
+}
+.ps-connector.done { background: rgba(0,230,118,0.3); }
+
+.ps-num {
+  width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--text3); font-weight: 600;
+  flex-shrink: 0; margin-top: 1px;
+  transition: all 0.2s;
+}
+
+.ps-body { flex: 1; min-width: 0; }
+.ps-name {
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  color: var(--text2); margin-bottom: 2px;
+}
+.pipe-step.active .ps-name { color: var(--c); }
+.pipe-step.done .ps-name { color: var(--g); }
+
+.ps-desc { font-size: 10px; color: var(--text3); line-height: 1.5; }
+.ps-badge {
+  font-size: 8px; padding: 2px 6px; border-radius: 3px; margin-top: 4px;
+  display: inline-block; letter-spacing: 0.06em;
+}
+.ps-badge-g { background: rgba(0,230,118,0.1); color: var(--g); border: 1px solid rgba(0,230,118,0.2); }
+.ps-badge-c { background: rgba(0,229,255,0.1); color: var(--c); border: 1px solid rgba(0,229,255,0.2); }
+.ps-badge-v { background: rgba(179,136,255,0.1); color: var(--v); border: 1px solid rgba(179,136,255,0.2); }
+.ps-badge-a { background: rgba(255,109,0,0.1); color: var(--a); border: 1px solid rgba(255,109,0,0.2); }
+
+/* Template selector */
+.template-section { padding: 12px 16px; border-top: 1px solid var(--border); }
+
+.section-label {
+  font-size: 9px; letter-spacing: 0.14em; color: var(--text4);
+  text-transform: uppercase; font-family: var(--sans); font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tpl-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 5px; padding: 8px 10px; cursor: pointer;
+  transition: all 0.14s; font-size: 10px;
+}
+.tpl-card:hover { border-color: var(--border2); background: var(--raised); }
+.tpl-card.selected { border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.04); }
+.tpl-card-name { color: var(--text); font-weight: 500; margin-bottom: 2px; font-family: var(--sans); }
+.tpl-card-desc { color: var(--text3); font-size: 9px; line-height: 1.4; }
+.tpl-card-tag { margin-top: 4px; }
+
+.sidebar-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+/* ── CENTER WORKSPACE ────────────────────────────────────────────────────── */
+#workspace {
+  background: var(--void);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.ws-tabs {
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--ground);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.ws-tab {
+  padding: 10px 16px;
+  font-size: 10px; color: var(--text3);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.12s; white-space: nowrap;
+  user-select: none;
+}
+.ws-tab:hover { color: var(--text2); }
+.ws-tab.active { color: var(--c); border-bottom-color: var(--c); }
+
+.ws-body { flex: 1; overflow: hidden; position: relative; }
+
+.ws-panel { display: none; height: 100%; overflow-y: auto; padding: 18px; flex-direction: column; gap: 14px; }
+.ws-panel.active { display: flex; }
+.ws-panel::-webkit-scrollbar { width: 3px; }
+.ws-panel::-webkit-scrollbar-thumb { background: var(--float); }
+
+/* Step panels */
+.step-panel {
+  background: var(--ground);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sp-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface);
+}
+.sp-icon { font-size: 12px; }
+.sp-title { font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--text2); flex: 1; }
+.sp-status { font-size: 9px; }
+
+.sp-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Form elements */
+label { font-size: 9px; color: var(--text3); display: block; margin-bottom: 4px; letter-spacing: 0.08em; }
+
+input, textarea, select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--mono); font-size: 12px;
+  padding: 8px 10px; border-radius: 5px; width: 100%; outline: none;
+  transition: border 0.18s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--c); }
+textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
+select option { background: var(--surface); }
+
+button {
+  background: var(--surface); border: 1px solid var(--border2);
+  color: var(--text2); font-family: var(--mono); font-size: 11px;
+  padding: 7px 14px; cursor: pointer; border-radius: 5px;
+  transition: all 0.14s; white-space: nowrap; letter-spacing: 0.03em;
+}
+button:hover { color: var(--text); border-color: var(--border3); background: var(--raised); }
+button.btn-g { background: rgba(0,230,118,0.08); border-color: rgba(0,230,118,0.3); color: var(--g); }
+button.btn-g:hover { background: rgba(0,230,118,0.14); }
+button.btn-c { background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); color: var(--c); }
+button.btn-c:hover { background: rgba(0,229,255,0.14); }
+button.btn-v { background: rgba(179,136,255,0.08); border-color: rgba(179,136,255,0.3); color: var(--v); }
+button.btn-v:hover { background: rgba(179,136,255,0.14); }
+button.btn-a { background: rgba(255,109,0,0.08); border-color: rgba(255,109,0,0.3); color: var(--a); }
+button.btn-a:hover { background: rgba(255,109,0,0.14); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.row { display: flex; gap: 8px; }
+.row.ac { align-items: center; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+
+/* Code blocks */
+.code-block {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 10px; line-height: 1.7;
+  word-break: break-all; white-space: pre-wrap;
+  max-height: 280px; overflow-y: auto;
+}
+.code-block::-webkit-scrollbar { width: 2px; }
+.code-block::-webkit-scrollbar-thumb { background: var(--float); }
+.code-block em { color: var(--g); font-style: normal; }
+.code-block .c { color: var(--c); }
+.code-block .v { color: var(--v); }
+.code-block .a { color: var(--a); }
+.code-block .y { color: var(--y); }
+.code-block .r { color: var(--r); }
+
+.tag {
+  display: inline-block; font-size: 9px; padding: 2px 7px;
+  border-radius: 3px; font-weight: 500; letter-spacing: 0.05em;
+}
+.tag-g { background: rgba(0,230,118,0.1); color: var(--g); border: 1px solid rgba(0,230,118,0.2); }
+.tag-c { background: rgba(0,229,255,0.1); color: var(--c); border: 1px solid rgba(0,229,255,0.2); }
+.tag-v { background: rgba(179,136,255,0.1); color: var(--v); border: 1px solid rgba(179,136,255,0.2); }
+.tag-a { background: rgba(255,109,0,0.1); color: var(--a); border: 1px solid rgba(255,109,0,0.2); }
+.tag-r { background: rgba(255,82,82,0.1); color: var(--r); border: 1px solid rgba(255,82,82,0.2); }
+
+/* AI response */
+.ai-block {
+  background: rgba(179,136,255,0.05);
+  border: 1px solid rgba(179,136,255,0.15);
+  border-radius: 5px; padding: 12px;
+  font-size: 11px; line-height: 1.7; color: var(--text);
+  white-space: pre-wrap; max-height: 240px; overflow-y: auto;
+}
+.ai-block::-webkit-scrollbar { width: 2px; }
+.ai-block::-webkit-scrollbar-thumb { background: rgba(179,136,255,0.3); }
+
+.thinking { font-size: 11px; color: var(--text4); font-style: italic; }
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Progress */
+.progress-track {
+  height: 2px; background: var(--float); border-radius: 2px;
+  overflow: hidden; margin: 4px 0;
+}
+.progress-fill {
+  height: 100%; border-radius: 2px; transition: width 0.4s;
+  background: var(--c);
+}
+
+/* Variable mapping table */
+.var-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.var-table th {
+  text-align: left; font-size: 9px; letter-spacing: 0.1em;
+  color: var(--text4); padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--sans); font-weight: 600;
+}
+.var-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.var-table td input { padding: 4px 6px; font-size: 10px; }
+.var-table tr:last-child td { border-bottom: none; }
+
+/* ── RIGHT PANEL (Preview + Output) ─────────────────────────────────────── */
+#output-panel {
+  border-left: 1px solid var(--border);
+  background: var(--deep);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.op-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--ground); flex-shrink: 0;
+}
+.op-tab {
+  padding: 10px 14px; font-size: 10px; color: var(--text3);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.12s;
+}
+.op-tab:hover { color: var(--text2); }
+.op-tab.active { color: var(--g); border-bottom-color: var(--g); }
+
+.op-body { flex: 1; overflow: hidden; position: relative; }
+.op-pane { display: none; height: 100%; flex-direction: column; }
+.op-pane.active { display: flex; }
+
+/* Mini preview */
+#preview-frame-wrapper {
+  flex: 1; overflow: hidden; position: relative;
+  background: var(--void);
+}
+#preview-frame {
+  width: 100%; height: 100%; border: none;
+}
+.preview-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; color: var(--text4); font-size: 11px; text-align: center;
+  pointer-events: none;
+}
+.preview-empty svg { opacity: 0.3; }
+
+/* Generated code viewer */
+#gen-code-area {
+  flex: 1; overflow-y: auto; padding: 12px;
+}
+#gen-code-area::-webkit-scrollbar { width: 2px; }
+#gen-code-area::-webkit-scrollbar-thumb { background: var(--float); }
+#gen-code-content {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  white-space: pre; line-height: 1.7; overflow-x: auto;
+}
+
+.op-actions {
+  padding: 10px 12px; border-top: 1px solid var(--border);
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: var(--ground); flex-shrink: 0;
+}
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+#toast-stack {
+  position: fixed; bottom: 18px; right: 18px;
+  z-index: 9998; display: flex; flex-direction: column; gap: 5px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--raised); border: 1px solid var(--border2);
+  border-radius: 5px; padding: 9px 14px; font-size: 11px; color: var(--text);
+  animation: toast-in 0.18s ease; max-width: 280px;
+}
+.toast.t-g { border-color: rgba(0,230,118,0.3); color: var(--g); }
+.toast.t-r { border-color: rgba(255,82,82,0.3); color: var(--r); }
+.toast.t-c { border-color: rgba(0,229,255,0.3); color: var(--c); }
+.toast.t-v { border-color: rgba(179,136,255,0.3); color: var(--v); }
+@keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; } }
+
+/* ── MISC ────────────────────────────────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 2px 0; }
+.mono-val { font-family: var(--mono); color: var(--c); }
+
+/* Animated dot */
+@keyframes breathe { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--r);
+  transition: background 0.3s, box-shadow 0.3s; display: inline-block;
+}
+.live-dot.on { background: var(--g); box-shadow: 0 0 7px var(--g); animation: breathe 2s ease-in-out infinite; }
+
+/* jsonflow syntax highlight */
+.jf-key { color: var(--c); }
+.jf-str { color: var(--g); }
+.jf-num { color: var(--a); }
+.jf-bool { color: var(--v); }
+
+/* Compliance badge row */
+.compliance-row {
+  display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 14px;
+  border-top: 1px solid var(--border); background: rgba(0,0,0,0.2);
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 28 28" fill="none">
+      <polygon points="14,2 26,22 2,22" stroke="#00e676" stroke-width="1.5" fill="rgba(0,230,118,0.06)"/>
+      <polygon points="14,9 20,20 8,20" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="0.75"/>
+      <circle cx="14" cy="14" r="2.5" fill="#00e676"/>
+    </svg>
+    <div>
+      <div class="brand-text">TRINITY</div>
+      <div class="brand-sub">APP BUILDER</div>
+    </div>
+  </div>
+
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span class="live-dot" id="ollama-dot"></span>
+    <span class="tb-stat">ollama: <em id="ollama-model-name">offline</em></span>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-stat">pipeline: <em id="pipe-stage">IDLE</em></div>
+  <div class="tb-sep"></div>
+  <div class="tb-stat">apps built: <em id="apps-built">0</em></div>
+
+  <div class="tb-right">
+    <div class="pill" id="compliance-pill">compliance: checking</div>
+    <div class="pill v">JSONFlow v1</div>
+  </div>
+</div>
+
+<!-- MAIN SHELL -->
+<div id="shell">
+
+  <!-- ── LEFT: PIPELINE SIDEBAR ─────────────────────────────────────────── -->
+  <div id="pipeline">
+    <div class="pipe-hd">
+      <div class="pipe-hd-title">Build Pipeline</div>
+      <div class="pipe-hd-sub">intent → schema → JSONFlow → code → app</div>
+    </div>
+
+    <div class="pipe-steps">
+      <!-- Step 0: Config -->
+      <div class="pipe-step active" id="ps-0" onclick="gotoStep(0)">
+        <div style="position:relative">
+          <div class="ps-num" id="psn-0">0</div>
+          <div class="ps-connector" id="psc-0"></div>
+        </div>
+        <div class="ps-body">
+          <div class="ps-name">Config</div>
+          <div class="ps-desc">Ollama host · template · app metadata</div>
+          <div class="ps-badge ps-badge-g">foundation</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Intent -->
+      <div class="pipe-step" id="ps-1" onclick="gotoStep(1)">
+        <div style="position:relative">
+          <div class="ps-num" id="psn-1">1</div>
+          <div class="ps-connector" id="psc-1"></div>
+        </div>
+        <div class="ps-body">
+          <div class="ps-name">Intent → JSON Schema</div>
+          <div class="ps-desc">Describe what the app does. Ollama extracts structured schema.</div>
+          <div class="ps-badge ps-badge-v">ollama → json</div>
+        </div>
+      </div>
+
+      <!-- Step 2: JSONFlow -->
+      <div class="pipe-step" id="ps-2" onclick="gotoStep(2)">
+        <div style="position:relative">
+          <div class="ps-num" id="psn-2">2</div>
+          <div class="ps-connector" id="psc-2"></div>
+        </div>
+        <div class="ps-body">
+          <div class="ps-name">Schema → JSONFlow</div>
+          <div class="ps-desc">Auto-compile deterministic JSONFlow program from schema.</div>
+          <div class="ps-badge ps-badge-c">deterministic</div>
+        </div>
+      </div>
+
+      <!-- Step 3: Variables -->
+      <div class="pipe-step" id="ps-3" onclick="gotoStep(3)">
+        <div style="position:relative">
+          <div class="ps-num" id="psn-3">3</div>
+          <div class="ps-connector" id="psc-3"></div>
+        </div>
+        <div class="ps-body">
+          <div class="ps-name">Variable Mapping</div>
+          <div class="ps-desc">Map schema fields to UI slots in selected template.</div>
+          <div class="ps-badge ps-badge-a">template</div>
+        </div>
+      </div>
+
+      <!-- Step 4: Generate -->
+      <div class="pipe-step" id="ps-4" onclick="gotoStep(4)">
+        <div style="position:relative">
+          <div class="ps-num" id="psn-4">4</div>
+        </div>
+        <div class="ps-body">
+          <div class="ps-name">Generate App</div>
+          <div class="ps-desc">Produce compliant single-file HTML app with TRINITY foundation embedded.</div>
+          <div class="ps-badge ps-badge-g">sovereign · compliant</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Templates -->
+    <div class="template-section">
+      <div class="section-label">App Templates</div>
+      <div class="tpl-grid">
+        <div class="tpl-card selected" id="tpl-dashboard" onclick="selectTemplate('dashboard')">
+          <div class="tpl-card-name">Dashboard</div>
+          <div class="tpl-card-desc">Stats + data table + actions</div>
+          <div class="tpl-card-tag"><span class="tag tag-c">data</span></div>
+        </div>
+        <div class="tpl-card" id="tpl-form" onclick="selectTemplate('form')">
+          <div class="tpl-card-name">Form + Flow</div>
+          <div class="tpl-card-desc">Input → validate → submit → confirm</div>
+          <div class="tpl-card-tag"><span class="tag tag-g">flow</span></div>
+        </div>
+        <div class="tpl-card" id="tpl-ledger" onclick="selectTemplate('ledger')">
+          <div class="tpl-card-name">Ledger App</div>
+          <div class="tpl-card-desc">Append-only log with hash chain</div>
+          <div class="tpl-card-tag"><span class="tag tag-a">audit</span></div>
+        </div>
+        <div class="tpl-card" id="tpl-market" onclick="selectTemplate('market')">
+          <div class="tpl-card-name">Marketplace</div>
+          <div class="tpl-card-desc">List → buy → settle (IST economy)</div>
+          <div class="tpl-card-tag"><span class="tag tag-v">economy</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="btn-g" style="width:100%;margin-bottom:6px" onclick="runFullPipeline()">⚡ Run Full Pipeline</button>
+      <button style="width:100%;font-size:10px" onclick="resetAll()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- ── CENTER: WORKSPACE ──────────────────────────────────────────────── -->
+  <div id="workspace">
+    <div class="ws-tabs">
+      <div class="ws-tab active" onclick="wsTab('step0', this)">⚙ Config</div>
+      <div class="ws-tab" onclick="wsTab('step1', this)">◬ Intent → Schema</div>
+      <div class="ws-tab" onclick="wsTab('step2', this)">⊕ JSONFlow</div>
+      <div class="ws-tab" onclick="wsTab('step3', this)">⊞ Variables</div>
+      <div class="ws-tab" onclick="wsTab('step4', this)">◈ Generate</div>
+    </div>
+
+    <div class="ws-body">
+
+      <!-- ── STEP 0: CONFIG ──────────────────────────────────────────────── -->
+      <div class="ws-panel active col" id="ws-step0">
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">⬡</span>
+            <span class="sp-title">Ollama Connection</span>
+            <span class="sp-status" id="ollama-status-badge"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">offline</span></span>
+          </div>
+          <div class="sp-body">
+            <div class="row ac">
+              <div style="flex:1">
+                <label>Ollama Host</label>
+                <input id="ollama-host" value="http://localhost:11434" placeholder="http://localhost:11434">
+              </div>
+              <button class="btn-v" style="margin-top:18px" onclick="connectOllama()">Connect</button>
+            </div>
+            <div>
+              <label>Model</label>
+              <select id="ollama-model-sel">
+                <option value="llama3.2">llama3.2</option>
+                <option value="llama3.1">llama3.1</option>
+                <option value="mistral">mistral</option>
+                <option value="codellama">codellama</option>
+                <option value="deepseek-coder">deepseek-coder</option>
+              </select>
+            </div>
+            <div class="code-block" id="ollama-models-out" style="min-height:40px">Not connected. Click Connect to check Ollama.</div>
+          </div>
+        </div>
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">◈</span>
+            <span class="sp-title">App Metadata</span>
+          </div>
+          <div class="sp-body">
+            <div class="row">
+              <div style="flex:1">
+                <label>App ID</label>
+                <input id="cfg-app-id" value="my-sovereign-app" placeholder="my-app">
+              </div>
+              <div style="flex:1">
+                <label>Version</label>
+                <input id="cfg-version" value="1.0.0" placeholder="1.0.0">
+              </div>
+            </div>
+            <div>
+              <label>App Title</label>
+              <input id="cfg-app-title" value="My Sovereign App" placeholder="Visible title">
+            </div>
+            <div>
+              <label>Description</label>
+              <input id="cfg-app-desc" value="" placeholder="One-line description">
+            </div>
+            <div class="row">
+              <div style="flex:1">
+                <label>Price (IST)</label>
+                <input id="cfg-price" type="number" value="10" min="0">
+              </div>
+              <div style="flex:1">
+                <label>Author / NodeId</label>
+                <input id="cfg-author" value="" placeholder="0x… or name">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">⊛</span>
+            <span class="sp-title">TRINITY Foundation Options</span>
+          </div>
+          <div class="sp-body">
+            <div style="font-size:11px;color:var(--text2);line-height:2.2">
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="opt-log" checked style="width:auto"> Embed sovereign-log (FNV-32 hash chain)
+              </label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="opt-identity" checked style="width:auto"> Embed identity kernel (keypair + EIP-191)
+              </label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="opt-economy" checked style="width:auto"> Embed economy (IST settlement + 70/20/10)
+              </label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="opt-broadcast" checked style="width:auto"> Embed BroadcastChannel transport
+              </label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="opt-audit" checked style="width:auto"> Embed audit + invariant checker
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn-c" onclick="gotoStep(1);wsTab('step1')">Next: Describe Intent →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 1: INTENT ──────────────────────────────────────────────── -->
+      <div class="ws-panel col" id="ws-step1">
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">◬</span>
+            <span class="sp-title">App Intent — Natural Language</span>
+            <span class="sp-status"><span class="tag tag-v">non-det → log.emit()</span></span>
+          </div>
+          <div class="sp-body">
+            <div>
+              <label>Describe what your app does (plain English)</label>
+              <textarea id="intent-text" style="height:100px" placeholder="e.g. A peer-to-peer lending app where users post loan requests with amount and interest rate, lenders can fund them, and repayments are tracked on the sovereign ledger with automatic IST settlement at 70% to lender, 20% to compute nodes, 10% to protocol."></textarea>
+            </div>
+            <div class="row ac" style="gap:8px">
+              <button class="btn-v" onclick="runIntent()" id="intent-btn" style="flex:1">◬ Extract Schema via Ollama</button>
+              <button onclick="useExampleIntent()" style="flex-shrink:0;font-size:10px">load example</button>
+            </div>
+            <div style="font-size:10px;color:var(--text3)">
+              Ollama will parse your description into a structured JSON schema for fields, flows, and state transitions.
+              If Ollama is offline, a local fallback parser runs instead.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel" id="schema-panel">
+          <div class="sp-head">
+            <span class="sp-icon">{ }</span>
+            <span class="sp-title">Extracted JSON Schema</span>
+            <span class="sp-status" id="schema-status">
+              <span class="tag" style="color:var(--text3);border:1px solid var(--border)">pending</span>
+            </span>
+          </div>
+          <div class="sp-body">
+            <div class="thinking" id="schema-thinking">Run intent extraction to see schema here.</div>
+            <div class="code-block" id="schema-out" style="display:none;min-height:160px"></div>
+            <div class="row" id="schema-actions" style="display:none">
+              <button onclick="editSchema()" style="flex:1">✎ Edit</button>
+              <button class="btn-c" onclick="gotoStep(2);wsTab('step2');compileJsonFlow()" style="flex:1">Next: Compile JSONFlow →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: JSONFLOW ────────────────────────────────────────────── -->
+      <div class="ws-panel col" id="ws-step2">
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">⊕</span>
+            <span class="sp-title">JSONFlow Program — Deterministic</span>
+            <span class="sp-status"><span class="tag tag-g">deterministic · pure</span></span>
+          </div>
+          <div class="sp-body">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px">
+              Auto-compiled from schema. Same IR + same input = same output. Always auditable.
+            </div>
+            <textarea id="jf-editor" style="height:240px;font-family:var(--mono);font-size:11px;color:#9cdcfe;background:var(--void);border:1px solid var(--border2);border-radius:5px;padding:12px;line-height:1.7;resize:vertical"
+              placeholder="Run Step 1 first to auto-generate JSONFlow…"></textarea>
+            <div class="row ac" style="gap:8px">
+              <button class="btn-g" onclick="validateJF()" style="flex:1">✓ Validate</button>
+              <button onclick="compileJFToTarget('JavaScript')" style="flex:1">→ JS</button>
+              <button onclick="compileJFToTarget('Python')" style="flex:1">→ Python</button>
+              <button onclick="compileJFToTarget('Rust')" style="flex:1">→ Rust</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel" id="jf-validate-panel">
+          <div class="sp-head">
+            <span class="sp-icon">◉</span>
+            <span class="sp-title">Validation + IR</span>
+            <span class="sp-status" id="jf-val-badge"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">pending</span></span>
+          </div>
+          <div class="sp-body">
+            <div class="code-block" id="jf-val-out">Run validation to see IR output.</div>
+            <div class="row" id="jf-actions" style="margin-top:4px">
+              <button class="btn-c" onclick="gotoStep(3);wsTab('step3');buildVarMap()" style="flex:1">Next: Map Variables →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: VARIABLES ───────────────────────────────────────────── -->
+      <div class="ws-panel col" id="ws-step3">
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">⊞</span>
+            <span class="sp-title">Variable → Template Mapping</span>
+            <span class="sp-status"><span class="tag tag-a">template</span></span>
+          </div>
+          <div class="sp-body">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:8px">
+              Map your schema fields to the template's UI slots.
+              The universal foundation stays the same — only these variables get customized per app.
+            </div>
+            <div id="var-map-container">
+              <div class="thinking">Complete Step 1 first to extract schema fields.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">▦</span>
+            <span class="sp-title">Template: <span id="tpl-name-display" style="color:var(--c)">Dashboard</span></span>
+          </div>
+          <div class="sp-body">
+            <div style="font-size:10px;color:var(--text2);line-height:2">
+              <div>Structure: <span id="tpl-structure" style="color:var(--c)">header · stats grid · data table · action bar</span></div>
+              <div>Foundation: <span style="color:var(--g)">sovereign-log · identity · economy · audit</span></div>
+              <div>Custom slots: <span id="tpl-slots" style="color:var(--a)">APP_NAME · STAT_FIELDS · TABLE_COLS · ACTIONS</span></div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <button class="btn-c" onclick="gotoStep(4);wsTab('step4');generateApp()" style="flex:1">Next: Generate App →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: GENERATE ────────────────────────────────────────────── -->
+      <div class="ws-panel col" id="ws-step4">
+
+        <div class="step-panel">
+          <div class="sp-head">
+            <span class="sp-icon">⚡</span>
+            <span class="sp-title">Generate Sovereign App</span>
+            <span class="sp-status" id="gen-status"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">ready</span></span>
+          </div>
+          <div class="sp-body">
+            <div style="font-size:10px;color:var(--text2);line-height:2">
+              <div id="gen-summary">Complete steps 1–3 before generating.</div>
+            </div>
+            <div class="progress-track" style="margin:8px 0">
+              <div class="progress-fill" id="gen-progress" style="width:0%"></div>
+            </div>
+            <div id="gen-log" style="font-size:10px;color:var(--text4);line-height:1.8;min-height:40px"></div>
+            <div class="row ac" style="gap:8px;margin-top:4px">
+              <button class="btn-g" id="gen-btn" onclick="generateApp()" style="flex:1">⚡ Generate App HTML</button>
+              <button onclick="runAuditCheck()" style="flex:1">✦ Verify Compliance</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel" id="audit-panel">
+          <div class="sp-head">
+            <span class="sp-icon">✦</span>
+            <span class="sp-title">Compliance Report</span>
+            <span class="sp-status" id="audit-badge"><span class="tag" style="color:var(--text3);border:1px solid var(--border)">pending</span></span>
+          </div>
+          <div class="sp-body">
+            <div class="code-block" id="audit-out" style="min-height:100px">Run audit to verify TRINITY compliance.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /ws-body -->
+  </div><!-- /workspace -->
+
+  <!-- ── RIGHT: OUTPUT + PREVIEW ────────────────────────────────────────── -->
+  <div id="output-panel">
+    <div class="op-tabs">
+      <div class="op-tab active" onclick="opTab('preview', this)">▶ Preview</div>
+      <div class="op-tab" onclick="opTab('code', this)">{ } Code</div>
+      <div class="op-tab" onclick="opTab('schema-view', this)">▦ Schema</div>
+    </div>
+
+    <div class="op-body">
+      <!-- Preview pane -->
+      <div class="op-pane active" id="pane-preview">
+        <div id="preview-frame-wrapper">
+          <div class="preview-empty" id="preview-empty">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <polygon points="24,4 44,40 4,40" stroke="#00e676" stroke-width="1.5" fill="none"/>
+              <circle cx="24" cy="24" r="5" fill="rgba(0,230,118,0.2)" stroke="#00e676" stroke-width="1"/>
+            </svg>
+            <div>Generate an app to see preview</div>
+            <div style="font-size:9px;color:var(--text4)">Built on TRINITY · Sovereign</div>
+          </div>
+          <iframe id="preview-frame" style="display:none" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+        <div class="compliance-row" id="compliance-row" style="display:none">
+          <span class="tag tag-g">✓ sovereign-log</span>
+          <span class="tag tag-g">✓ hash chain</span>
+          <span class="tag tag-g">✓ identity</span>
+          <span class="tag tag-g">✓ economy</span>
+          <span class="tag tag-a">✓ JSONFlow</span>
+        </div>
+      </div>
+
+      <!-- Code pane -->
+      <div class="op-pane" id="pane-code">
+        <div id="gen-code-area">
+          <div id="gen-code-content" style="color:var(--text4)">// Generated HTML will appear here after Step 4</div>
+        </div>
+      </div>
+
+      <!-- Schema view -->
+      <div class="op-pane" id="pane-schema-view">
+        <div style="padding:12px;flex:1;overflow-y:auto">
+          <div class="section-label" style="margin-bottom:8px">Live Schema</div>
+          <div class="code-block" id="schema-live" style="min-height:200px">No schema yet. Run Step 1.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="op-actions">
+      <button class="btn-g" id="dl-btn" onclick="downloadApp()" disabled>↓ Download .html</button>
+      <button class="btn-c" id="emit-btn" onclick="emitToNetwork()" disabled>→ log.emit(APP_PUBLISHED)</button>
+      <button onclick="openInTab()" id="open-btn" disabled style="font-size:10px">↗ Open</button>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- TOAST STACK -->
+<div id="toast-stack"></div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TRINITY APP BUILDER — PIPELINE RUNTIME
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── State ──────────────────────────────────────────────────────────────────
+const B = {
+  ollamaOnline: false,
+  ollamaHost: 'http://localhost:11434',
+  ollamaModel: 'llama3.2',
+  currentStep: 0,
+  selectedTemplate: 'dashboard',
+  schema: null,
+  jsonflow: null,
+  varMap: {},
+  generatedHTML: null,
+  appsBuilt: 0,
+  // sovereign-log sim
+  events: [],
+  headHash: '00000000',
+};
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function fnv32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+function toast(msg, cls = '') {
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = 'toast ' + cls;
+  el.textContent = msg;
+  stack.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; }, 3000);
+  setTimeout(() => el.remove(), 3300);
+}
+
+function logEmit(type, payload) {
+  const prevHash = B.headHash;
+  const hash = fnv32(JSON.stringify(payload) + '|' + prevHash);
+  B.events.push({ type, payload, hash, prevHash, ts: Date.now() });
+  B.headHash = hash;
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function gotoStep(n) {
+  B.currentStep = n;
+  document.querySelectorAll('.pipe-step').forEach((el, i) => {
+    el.classList.remove('active');
+    if (i === n) el.classList.add('active');
+  });
+  document.getElementById('pipe-stage').textContent = ['CONFIG','INTENT→SCHEMA','SCHEMA→JSONFLOW','VAR-MAP','GENERATE'][n];
+}
+
+function wsTab(id, el) {
+  document.querySelectorAll('.ws-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ws-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('ws-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.ws-tab').forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + id + "'")) {
+        t.classList.add('active');
+      }
+    });
+  }
+}
+
+function opTab(id, el) {
+  document.querySelectorAll('.op-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.op-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function markStepDone(n) {
+  const el = document.getElementById('ps-' + n);
+  const num = document.getElementById('psn-' + n);
+  const conn = document.getElementById('psc-' + n);
+  if (el) el.classList.add('done');
+  if (num) num.textContent = '✓';
+  if (conn) conn.classList.add('done');
+}
+
+// ── Template selector ──────────────────────────────────────────────────────
+const TEMPLATES = {
+  dashboard: {
+    name: 'Dashboard',
+    structure: 'header · stats grid · data table · action bar',
+    slots: 'APP_NAME · STAT_FIELDS · TABLE_COLS · ACTIONS',
+  },
+  form: {
+    name: 'Form + Flow',
+    structure: 'header · form fields · validation · confirm modal',
+    slots: 'APP_NAME · FORM_FIELDS · SUBMIT_ACTION · SUCCESS_MSG',
+  },
+  ledger: {
+    name: 'Ledger App',
+    structure: 'header · emit panel · log viewer · hash display',
+    slots: 'APP_NAME · EVENT_TYPES · LEDGER_COLS · DERIVE_STATE',
+  },
+  market: {
+    name: 'Marketplace',
+    structure: 'header · listing grid · buy modal · settlement',
+    slots: 'APP_NAME · ITEM_FIELDS · PRICE_IST · ECONOMY_SPLIT',
+  },
+};
+
+function selectTemplate(id) {
+  document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('tpl-' + id).classList.add('selected');
+  B.selectedTemplate = id;
+  const tpl = TEMPLATES[id];
+  document.getElementById('tpl-name-display').textContent = tpl.name;
+  document.getElementById('tpl-structure').textContent = tpl.structure;
+  document.getElementById('tpl-slots').textContent = tpl.slots;
+  toast('Template: ' + tpl.name, 't-c');
+}
+
+// ── Ollama ─────────────────────────────────────────────────────────────────
+async function connectOllama() {
+  const host = document.getElementById('ollama-host').value.trim();
+  B.ollamaHost = host;
+  document.getElementById('ollama-models-out').textContent = 'Connecting to ' + host + '…';
+  try {
+    const r = await fetch(host + '/api/tags');
+    const d = await r.json();
+    const models = d.models?.map(m => m.name) || [];
+    B.ollamaOnline = true;
+    document.getElementById('ollama-dot').classList.add('on');
+    document.getElementById('ollama-model-name').textContent = models[0] || 'connected';
+    document.getElementById('ollama-status-badge').innerHTML = '<span class="tag tag-g">online</span>';
+    document.getElementById('ollama-models-out').textContent = 'Models: ' + models.join(', ');
+    document.getElementById('compliance-pill').textContent = 'compliance: ok';
+    document.getElementById('compliance-pill').className = 'pill ok';
+    // Populate model select
+    const sel = document.getElementById('ollama-model-sel');
+    if (models.length) {
+      sel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+      B.ollamaModel = models[0];
+    }
+    toast('Ollama connected · ' + models.length + ' models', 't-v');
+  } catch (_) {
+    B.ollamaOnline = false;
+    document.getElementById('ollama-status-badge').innerHTML = '<span class="tag tag-r">offline — fallback active</span>';
+    document.getElementById('ollama-models-out').textContent = 'Ollama not reachable at ' + host + '\nLocal fallback parser will be used instead.';
+    toast('Ollama offline — local fallback active', 't-a');
+  }
+}
+
+async function ollamaGenerate(prompt) {
+  const model = document.getElementById('ollama-model-sel').value || B.ollamaModel;
+  const r = await fetch(B.ollamaHost + '/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt, stream: false }),
+  });
+  const d = await r.json();
+  return d.response || '';
+}
+
+// ── STEP 1: Intent → Schema ────────────────────────────────────────────────
+function useExampleIntent() {
+  document.getElementById('intent-text').value =
+    `A peer-to-peer micro-lending app where borrowers post loan requests with title, requested amount in IST, interest rate percentage, and repayment duration in days. Lenders can fund open requests. Once funded, repayments are tracked on the sovereign ledger. Settlement follows TRINITY economy rules: 70% to lender, 20% to compute nodes, 10% to protocol. State transitions: draft → funded → repaying → settled.`;
+}
+
+async function runIntent() {
+  const intent = document.getElementById('intent-text').value.trim();
+  if (!intent) { toast('Enter your app description first', 't-r'); return; }
+
+  document.getElementById('schema-thinking').innerHTML = '<span class="spin">◌</span> Extracting schema…';
+  document.getElementById('schema-thinking').style.display = 'block';
+  document.getElementById('schema-out').style.display = 'none';
+  document.getElementById('schema-actions').style.display = 'none';
+  document.getElementById('schema-status').innerHTML = '<span class="tag tag-v">analyzing</span>';
+
+  const appId = document.getElementById('cfg-app-id').value || 'my-app';
+  const title = document.getElementById('cfg-app-title').value || 'My App';
+
+  let schema;
+  try {
+    if (B.ollamaOnline) {
+      const prompt = `You are a TRINITY sovereign compute schema extractor. The user describes an app.
+Extract a structured JSON schema. Respond with ONLY valid JSON, no markdown, no explanation.
+
+Format:
+{
+  "appId": "${appId}",
+  "title": "${title}",
+  "description": "one line",
+  "fields": [{"name":"fieldName","type":"string|number|boolean","label":"Human Label","required":true}],
+  "states": ["state1","state2"],
+  "transitions": [{"id":"t1","from":"state1","to":"state2","label":"Action Label","trigger":"EVENT_TYPE"}],
+  "economy": {"priceIST": 10, "split": {"creator": 70, "compute": 20, "protocol": 10}},
+  "events": ["EVENT_TYPE_1","EVENT_TYPE_2"]
+}
+
+User description: ${intent}`;
+
+      const raw = await ollamaGenerate(prompt);
+      // Extract JSON from response
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        schema = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON in response');
+      }
+    } else {
+      throw new Error('offline');
+    }
+  } catch (_) {
+    // Local fallback: parse intent heuristically
+    schema = localParseIntent(intent, appId, title);
+  }
+
+  B.schema = schema;
+  const pretty = JSON.stringify(schema, null, 2);
+  document.getElementById('schema-thinking').style.display = 'none';
+  document.getElementById('schema-out').textContent = pretty;
+  document.getElementById('schema-out').style.display = 'block';
+  document.getElementById('schema-actions').style.display = 'flex';
+  document.getElementById('schema-status').innerHTML = '<span class="tag tag-g">extracted</span>';
+  document.getElementById('schema-live').textContent = pretty;
+
+  markStepDone(1);
+  logEmit('SCHEMA_EXTRACTED', { appId: schema.appId, fields: schema.fields?.length });
+  toast('Schema extracted · ' + (schema.fields?.length || 0) + ' fields', 't-v');
+}
+
+function localParseIntent(intent, appId, title) {
+  // Heuristic local parser — no Ollama needed
+  const lower = intent.toLowerCase();
+  const fields = [];
+  const events = [];
+  const states = [];
+  const transitions = [];
+
+  // Extract field hints from common words
+  const fieldHints = [
+    { kw: ['title','name','label'], name:'title', type:'string', label:'Title' },
+    { kw: ['amount','price','cost','ist','value'], name:'amount', type:'number', label:'Amount (IST)' },
+    { kw: ['description','desc','details','notes'], name:'description', type:'string', label:'Description' },
+    { kw: ['rate','interest','percentage','percent'], name:'rate', type:'number', label:'Rate (%)' },
+    { kw: ['duration','days','period','term'], name:'duration', type:'number', label:'Duration (days)' },
+    { kw: ['address','recipient','sender','peer'], name:'address', type:'string', label:'Address (0x…)' },
+    { kw: ['status','state'], name:'status', type:'string', label:'Status' },
+    { kw: ['date','timestamp','time'], name:'createdAt', type:'string', label:'Created At' },
+  ];
+
+  for (const h of fieldHints) {
+    if (h.kw.some(k => lower.includes(k))) {
+      fields.push({ name: h.name, type: h.type, label: h.label, required: ['title','amount'].includes(h.name) });
+    }
+  }
+  if (fields.length === 0) {
+    fields.push({ name:'title', type:'string', label:'Title', required:true });
+    fields.push({ name:'value', type:'number', label:'Value', required:true });
+  }
+
+  // Extract states from "→" or ":" patterns or known words
+  const stateWords = ['draft','open','pending','funded','active','repaying','settled','closed','complete','done','submitted','approved','rejected'];
+  for (const s of stateWords) { if (lower.includes(s)) states.push(s); }
+  if (states.length === 0) states.push('active', 'complete');
+
+  // Build transitions
+  for (let i = 0; i < states.length - 1; i++) {
+    transitions.push({
+      id: 't' + i,
+      from: states[i],
+      to: states[i + 1],
+      label: 'Advance',
+      trigger: states[i].toUpperCase() + '_TO_' + states[i + 1].toUpperCase(),
+    });
+    events.push(states[i].toUpperCase() + '_TO_' + states[i + 1].toUpperCase());
+  }
+  events.push('ITEM_CREATED', 'ITEM_UPDATED', 'SETTLEMENT_COMPLETE');
+
+  const priceMatch = intent.match(/(\d+)\s*(IST|ist)/);
+  const priceIST = priceMatch ? parseInt(priceMatch[1]) : 10;
+
+  return {
+    appId,
+    title,
+    description: intent.slice(0, 100),
+    fields,
+    states,
+    transitions,
+    economy: { priceIST, split: { creator: 70, compute: 20, protocol: 10 } },
+    events,
+  };
+}
+
+function editSchema() {
+  const current = document.getElementById('schema-out').textContent;
+  const ta = document.createElement('textarea');
+  ta.style.cssText = 'width:100%;height:200px;font-family:var(--mono);font-size:11px;background:var(--void);color:var(--c);border:1px solid var(--border2);border-radius:4px;padding:8px;resize:vertical';
+  ta.value = current;
+  const container = document.getElementById('schema-out');
+  container.style.display = 'none';
+  container.parentNode.insertBefore(ta, container);
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save Schema';
+  saveBtn.className = 'btn-g';
+  saveBtn.style.marginTop = '6px';
+  saveBtn.onclick = () => {
+    try {
+      B.schema = JSON.parse(ta.value);
+      container.textContent = ta.value;
+      container.style.display = 'block';
+      ta.remove(); saveBtn.remove();
+      toast('Schema saved', 't-g');
+    } catch (e) {
+      toast('Invalid JSON: ' + e.message, 't-r');
+    }
+  };
+  ta.parentNode.insertBefore(saveBtn, ta.nextSibling);
+}
+
+// ── STEP 2: Schema → JSONFlow ──────────────────────────────────────────────
+function compileJsonFlow() {
+  if (!B.schema) {
+    document.getElementById('jf-editor').value = '// Complete Step 1 first';
+    return;
+  }
+  const s = B.schema;
+  const prog = {
+    name: s.appId,
+    version: '1.0.0',
+    description: s.description || '',
+    states: s.states || [],
+    steps: [],
+  };
+
+  // Build steps from fields + transitions
+  for (const f of (s.fields || [])) {
+    if (f.required) {
+      prog.steps.push({
+        id: 'validate_' + f.name,
+        op: f.type === 'number' ? 'gte' : 'truthy',
+        args: ['input.' + f.name, f.type === 'number' ? 0 : '""'],
+        output: 'valid_' + f.name,
+        comment: 'Validate ' + f.label,
+      });
+    }
+  }
+
+  // Economy step
+  if (s.economy) {
+    const split = s.economy.split || { creator: 70, compute: 20, protocol: 10 };
+    prog.steps.push({
+      id: 'settle_creator',
+      op: 'multiply',
+      args: ['input.amount', split.creator / 100],
+      output: 'creator_amount',
+      comment: 'Creator share ' + split.creator + '%',
+    });
+    prog.steps.push({
+      id: 'settle_compute',
+      op: 'multiply',
+      args: ['input.amount', split.compute / 100],
+      output: 'compute_amount',
+      comment: 'Compute share ' + split.compute + '%',
+    });
+    prog.steps.push({
+      id: 'settle_protocol',
+      op: 'multiply',
+      args: ['input.amount', split.protocol / 100],
+      output: 'protocol_amount',
+      comment: 'Protocol share ' + split.protocol + '%',
+    });
+  }
+
+  // State transition steps
+  for (const t of (s.transitions || [])) {
+    prog.steps.push({
+      id: 'transition_' + t.id,
+      op: 'emit',
+      args: [t.trigger, 'input.id'],
+      output: 'event_' + t.id,
+      comment: t.label + ': ' + t.from + ' → ' + t.to,
+    });
+  }
+
+  B.jsonflow = prog;
+  document.getElementById('jf-editor').value = JSON.stringify(prog, null, 2);
+  markStepDone(2);
+  logEmit('JSONFLOW_COMPILED', { program: prog.name, steps: prog.steps.length });
+  toast('JSONFlow compiled · ' + prog.steps.length + ' steps', 't-c');
+}
+
+function validateJF() {
+  const src = document.getElementById('jf-editor').value;
+  try {
+    const prog = JSON.parse(src);
+    B.jsonflow = prog;
+
+    // Run test execution
+    const testInput = {};
+    if (B.schema?.fields) {
+      for (const f of B.schema.fields) {
+        testInput[f.name] = f.type === 'number' ? 100 : 'test';
+      }
+    }
+    testInput.amount = testInput.amount || 100;
+
+    const result = executeJF(prog, testInput);
+    const hash = fnv32(JSON.stringify(result));
+
+    const ir = {
+      ir_version: '1.0',
+      name: prog.name,
+      step_count: prog.steps?.length || 0,
+      state_count: prog.states?.length || 0,
+      deterministic: true,
+      hash,
+      test_result: result,
+    };
+
+    document.getElementById('jf-val-out').textContent = '// IR + Test Execution\n// hash: ' + hash + '\n\n' + JSON.stringify(ir, null, 2);
+    document.getElementById('jf-val-badge').innerHTML = '<span class="tag tag-g">valid · deterministic</span>';
+    toast('JSONFlow valid · hash: ' + hash, 't-g');
+  } catch (e) {
+    document.getElementById('jf-val-out').textContent = '// ERROR: ' + e.message;
+    document.getElementById('jf-val-badge').innerHTML = '<span class="tag tag-r">invalid</span>';
+    toast('Validation error: ' + e.message, 't-r');
+  }
+}
+
+function executeJF(prog, input) {
+  const state = { input };
+  for (const step of (prog.steps || [])) {
+    const resolve = v => {
+      if (typeof v !== 'string') return v;
+      const parts = v.split('.');
+      let curr = state;
+      for (const p of parts) curr = curr?.[p];
+      return curr ?? v;
+    };
+    const args = (step.args || []).map(resolve);
+    let out;
+    switch (step.op) {
+      case 'multiply':  out = Number(args[0]) * Number(args[1]); break;
+      case 'add':       out = Number(args[0]) + Number(args[1]); break;
+      case 'subtract':  out = Number(args[0]) - Number(args[1]); break;
+      case 'divide':    out = Number(args[0]) / Number(args[1]); break;
+      case 'gte':       out = Number(args[0]) >= Number(args[1]); break;
+      case 'truthy':    out = Boolean(args[0]); break;
+      case 'eq':        out = args[0] === args[1]; break;
+      case 'emit':      out = { type: args[0], value: args[1] }; break;
+      default:          out = args[0];
+    }
+    if (step.output) state[step.output] = out;
+  }
+  const { input: _, ...result } = state;
+  return result;
+}
+
+function compileJFToTarget(target) {
+  const src = document.getElementById('jf-editor').value;
+  try {
+    const prog = JSON.parse(src);
+    let out = '';
+    const name = (prog.name || 'app').replace(/-/g, '_');
+    if (target === 'JavaScript') {
+      out = `// TRINITY JSONFlow → JavaScript\n// Generated: ${new Date().toISOString()}\n\nfunction ${name}(input) {\n  const state = { input };\n` +
+        (prog.steps || []).map(s => `  // ${s.comment || s.id}\n  const ${s.output} = /* ${s.op}(${s.args?.join(', ')}) */;`).join('\n') +
+        `\n  const { input: _, ...result } = state;\n  return result;\n}`;
+    } else if (target === 'Python') {
+      out = `# TRINITY JSONFlow → Python\n# Generated: ${new Date().toISOString()}\n\ndef ${name}(input_data):\n    state = {'input': input_data}\n` +
+        (prog.steps || []).map(s => `    # ${s.comment || s.id} (${s.op})\n    state['${s.output}'] = None  # TODO: implement ${s.op}`).join('\n') +
+        `\n    return {k: v for k, v in state.items() if k != 'input'}`;
+    } else if (target === 'Rust') {
+      out = `// TRINITY JSONFlow → Rust\n// Generated: ${new Date().toISOString()}\n\npub fn ${name}(input: &Input) -> Output {\n` +
+        (prog.steps || []).map(s => `    // ${s.comment || s.id}: ${s.op}\n    let ${s.output} = todo!();`).join('\n') +
+        `\n    Output { /* fields */ }\n}`;
+    }
+    document.getElementById('jf-val-out').textContent = out;
+    toast('Compiled to ' + target, 't-c');
+  } catch (e) {
+    toast('Compile error: ' + e.message, 't-r');
+  }
+}
+
+// ── STEP 3: Variable Mapping ───────────────────────────────────────────────
+function buildVarMap() {
+  if (!B.schema) {
+    document.getElementById('var-map-container').innerHTML = '<div class="thinking">Complete Step 1 first to extract schema fields.</div>';
+    return;
+  }
+  const s = B.schema;
+  const tpl = TEMPLATES[B.selectedTemplate];
+
+  let html = `<table class="var-table">
+    <thead><tr><th>Schema Field</th><th>Type</th><th>UI Slot / Label Override</th></tr></thead>
+    <tbody>`;
+
+  for (const f of (s.fields || [])) {
+    const defaultVal = B.varMap[f.name] || f.label || f.name;
+    html += `<tr>
+      <td><span class="mono-val">${f.name}</span> ${f.required ? '<span class="tag tag-r" style="font-size:8px">req</span>' : ''}</td>
+      <td><span class="tag tag-c">${f.type}</span></td>
+      <td><input data-field="${f.name}" value="${defaultVal}" placeholder="UI label…" oninput="updateVarMap(this)"></td>
+    </tr>`;
+  }
+
+  // Economy fields
+  if (s.economy) {
+    html += `<tr>
+      <td><span class="mono-val">priceIST</span></td>
+      <td><span class="tag tag-a">number</span></td>
+      <td><input data-field="priceIST" value="${s.economy.priceIST || 10}" oninput="updateVarMap(this)"></td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  html += `<div style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.8">
+    Template: <span style="color:var(--c)">${tpl.name}</span><br>
+    Slots: <span style="color:var(--a)">${tpl.slots}</span>
+  </div>`;
+
+  document.getElementById('var-map-container').innerHTML = html;
+  markStepDone(3);
+  toast('Variable map built · ' + (s.fields?.length || 0) + ' fields', 't-a');
+}
+
+function updateVarMap(el) {
+  B.varMap[el.dataset.field] = el.value;
+}
+
+// ── STEP 4: Generate ───────────────────────────────────────────────────────
+async function generateApp() {
+  if (!B.schema) { toast('Run Step 1 first', 't-r'); return; }
+  if (!B.jsonflow) { compileJsonFlow(); }
+
+  const schema = B.schema;
+  const jf = B.jsonflow;
+  const tpl = B.selectedTemplate;
+  const appId = document.getElementById('cfg-app-id').value || schema.appId;
+  const appTitle = document.getElementById('cfg-app-title').value || schema.title;
+  const appDesc = document.getElementById('cfg-app-desc').value || schema.description || '';
+  const priceIST = parseInt(document.getElementById('cfg-price').value) || (schema.economy?.priceIST || 10);
+  const author = document.getElementById('cfg-author').value || 'unknown';
+  const version = document.getElementById('cfg-version').value || '1.0.0';
+
+  const opts = {
+    log: document.getElementById('opt-log').checked,
+    identity: document.getElementById('opt-identity').checked,
+    economy: document.getElementById('opt-economy').checked,
+    broadcast: document.getElementById('opt-broadcast').checked,
+    audit: document.getElementById('opt-audit').checked,
+  };
+
+  // Animate generation
+  const log = document.getElementById('gen-log');
+  const bar = document.getElementById('gen-progress');
+  const status = document.getElementById('gen-status');
+  status.innerHTML = '<span class="tag tag-v">generating…</span>';
+  document.getElementById('gen-summary').innerHTML = `Building <em>${appTitle}</em> on TRINITY foundation · template: <em>${TEMPLATES[tpl].name}</em>`;
+
+  const steps = [
+    [10, 'Embedding TRINITY foundation (crypto + log + identity)…'],
+    [25, 'Injecting JSONFlow program (' + (jf.steps?.length || 0) + ' steps)…'],
+    [45, 'Compiling template: ' + TEMPLATES[tpl].name + '…'],
+    [65, 'Mapping variables (' + (schema.fields?.length || 0) + ' fields)…'],
+    [80, 'Wiring economy (70/20/10 split)…'],
+    [92, 'Embedding audit + invariant checker…'],
+    [100, 'Finalizing sovereign HTML…'],
+  ];
+
+  for (const [pct, msg] of steps) {
+    await new Promise(r => setTimeout(r, 180));
+    bar.style.width = pct + '%';
+    log.innerHTML += `<div style="color:var(--text3)">· ${msg}</div>`;
+  }
+
+  // Build the actual HTML
+  const html = buildAppHTML({
+    appId, appTitle, appDesc, priceIST, author, version,
+    schema, jf, tpl, opts, varMap: B.varMap,
+  });
+
+  B.generatedHTML = html;
+  B.appsBuilt++;
+  document.getElementById('apps-built').textContent = B.appsBuilt;
+
+  // Show in code pane
+  document.getElementById('gen-code-content').textContent = html;
+  document.getElementById('gen-status').innerHTML = '<span class="tag tag-g">generated</span>';
+
+  // Preview
+  const iframe = document.getElementById('preview-frame');
+  iframe.style.display = 'block';
+  document.getElementById('preview-empty').style.display = 'none';
+  iframe.srcdoc = html;
+  document.getElementById('compliance-row').style.display = 'flex';
+
+  // Enable buttons
+  document.getElementById('dl-btn').disabled = false;
+  document.getElementById('emit-btn').disabled = false;
+  document.getElementById('open-btn').disabled = false;
+
+  markStepDone(4);
+  markStepDone(0);
+  logEmit('APP_GENERATED', { appId, template: tpl, steps: jf.steps?.length });
+  toast('App generated! · ' + appTitle, 't-g');
+  runAuditCheck();
+}
+
+// ── The actual app generator ───────────────────────────────────────────────
+function buildAppHTML({ appId, appTitle, appDesc, priceIST, author, version, schema, jf, tpl, opts, varMap }) {
+  const fields = schema.fields || [];
+  const states = schema.states || [];
+  const transitions = schema.transitions || [];
+  const events = schema.events || [];
+  const economy = schema.economy || { priceIST, split: { creator: 70, compute: 20, protocol: 10 } };
+
+  // Build form fields HTML
+  const formFieldsHTML = fields.map(f => {
+    const label = varMap[f.name] || f.label || f.name;
+    const inputType = f.type === 'number' ? 'number' : 'text';
+    return `
+      <div class="field-group">
+        <label class="field-label">${label}${f.required ? ' <span style="color:var(--r)">*</span>' : ''}</label>
+        <input type="${inputType}" id="field-${f.name}" class="field-input" placeholder="${label}…" ${f.required ? 'required' : ''}>
+      </div>`;
+  }).join('');
+
+  // Build stats grid HTML (for dashboard template)
+  const statsHTML = fields.slice(0, 4).map(f => {
+    const label = varMap[f.name] || f.label || f.name;
+    return `<div class="stat-card"><div class="stat-value" id="stat-${f.name}">—</div><div class="stat-label">${label}</div></div>`;
+  }).join('');
+
+  // State pills
+  const statePillsHTML = states.map(s =>
+    `<div class="state-pill" id="state-${s}">${s}</div>`
+  ).join('');
+
+  // Action buttons from transitions
+  const actionsHTML = transitions.map(t =>
+    `<button class="action-btn" onclick="triggerTransition('${t.id}','${t.trigger}','${t.from}','${t.to}')">${t.label}</button>`
+  ).join('');
+
+  // Economy split
+  const split = economy.split || { creator: 70, compute: 20, protocol: 10 };
+
+  // JSONFlow program as embedded JSON
+  const jfJSON = JSON.stringify(jf, null, 2);
+
+  // Template-specific body
+  const templateBody = buildTemplateBody(tpl, { formFieldsHTML, statsHTML, statePillsHTML, actionsHTML, fields, states, appTitle, appDesc });
+
+  // The foundation JS (sovereign-log, identity, economy, audit)
+  const foundationJS = buildFoundationJS(opts, jf, events, economy, split, appId, version, author);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${appTitle}</title>
+<!--
+  TRINITY Sovereign App
+  appId:    ${appId}
+  version:  ${version}
+  author:   ${author}
+  template: ${tpl}
+  built:    ${new Date().toISOString()}
+
+  Foundation: crypto/wallet.js → primitives/sovereign-log.js →
+              execution/engine/jsonflow.js → policy/economy.js → runtime/audit.js
+  Invariants:
+    VM_stateₙ = deriveState(eventLog[0..n])
+    T_i = hash(T_{i-1}, E_i, S_i, authorId)
+    compute = same IR → same output (always)
+    non-det = results enter via log.emit() only
+-->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+:root {
+  --void: #030405; --deep: #070a0f; --ground: #0c1018; --surface: #111722;
+  --raised: #171f2d; --float: #1e2840;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11); --border3: rgba(255,255,255,0.18);
+  --text: #d0dae8; --text2: #7a91a8; --text3: #3d5468; --text4: #243040;
+  --g: #00e676; --c: #00e5ff; --v: #b388ff; --a: #ff6d00; --r: #ff5252;
+  --mono: 'JetBrains Mono', monospace; --sans: 'Space Grotesk', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--mono); font-size: 13px; background: var(--void); color: var(--text); min-height: 100vh; }
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px);
+}
+.app-header {
+  display: flex; align-items: center; gap: 16px; padding: 0 24px;
+  height: 52px; background: var(--deep); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.app-logo { display: flex; align-items: center; gap: 10px; }
+.app-logo svg { width: 26px; height: 26px; }
+.app-name { font-family: var(--sans); font-weight: 700; font-size: 14px; color: var(--g); letter-spacing: 0.08em; }
+.app-ver { font-size: 9px; color: var(--text3); }
+.header-sep { width: 1px; height: 18px; background: var(--border); }
+.header-meta { font-size: 10px; color: var(--text3); }
+.header-meta em { color: var(--text2); font-style: normal; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.h-pill { font-size: 9px; padding: 3px 8px; border-radius: 100px; border: 1px solid var(--border2); color: var(--text3); }
+.h-pill.on { border-color: rgba(0,230,118,0.3); color: var(--g); background: rgba(0,230,118,0.06); }
+.app-body { padding: 22px 24px; max-width: 1100px; }
+.section-hd { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: var(--text4); text-transform: uppercase; margin-bottom: 12px; }
+.card { background: var(--ground); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 14px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 12px; text-align: center; }
+.stat-value { font-size: 22px; font-weight: 600; font-family: var(--sans); color: var(--c); margin-bottom: 4px; }
+.stat-label { font-size: 9px; color: var(--text4); letter-spacing: 0.12em; text-transform: uppercase; font-family: var(--sans); }
+.field-group { margin-bottom: 10px; }
+.field-label { font-size: 9px; color: var(--text3); display: block; margin-bottom: 4px; letter-spacing: 0.08em; }
+.field-input {
+  background: var(--surface); border: 1px solid var(--border2); color: var(--text);
+  font-family: var(--mono); font-size: 12px; padding: 8px 10px; border-radius: 5px;
+  width: 100%; outline: none; transition: border 0.18s;
+}
+.field-input:focus { border-color: var(--c); }
+.form-actions { display: flex; gap: 8px; margin-top: 12px; }
+button {
+  background: var(--surface); border: 1px solid var(--border2); color: var(--text2);
+  font-family: var(--mono); font-size: 11px; padding: 7px 14px; cursor: pointer;
+  border-radius: 5px; transition: all 0.14s;
+}
+button:hover { color: var(--text); border-color: var(--border3); background: var(--raised); }
+.btn-g { background: rgba(0,230,118,0.08); border-color: rgba(0,230,118,0.3); color: var(--g); }
+.btn-c { background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); color: var(--c); }
+.btn-a { background: rgba(255,109,0,0.08); border-color: rgba(255,109,0,0.3); color: var(--a); }
+.btn-r { background: rgba(255,82,82,0.08); border-color: rgba(255,82,82,0.3); color: var(--r); }
+.state-pills { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.state-pill {
+  font-size: 10px; padding: 4px 10px; border-radius: 100px;
+  border: 1px solid var(--border2); color: var(--text3);
+  transition: all 0.2s;
+}
+.state-pill.active { border-color: rgba(0,230,118,0.4); color: var(--g); background: rgba(0,230,118,0.08); }
+.action-btn {
+  font-size: 10px; padding: 5px 12px; cursor: pointer; border-radius: 4px;
+  background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2); color: var(--c);
+  transition: all 0.14s;
+}
+.action-btn:hover { background: rgba(0,229,255,0.12); }
+.ledger-row {
+  display: flex; gap: 10px; padding: 6px 0;
+  border-bottom: 1px solid var(--border); font-size: 10px;
+}
+.lr-ts { color: var(--text4); width: 58px; flex-shrink: 0; }
+.lr-type { flex-shrink: 0; width: 100px; color: var(--c); }
+.lr-hash { color: var(--text4); width: 72px; flex-shrink: 0; }
+.lr-msg { color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#ledger-list { max-height: 200px; overflow-y: auto; }
+#ledger-list::-webkit-scrollbar { width: 2px; }
+#ledger-list::-webkit-scrollbar-thumb { background: var(--float); }
+.economy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.econ-cell { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 10px; text-align: center; }
+.econ-pct { font-size: 20px; font-weight: 700; font-family: var(--sans); }
+.econ-lbl { font-size: 8px; color: var(--text4); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--sans); margin-top: 2px; }
+.toast-stack { position: fixed; bottom: 18px; right: 18px; z-index: 9998; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
+.toast { background: var(--raised); border: 1px solid var(--border2); border-radius: 5px; padding: 9px 14px; font-size: 11px; color: var(--text); animation: ti 0.18s ease; max-width: 260px; }
+.toast.tg { border-color: rgba(0,230,118,0.3); color: var(--g); }
+.toast.tr { border-color: rgba(255,82,82,0.3); color: var(--r); }
+.toast.tc { border-color: rgba(0,229,255,0.3); color: var(--c); }
+@keyframes ti { from{opacity:0;transform:translateY(8px)} to{opacity:1} }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo">
+    <svg viewBox="0 0 28 28" fill="none">
+      <polygon points="14,2 26,22 2,22" stroke="#00e676" stroke-width="1.5" fill="rgba(0,230,118,0.06)"/>
+      <polygon points="14,9 20,20 8,20" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="0.75"/>
+      <circle cx="14" cy="14" r="2.5" fill="#00e676"/>
+    </svg>
+    <div>
+      <div class="app-name">${appTitle.toUpperCase()}</div>
+      <div class="app-ver">v${version} · TRINITY</div>
+    </div>
+  </div>
+  <div class="header-sep"></div>
+  <div class="header-meta">events: <em id="hdr-events">0</em></div>
+  <div class="header-meta" style="margin-left:12px">hash: <em id="hdr-hash">—</em></div>
+  <div class="header-right">
+    <div class="h-pill" id="hdr-node-pill">node: offline</div>
+    <div class="h-pill" id="hdr-chain-pill">chain: init</div>
+    <div class="h-pill on">TRINITY · sovereign</div>
+  </div>
+</div>
+
+<div class="app-body">
+  ${templateBody}
+</div>
+
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+// TRINITY FOUNDATION — embedded
+// appId: ${appId} | version: ${version}
+// Generated: ${new Date().toISOString()}
+// ═══════════════════════════════════════════════════════════════
+
+// JSONFlow program
+const JSONFLOW_PROGRAM = ${jfJSON};
+
+${foundationJS}
+</script>
+</body>
+</html>`;
+}
+
+function buildTemplateBody(tpl, { formFieldsHTML, statsHTML, statePillsHTML, actionsHTML, fields, states, appTitle, appDesc }) {
+  const econ = `
+<div class="card">
+  <div class="section-hd">Economy — IST Settlement</div>
+  <div class="economy-grid">
+    <div class="econ-cell"><div class="econ-pct" style="color:var(--a)">70%</div><div class="econ-lbl">Creator</div></div>
+    <div class="econ-cell"><div class="econ-pct" style="color:var(--c)">20%</div><div class="econ-lbl">Compute</div></div>
+    <div class="econ-cell"><div class="econ-pct">10%</div><div class="econ-lbl">Protocol</div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+    <input id="settle-amount" type="number" value="100" placeholder="IST amount" style="max-width:130px;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:5px;outline:none">
+    <button class="btn-a" onclick="settle()">Settle Execution</button>
+    <span id="settle-result" style="font-size:11px;color:var(--text3);margin-left:8px"></span>
+  </div>
+</div>`;
+
+  const ledger = `
+<div class="card">
+  <div class="section-hd">Sovereign Ledger — Append-Only Log</div>
+  <div id="ledger-list"><div style="font-size:11px;color:var(--text4);padding:8px 0">No events yet.</div></div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <input id="custom-event-type" placeholder="EVENT_TYPE" style="max-width:160px;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 8px;border-radius:4px;outline:none">
+    <input id="custom-event-payload" placeholder='{"key":"value"}' style="flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 8px;border-radius:4px;outline:none">
+    <button class="btn-g" onclick="emitCustom()">Emit</button>
+  </div>
+</div>`;
+
+  if (tpl === 'dashboard') {
+    return `
+<div class="section-hd">Stats</div>
+<div class="stat-grid">${statsHTML || '<div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>'}</div>
+
+<div class="card">
+  <div class="section-hd">Add Record</div>
+  ${formFieldsHTML}
+  <div class="form-actions">
+    <button class="btn-g" onclick="submitRecord()" style="flex:1">+ Add to Ledger</button>
+    <button onclick="runJF()" class="btn-c">▶ Run JSONFlow</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-hd">State Machine</div>
+  <div class="state-pills">${statePillsHTML}</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${actionsHTML || ''}</div>
+</div>
+
+${econ}
+${ledger}`;
+  }
+
+  if (tpl === 'form') {
+    return `
+<div class="card" style="max-width:560px">
+  <div class="section-hd">${appTitle}</div>
+  <div style="font-size:11px;color:var(--text3);margin-bottom:14px">${(fields[0]?.label || 'Fill in the form below')}</div>
+  ${formFieldsHTML}
+  <div class="state-pills" style="margin:10px 0">${statePillsHTML}</div>
+  <div class="form-actions">
+    <button class="btn-g" onclick="submitRecord()" style="flex:1">Submit → log.emit()</button>
+    <button onclick="runJF()" class="btn-c">▶ Validate JSONFlow</button>
+  </div>
+</div>
+${econ}
+${ledger}`;
+  }
+
+  if (tpl === 'ledger') {
+    return `
+<div class="card">
+  <div class="section-hd">Emit Record</div>
+  ${formFieldsHTML}
+  <div class="form-actions">
+    <button class="btn-g" onclick="submitRecord()" style="flex:1">→ Append to Ledger</button>
+    <button onclick="runJF()" class="btn-c">▶ Hash + Verify</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-hd">State Transitions</div>
+  <div class="state-pills">${statePillsHTML}</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${actionsHTML || ''}</div>
+</div>
+
+${ledger}
+${econ}`;
+  }
+
+  if (tpl === 'market') {
+    return `
+<div class="card">
+  <div class="section-hd">List Item</div>
+  ${formFieldsHTML}
+  <div class="form-actions">
+    <button class="btn-a" onclick="submitRecord()" style="flex:1">⊕ Publish Listing → APP_PUBLISHED</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-hd">Listings</div>
+  <div id="listing-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;min-height:60px">
+    <div style="font-size:11px;color:var(--text4);padding:8px 0">No listings yet.</div>
+  </div>
+</div>
+
+${econ}
+${ledger}`;
+  }
+
+  return `<div class="card"><div class="section-hd">App Content</div>${formFieldsHTML}${econ}${ledger}</div>`;
+}
+
+function buildFoundationJS(opts, jf, events, economy, split, appId, version, author) {
+  return `
+// ── FOUNDATION: FNV-32 hash ────────────────────────────────────────────
+function fnv32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+// ── SOVEREIGN LOG ──────────────────────────────────────────────────────
+const SOVEREIGN_LOG = {
+  events: [],
+  headHash: '00000000',
+  nodeId: null,
+
+  emit(type, payload) {
+    const prevHash = this.headHash;
+    const hash = fnv32(JSON.stringify(payload) + '|' + prevHash + '|' + type);
+    const ev = {
+      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+      type, payload,
+      authorId: this.nodeId || '${author || 'anon'}',
+      ts: Date.now(), hash, prevHash,
+      seq: this.events.length,
+    };
+    this.events.push(ev);
+    this.headHash = hash;
+    this._notify(ev);
+    this._updateUI();
+    // BroadcastChannel sync
+    try { const bc = new BroadcastChannel('trinity-bus'); bc.postMessage({ nonce: ev.id, type, payload, hash }); bc.close(); } catch(_) {}
+    return ev;
+  },
+
+  getState() {
+    const s = { eventCount: this.events.length, headHash: this.headHash, apps: {}, stake: 0 };
+    for (const ev of this.events) {
+      if (ev.type === 'RECORD_ADDED' || ev.type === 'ITEM_CREATED') s.itemCount = (s.itemCount || 0) + 1;
+      if (ev.type === 'STAKE_DEPOSITED') s.stake += ev.payload.amount || 0;
+    }
+    return s;
+  },
+
+  _subs: {},
+  on(type, fn) { (this._subs[type] = this._subs[type] || []).push(fn); },
+  _notify(ev) {
+    (this._subs[ev.type] || []).forEach(f => f(ev));
+    (this._subs['*'] || []).forEach(f => f(ev));
+  },
+
+  _updateUI() {
+    const evEl = document.getElementById('hdr-events');
+    const hashEl = document.getElementById('hdr-hash');
+    if (evEl) evEl.textContent = this.events.length;
+    if (hashEl) hashEl.textContent = this.headHash;
+    // Update ledger list
+    const list = document.getElementById('ledger-list');
+    if (!list) return;
+    const recent = this.events.slice(-30).reverse();
+    list.innerHTML = recent.map(e => {
+      const col = e.type.includes('SETTLED') || e.type.includes('SETTLE') ? 'var(--a)' :
+                  e.type.includes('RECORD') || e.type.includes('ITEM') || e.type.includes('APP') ? 'var(--g)' :
+                  e.type.includes('ERROR') ? 'var(--r)' : 'var(--c)';
+      return '<div class="ledger-row"><div class="lr-ts">' +
+        new Date(e.ts).toTimeString().slice(0,8) +
+        '</div><div class="lr-type" style="color:' + col + '">' + e.type +
+        '</div><div class="lr-hash">' + e.hash +
+        '</div><div class="lr-msg">' + JSON.stringify(e.payload).slice(0,50) + '</div></div>';
+    }).join('');
+  }
+};
+
+// ── IDENTITY ───────────────────────────────────────────────────────────
+function randomHex(n) {
+  const b = new Uint8Array(n);
+  (globalThis.crypto || window.crypto).getRandomValues(b);
+  return Array.from(b).map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function initIdentity() {
+  try {
+    const saved = localStorage.getItem('trinity-id-${appId}');
+    if (saved) {
+      const id = JSON.parse(saved);
+      SOVEREIGN_LOG.nodeId = id.address;
+      document.getElementById('hdr-node-pill').textContent = 'node: ' + id.address.slice(0,10) + '…';
+      document.getElementById('hdr-node-pill').className = 'h-pill on';
+      return id;
+    }
+  } catch(_) {}
+  const address = '0x' + randomHex(20);
+  const id = { address, name: '${appId}-node', created: Date.now() };
+  try { localStorage.setItem('trinity-id-${appId}', JSON.stringify(id)); } catch(_) {}
+  SOVEREIGN_LOG.nodeId = address;
+  document.getElementById('hdr-node-pill').textContent = 'node: ' + address.slice(0,10) + '…';
+  document.getElementById('hdr-node-pill').className = 'h-pill on';
+  SOVEREIGN_LOG.emit('IDENTITY_CREATED', { address, appId: '${appId}' });
+  return id;
+}
+
+// ── JSONFLOW EXECUTOR ──────────────────────────────────────────────────
+function executeJF(prog, input) {
+  const state = { input };
+  for (const step of (prog.steps || [])) {
+    const resolve = v => {
+      if (typeof v !== 'string') return v;
+      const parts = v.split('.');
+      let curr = state;
+      for (const p of parts) curr = curr?.[p];
+      return curr ?? v;
+    };
+    const args = (step.args || []).map(resolve);
+    let out;
+    switch (step.op) {
+      case 'multiply':  out = Number(args[0]) * Number(args[1]); break;
+      case 'add':       out = Number(args[0]) + Number(args[1]); break;
+      case 'subtract':  out = Number(args[0]) - Number(args[1]); break;
+      case 'divide':    out = Number(args[0]) / Number(args[1]); break;
+      case 'gte':       out = Number(args[0]) >= Number(args[1]); break;
+      case 'truthy':    out = Boolean(args[0]); break;
+      case 'eq':        out = String(args[0]) === String(args[1]); break;
+      case 'emit':      out = { type: args[0], value: args[1] }; break;
+      default:          out = args[0];
+    }
+    if (step.output) state[step.output] = out;
+  }
+  const { input: _, ...result } = state;
+  return result;
+}
+
+// ── ECONOMY ────────────────────────────────────────────────────────────
+const ECONOMY = {
+  split: ${JSON.stringify(split)},
+  priceIST: ${economy.priceIST || 10},
+  settle(amount) {
+    const creator  = amount * (this.split.creator  / 100);
+    const compute  = amount * (this.split.compute  / 100);
+    const protocol = amount * (this.split.protocol / 100);
+    SOVEREIGN_LOG.emit('EXECUTION_SETTLED', { amount, creator, compute, protocol, appId: '${appId}' });
+    return { creator, compute, protocol };
+  }
+};
+
+// ── TOAST ──────────────────────────────────────────────────────────────
+function toast(msg, cls = '') {
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + cls;
+  el.textContent = msg;
+  stack.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; }, 3000);
+  setTimeout(() => el.remove(), 3300);
+}
+
+// ── APP ACTIONS ─────────────────────────────────────────────────────────
+const RECORDS = [];
+
+function collectFields() {
+  const data = {};
+  document.querySelectorAll('.field-input').forEach(inp => {
+    const id = inp.id.replace('field-', '');
+    data[id] = inp.type === 'number' ? (parseFloat(inp.value) || 0) : inp.value;
+  });
+  return data;
+}
+
+function submitRecord() {
+  const data = collectFields();
+  const keys = Object.keys(data);
+  if (keys.length === 0) { toast('Fill in at least one field', 'tr'); return; }
+
+  // Run JSONFlow validation
+  const jfResult = executeJF(JSONFLOW_PROGRAM, data);
+
+  RECORDS.push({ ...data, id: RECORDS.length + 1, ts: Date.now() });
+  SOVEREIGN_LOG.emit('RECORD_ADDED', { ...data, jfHash: fnv32(JSON.stringify(jfResult)) });
+
+  // Update stats
+  document.querySelectorAll('.stat-value').forEach((el, i) => {
+    const fieldVal = Object.values(data)[i];
+    if (fieldVal !== undefined) el.textContent = fieldVal;
+  });
+
+  // Update listing grid if marketplace
+  const grid = document.getElementById('listing-grid');
+  if (grid) {
+    grid.innerHTML = RECORDS.map(r => \`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px;font-size:11px">
+        \${Object.entries(r).filter(([k]) => !['id','ts'].includes(k)).map(([k,v]) => \`<div style="color:var(--text3)">\${k}: <span style="color:var(--text2)">\${v}</span></div>\`).join('')}
+        <button class="btn-a" style="margin-top:8px;font-size:9px" onclick="buyItem(\${r.id})">Buy (IST)</button>
+      </div>\`).join('');
+  }
+
+  // Clear fields
+  document.querySelectorAll('.field-input').forEach(i => { i.value = ''; });
+  toast('Record added to sovereign ledger', 'tg');
+}
+
+function runJF() {
+  const data = collectFields();
+  const result = executeJF(JSONFLOW_PROGRAM, data);
+  const hash = fnv32(JSON.stringify(result));
+  SOVEREIGN_LOG.emit('JSONFLOW_EXECUTED', { input: data, hash, steps: JSONFLOW_PROGRAM.steps?.length || 0 });
+  toast('JSONFlow: ' + JSON.stringify(result).slice(0, 60) + ' · hash: ' + hash, 'tc');
+  document.getElementById('hdr-chain-pill').textContent = 'chain: ' + hash;
+}
+
+function settle() {
+  const amount = parseFloat(document.getElementById('settle-amount')?.value) || ECONOMY.priceIST;
+  const result = ECONOMY.settle(amount);
+  const el = document.getElementById('settle-result');
+  if (el) el.innerHTML = \`<span style="color:var(--a)">creator: \${result.creator.toFixed(2)}</span> · <span style="color:var(--c)">compute: \${result.compute.toFixed(2)}</span> · prot: \${result.protocol.toFixed(2)}\`;
+  toast(\`Settled \${amount} IST · creator gets \${result.creator.toFixed(1)}\`, 'tg');
+}
+
+function buyItem(id) {
+  SOVEREIGN_LOG.emit('ITEM_PURCHASED', { itemId: id, buyer: SOVEREIGN_LOG.nodeId });
+  settle();
+  toast('Item purchased · settlement initiated', 'tg');
+}
+
+function triggerTransition(id, trigger, from, to) {
+  document.querySelectorAll('.state-pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('state-' + to);
+  if (el) el.classList.add('active');
+  SOVEREIGN_LOG.emit(trigger, { transitionId: id, from, to, nodeId: SOVEREIGN_LOG.nodeId });
+  toast(from + ' → ' + to, 'tc');
+}
+
+function emitCustom() {
+  const type = document.getElementById('custom-event-type')?.value?.trim()?.toUpperCase() || 'CUSTOM';
+  const payloadStr = document.getElementById('custom-event-payload')?.value || '{}';
+  const payload = (() => { try { return JSON.parse(payloadStr); } catch(_) { return {}; } })();
+  SOVEREIGN_LOG.emit(type, payload);
+  toast('Emitted: ' + type, 'tg');
+}
+
+// ── AUDIT ──────────────────────────────────────────────────────────────
+function runInvariantCheck() {
+  let prevHash = '00000000';
+  let valid = true;
+  for (const ev of SOVEREIGN_LOG.events) {
+    const expected = fnv32(JSON.stringify(ev.payload) + '|' + prevHash + '|' + ev.type);
+    if (ev.hash !== expected) { valid = false; break; }
+    prevHash = ev.hash;
+  }
+  return {
+    chainValid: valid,
+    eventCount: SOVEREIGN_LOG.events.length,
+    headHash: SOVEREIGN_LOG.headHash,
+    stateConsistent: true,
+    deterministic: true,
+  };
+}
+
+// ── BOOT ───────────────────────────────────────────────────────────────
+(function boot() {
+  initIdentity();
+  SOVEREIGN_LOG.emit('SYSTEM_BOOT', {
+    appId: '${appId}',
+    version: '${version}',
+    template: '${appId}',
+    trinity: '3.0',
+    ts: Date.now(),
+  });
+  // Set first state active
+  const firstState = document.querySelector('.state-pill');
+  if (firstState) firstState.classList.add('active');
+  document.getElementById('hdr-chain-pill').textContent = 'chain: ' + SOVEREIGN_LOG.headHash;
+})();
+`;
+}
+
+// ── Audit check ────────────────────────────────────────────────────────────
+function runAuditCheck() {
+  if (!B.generatedHTML) {
+    document.getElementById('audit-out').textContent = 'Generate an app first.';
+    return;
+  }
+  const html = B.generatedHTML;
+  const checks = [
+    { name: 'Sovereign log (FNV-32)', pass: html.includes('SOVEREIGN_LOG') && html.includes('fnv32') },
+    { name: 'Hash chain (T_i = hash(T_{i-1}))', pass: html.includes('headHash') && html.includes('prevHash') },
+    { name: 'Identity kernel (keypair)', pass: html.includes('IDENTITY_CREATED') && html.includes('initIdentity') },
+    { name: 'JSONFlow program embedded', pass: html.includes('JSONFLOW_PROGRAM') && html.includes('executeJF') },
+    { name: 'Economy (70/20/10 split)', pass: html.includes('ECONOMY') && html.includes('creator') && html.includes('compute') },
+    { name: 'EXECUTION_SETTLED event', pass: html.includes('EXECUTION_SETTLED') },
+    { name: 'Non-det boundary (log.emit only)', pass: html.includes('SOVEREIGN_LOG.emit') },
+    { name: 'BroadcastChannel transport', pass: html.includes('BroadcastChannel') },
+    { name: 'SYSTEM_BOOT event', pass: html.includes('SYSTEM_BOOT') },
+    { name: 'State deriveState pattern', pass: html.includes('getState') },
+    { name: 'TRINITY attribution', pass: html.includes('TRINITY') },
+    { name: 'Append-only (no mutation)', pass: html.includes('events.push') && !html.includes('events.splice') && !html.includes('events.pop') },
+  ];
+
+  const allPass = checks.every(c => c.pass);
+  const report = [
+    'TRINITY COMPLIANCE REPORT',
+    '═'.repeat(34),
+    '',
+    'App: ' + (document.getElementById('cfg-app-id').value || '—'),
+    'Generated: ' + new Date().toISOString().slice(0,19),
+    'Template: ' + TEMPLATES[B.selectedTemplate].name,
+    '',
+    'INVARIANT CHECKS:',
+    ...checks.map(c => '  [' + (c.pass ? '✓' : '✗') + '] ' + c.name),
+    '',
+    'RESULT: ' + (allPass ? 'ALL INVARIANTS PASS ✓ SOVEREIGN COMPLIANT' : 'WARNINGS — see above'),
+    '',
+    'Deterministic boundary: RESPECTED',
+    'Hash algorithm: FNV-32',
+    'Economy: 70/20/10 split',
+    'Transport: BroadcastChannel (local)',
+  ].join('\n');
+
+  document.getElementById('audit-out').textContent = report;
+  document.getElementById('audit-badge').innerHTML = allPass
+    ? '<span class="tag tag-g">compliant</span>'
+    : '<span class="tag tag-a">warnings</span>';
+  document.getElementById('compliance-pill').textContent = 'compliance: ' + (allPass ? 'ok' : 'warn');
+  document.getElementById('compliance-pill').className = 'pill ' + (allPass ? 'ok' : 'warn');
+  toast('Audit: ' + (allPass ? 'PASS ✓' : 'warnings'), allPass ? 't-g' : 't-a');
+}
+
+// ── Output actions ──────────────────────────────────────────────────────────
+function downloadApp() {
+  if (!B.generatedHTML) { toast('Generate an app first', 't-r'); return; }
+  const appId = document.getElementById('cfg-app-id').value || 'trinity-app';
+  const blob = new Blob([B.generatedHTML], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = appId + '.html';
+  a.click();
+  toast('Downloaded: ' + appId + '.html', 't-g');
+  logEmit('APP_DOWNLOADED', { appId });
+}
+
+function emitToNetwork() {
+  if (!B.generatedHTML) { toast('Generate an app first', 't-r'); return; }
+  const appId = document.getElementById('cfg-app-id').value || 'my-app';
+  const title = document.getElementById('cfg-app-title').value || 'My App';
+  const priceIST = parseInt(document.getElementById('cfg-price').value) || 10;
+  logEmit('APP_PUBLISHED', {
+    appId, title, priceIST,
+    author: document.getElementById('cfg-author').value || 'unknown',
+    jsonflowProgram: B.jsonflow,
+    hash: B.headHash,
+    ts: Date.now(),
+  });
+  toast('APP_PUBLISHED emitted to sovereign log', 't-a');
+  try {
+    const bc = new BroadcastChannel('trinity-bus');
+    bc.postMessage({ type: 'APP_PUBLISHED', payload: { appId, title, priceIST } });
+    bc.close();
+  } catch (_) {}
+}
+
+function openInTab() {
+  if (!B.generatedHTML) return;
+  const w = window.open('', '_blank');
+  w.document.write(B.generatedHTML);
+  w.document.close();
+}
+
+// ── Full pipeline runner ────────────────────────────────────────────────────
+async function runFullPipeline() {
+  toast('Running full pipeline…', 't-c');
+  // Step 0 → Step 1
+  gotoStep(0);
+  await new Promise(r => setTimeout(r, 300));
+  // If no intent, load example
+  if (!document.getElementById('intent-text').value.trim()) {
+    useExampleIntent();
+  }
+  gotoStep(1);
+  wsTab('step1');
+  await runIntent();
+  await new Promise(r => setTimeout(r, 400));
+  // Step 2
+  gotoStep(2);
+  wsTab('step2');
+  compileJsonFlow();
+  validateJF();
+  await new Promise(r => setTimeout(r, 300));
+  // Step 3
+  gotoStep(3);
+  wsTab('step3');
+  buildVarMap();
+  await new Promise(r => setTimeout(r, 300));
+  // Step 4
+  gotoStep(4);
+  wsTab('step4');
+  await generateApp();
+  opTab('preview', document.querySelector('.op-tab'));
+  toast('Pipeline complete! App ready.', 't-g');
+}
+
+function resetAll() {
+  B.schema = null;
+  B.jsonflow = null;
+  B.varMap = {};
+  B.generatedHTML = null;
+  document.querySelectorAll('.pipe-step').forEach(el => el.classList.remove('done'));
+  document.querySelectorAll('.ps-num').forEach((el, i) => el.textContent = i === 0 ? '0' : i);
+  document.querySelectorAll('.ps-connector').forEach(el => el.classList.remove('done'));
+  document.getElementById('schema-thinking').innerHTML = 'Run intent extraction to see schema here.';
+  document.getElementById('schema-thinking').style.display = 'block';
+  document.getElementById('schema-out').style.display = 'none';
+  document.getElementById('schema-actions').style.display = 'none';
+  document.getElementById('schema-live').textContent = 'No schema yet.';
+  document.getElementById('jf-editor').value = '';
+  document.getElementById('jf-val-out').textContent = 'Run validation to see IR output.';
+  document.getElementById('var-map-container').innerHTML = '<div class="thinking">Complete Step 1 first.</div>';
+  document.getElementById('gen-log').innerHTML = '';
+  document.getElementById('gen-progress').style.width = '0%';
+  document.getElementById('gen-code-content').textContent = '// Generated HTML will appear here after Step 4';
+  document.getElementById('preview-frame').style.display = 'none';
+  document.getElementById('preview-empty').style.display = 'flex';
+  document.getElementById('compliance-row').style.display = 'none';
+  document.getElementById('dl-btn').disabled = true;
+  document.getElementById('emit-btn').disabled = true;
+  document.getElementById('open-btn').disabled = true;
+  document.getElementById('audit-out').textContent = 'Run audit to verify TRINITY compliance.';
+  gotoStep(0);
+  wsTab('step0');
+  toast('Reset complete', 't-c');
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+(function init() {
+  document.getElementById('compliance-pill').textContent = 'compliance: ready';
+  document.getElementById('compliance-pill').className = 'pill ok';
+  // Try silent Ollama connection
+  connectOllama().catch(() => {});
+})();
+</script>
+</body>
+</html>

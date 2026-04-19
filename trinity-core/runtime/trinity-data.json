@@ -1,0 +1,537 @@
+{
+  "version": 2,
+  "users": {
+    "f530ef3e05b13b62c326480f4cfb562bef593a69": {
+      "id": "f530ef3e05b13b62c326480f4cfb562bef593a69",
+      "name": "Sovereign",
+      "walletAddress": "f530ef3e05b13b62c326480f4cfb562bef593a69",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:12:45.716Z",
+      "lastActivity": "2026-04-19T01:12:45.716Z"
+    },
+    "profile-jordan": {
+      "id": "profile-jordan",
+      "name": "Jordan",
+      "walletAddress": "profile-jordan",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.898Z",
+      "lastActivity": "2026-04-19T11:33:36.602Z"
+    },
+    "venture-omar": {
+      "id": "venture-omar",
+      "name": "Omar",
+      "walletAddress": "venture-omar",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.902Z",
+      "lastActivity": "2026-04-19T11:33:36.602Z"
+    },
+    "profile-sam": {
+      "id": "profile-sam",
+      "name": "Sam",
+      "walletAddress": "profile-sam",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.904Z",
+      "lastActivity": "2026-04-19T11:33:36.603Z"
+    },
+    "profile-alex": {
+      "id": "profile-alex",
+      "name": "Alex",
+      "walletAddress": "profile-alex",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.905Z",
+      "lastActivity": "2026-04-19T11:33:36.602Z"
+    },
+    "venture-andre": {
+      "id": "venture-andre",
+      "name": "Andre",
+      "walletAddress": "venture-andre",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.908Z",
+      "lastActivity": "2026-04-19T11:33:36.603Z"
+    },
+    "venture-priya": {
+      "id": "venture-priya",
+      "name": "Priya",
+      "walletAddress": "venture-priya",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.914Z",
+      "lastActivity": "2026-04-19T11:33:36.603Z"
+    },
+    "venture-maya": {
+      "id": "venture-maya",
+      "name": "Maya",
+      "walletAddress": "venture-maya",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.917Z",
+      "lastActivity": "2026-04-19T11:33:36.603Z"
+    },
+    "8a4064ef086ab92f72d0ac457f2513a87cffc0c1": {
+      "id": "8a4064ef086ab92f72d0ac457f2513a87cffc0c1",
+      "name": "Sovereign",
+      "walletAddress": "8a4064ef086ab92f72d0ac457f2513a87cffc0c1",
+      "balance": 0,
+      "earnings": 0,
+      "earningsToday": 0,
+      "createdAt": "2026-04-19T01:15:00.969Z",
+      "lastActivity": "2026-04-19T01:15:00.969Z"
+    }
+  },
+  "messages": [],
+  "earnings": [],
+  "bets": {
+    "b87c9f88-d704-4fb5-ac84-410e728dddde": {
+      "id": "b87c9f88-d704-4fb5-ac84-410e728dddde",
+      "title": "Network Growth",
+      "description": "Will the peer graph exceed 12 active sessions before the next sync window?",
+      "expiresAt": "2026-12-31T23:59:59.000Z",
+      "yesAmount": 0,
+      "noAmount": 0,
+      "totalPool": 0,
+      "resolved": false,
+      "winner": null,
+      "createdAt": "2026-04-19T01:15:00.954Z"
+    },
+    "45d91c18-9ad6-41dd-84ed-d4287d85cc78": {
+      "id": "45d91c18-9ad6-41dd-84ed-d4287d85cc78",
+      "title": "Ledger Throughput",
+      "description": "Will the CST mint ledger clear 25 events in this session?",
+      "expiresAt": "2026-12-31T23:59:59.000Z",
+      "yesAmount": 0,
+      "noAmount": 0,
+      "totalPool": 0,
+      "resolved": false,
+      "winner": null,
+      "createdAt": "2026-04-19T01:15:00.956Z"
+    }
+  },
+  "bet_placements": [],
+  "matches": [],
+  "liker_ledger": [],
+  "token_balances": {
+    "profile-jordan": "0",
+    "venture-omar": "0",
+    "profile-sam": "0",
+    "profile-alex": "0",
+    "venture-andre": "0",
+    "venture-priya": "0",
+    "venture-maya": "0"
+  },
+  "assets": {
+    "f530ef3e05b13b62c326480f4cfb562bef593a69": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "profile-jordan": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "venture-omar": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "profile-sam": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "profile-alex": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "venture-andre": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "venture-priya": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "venture-maya": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    },
+    "8a4064ef086ab92f72d0ac457f2513a87cffc0c1": {
+      "USDC": 5000,
+      "IMC": 500,
+      "SOL": 24,
+      "ETH": 2.5
+    }
+  },
+  "dex_pools": {
+    "imc-usdc": {
+      "id": "imc-usdc",
+      "base": "IMC",
+      "quote": "USDC",
+      "baseReserve": 40000,
+      "quoteReserve": 498000,
+      "feeBps": 30,
+      "openPrice": 12.45,
+      "seedVolume": 2400000,
+      "lastTradeAt": null
+    },
+    "sol-imc": {
+      "id": "sol-imc",
+      "base": "SOL",
+      "quote": "IMC",
+      "baseReserve": 3000,
+      "quoteReserve": 43560,
+      "feeBps": 30,
+      "openPrice": 14.52,
+      "seedVolume": 1800000,
+      "lastTradeAt": null
+    },
+    "eth-imc": {
+      "id": "eth-imc",
+      "base": "ETH",
+      "quote": "IMC",
+      "baseReserve": 800,
+      "quoteReserve": 157456,
+      "feeBps": 30,
+      "openPrice": 196.82,
+      "seedVolume": 890000,
+      "lastTradeAt": null
+    }
+  },
+  "dex_trades": [],
+  "apps": {
+    "smartnet-kernel": {
+      "id": "smartnet-kernel",
+      "title": "SMARTNET Kernel",
+      "desc": "Event-sourced sovereign internet runtime with identity, modules, messaging, and JSONFlow.",
+      "goal": 1200000,
+      "raised": 0,
+      "supporterIds": [],
+      "installCount": 0,
+      "authorId": "system",
+      "category": "surface",
+      "createdAt": "2026-04-19T01:05:46.720Z",
+      "updatedAt": "2026-04-19T01:11:46.719Z",
+      "manifest": {
+        "name": "SMARTNET Kernel",
+        "version": "1.0.0",
+        "runtime": "browser",
+        "kind": "surface",
+        "entry": "/apps/smartnet.html",
+        "permissions": [
+          "identity",
+          "ledger",
+          "network",
+          "ai"
+        ],
+        "capabilities": [
+          "kernel",
+          "modules",
+          "messaging",
+          "jsonflow"
+        ],
+        "routes": [
+          "/apps/smartnet.html"
+        ]
+      }
+    },
+    "core-iam-upgraded": {
+      "id": "core-iam-upgraded",
+      "title": "Core IAM Upgraded",
+      "desc": "Distributed intelligence surface focused on determinism, DAGs, consensus, and local inference.",
+      "goal": 900000,
+      "raised": 0,
+      "supporterIds": [],
+      "installCount": 0,
+      "authorId": "system",
+      "category": "surface",
+      "createdAt": "2026-04-19T01:06:46.720Z",
+      "updatedAt": "2026-04-19T01:11:46.719Z",
+      "manifest": {
+        "name": "Core IAM Upgraded",
+        "version": "1.0.0",
+        "runtime": "browser",
+        "kind": "surface",
+        "entry": "/apps/Core-Iam-Upgraded.html",
+        "permissions": [
+          "identity",
+          "compute",
+          "ledger"
+        ],
+        "capabilities": [
+          "determinism",
+          "consensus",
+          "local-ai"
+        ],
+        "routes": [
+          "/apps/Core-Iam-Upgraded.html"
+        ]
+      }
+    },
+    "iam-os-v12": {
+      "id": "iam-os-v12",
+      "title": "I-AM-O.S. v12",
+      "desc": "Monolith runtime with swarm control, identity, tokens, memory, and app orchestration.",
+      "goal": 1400000,
+      "raised": 0,
+      "supporterIds": [],
+      "installCount": 0,
+      "authorId": "system",
+      "category": "surface",
+      "createdAt": "2026-04-19T01:07:46.720Z",
+      "updatedAt": "2026-04-19T01:11:46.719Z",
+      "manifest": {
+        "name": "I-AM-O.S. v12",
+        "version": "1.0.0",
+        "runtime": "browser",
+        "kind": "surface",
+        "entry": "/apps/xheCarpenter.html",
+        "permissions": [
+          "identity",
+          "storage",
+          "agents",
+          "tokens"
+        ],
+        "capabilities": [
+          "orchestration",
+          "memory",
+          "terminal"
+        ],
+        "routes": [
+          "/apps/xheCarpenter.html"
+        ]
+      }
+    },
+    "sovereign-landing": {
+      "id": "sovereign-landing",
+      "title": "Sovereign Landing",
+      "desc": "Entry surface for the unified intelligence system and launch funnel.",
+      "goal": 350000,
+      "raised": 0,
+      "supporterIds": [],
+      "installCount": 0,
+      "authorId": "system",
+      "category": "surface",
+      "createdAt": "2026-04-19T01:08:46.720Z",
+      "updatedAt": "2026-04-19T01:11:46.719Z",
+      "manifest": {
+        "name": "Sovereign Landing",
+        "version": "1.0.0",
+        "runtime": "browser",
+        "kind": "surface",
+        "entry": "/apps/landing.html",
+        "permissions": [
+          "ui"
+        ],
+        "capabilities": [
+          "landing",
+          "navigation"
+        ],
+        "routes": [
+          "/apps/landing.html"
+        ]
+      }
+    },
+    "jsonflow-genes": {
+      "id": "jsonflow-genes",
+      "title": "JSONFlow Genes",
+      "desc": "TRINITY gene editor for JSONFlow snippets and reusable flow seeds.",
+      "goal": 420000,
+      "raised": 0,
+      "supporterIds": [],
+      "installCount": 0,
+      "authorId": "system",
+      "category": "tool",
+      "createdAt": "2026-04-19T01:09:46.720Z",
+      "updatedAt": "2026-04-19T01:11:46.719Z",
+      "manifest": {
+        "name": "JSONFlow Genes",
+        "version": "1.0.0",
+        "runtime": "browser",
+        "kind": "tool",
+        "entry": "/genes.html",
+        "permissions": [
+          "storage",
+          "builder"
+        ],
+        "capabilities": [
+          "jsonflow",
+          "builder"
+        ],
+        "routes": [
+          "/genes.html"
+        ]
+      }
+    },
+    "jsonflow-workbench": {
+      "id": "jsonflow-workbench",
+      "title": "JSONFlow Workbench",
+      "desc": "Compiler workbench for JSONFlow authoring and interop.",
+      "goal": 480000,
+      "raised": 0,
+      "supporterIds": [],
+      "installCount": 0,
+      "authorId": "system",
+      "category": "tool",
+      "createdAt": "2026-04-19T01:10:46.720Z",
+      "updatedAt": "2026-04-19T01:11:46.719Z",
+      "manifest": {
+        "name": "JSONFlow Workbench",
+        "version": "1.0.0",
+        "runtime": "browser",
+        "kind": "tool",
+        "entry": "/json-interop/JSONFlow-WebUI.html",
+        "permissions": [
+          "builder",
+          "ledger"
+        ],
+        "capabilities": [
+          "jsonflow",
+          "interop",
+          "compiler"
+        ],
+        "routes": [
+          "/json-interop/JSONFlow-WebUI.html"
+        ]
+      }
+    }
+  },
+  "app_installs": [],
+  "kernel_events": [
+    {
+      "id": "cc7e7767-822e-4f7d-a46c-6b708cf8a866",
+      "type": "USER_REGISTER",
+      "authorId": "profile-jordan",
+      "payload": {
+        "name": "Jordan",
+        "walletAddress": "profile-jordan"
+      },
+      "ts": 1776561300898,
+      "prevHash": "genesis",
+      "hash": "b3098e409de6082d2e2f0494"
+    },
+    {
+      "id": "1c876814-db0c-4342-b0e2-950d218e5a03",
+      "type": "USER_REGISTER",
+      "authorId": "venture-omar",
+      "payload": {
+        "name": "Omar",
+        "walletAddress": "venture-omar"
+      },
+      "ts": 1776561300902,
+      "prevHash": "b3098e409de6082d2e2f0494",
+      "hash": "5a6ef8022212e13d5fbf0bfe"
+    },
+    {
+      "id": "936dcbec-d577-45c2-8c67-b0c8b3d2d482",
+      "type": "USER_REGISTER",
+      "authorId": "profile-sam",
+      "payload": {
+        "name": "Sam",
+        "walletAddress": "profile-sam"
+      },
+      "ts": 1776561300904,
+      "prevHash": "5a6ef8022212e13d5fbf0bfe",
+      "hash": "120b0d6bfc87b323a5f63bf9"
+    },
+    {
+      "id": "2175e4c3-36f2-4521-b378-9d9c42820250",
+      "type": "USER_REGISTER",
+      "authorId": "profile-alex",
+      "payload": {
+        "name": "Alex",
+        "walletAddress": "profile-alex"
+      },
+      "ts": 1776561300905,
+      "prevHash": "120b0d6bfc87b323a5f63bf9",
+      "hash": "76966c6245205548b1adccdd"
+    },
+    {
+      "id": "59e5f3ce-9111-474c-91dd-4ee642111eae",
+      "type": "USER_REGISTER",
+      "authorId": "venture-andre",
+      "payload": {
+        "name": "Andre",
+        "walletAddress": "venture-andre"
+      },
+      "ts": 1776561300908,
+      "prevHash": "76966c6245205548b1adccdd",
+      "hash": "98700c0ed04c68811cdb5041"
+    },
+    {
+      "id": "eef8cd73-9d10-491a-84b6-8c2a763f5adf",
+      "type": "USER_REGISTER",
+      "authorId": "venture-priya",
+      "payload": {
+        "name": "Priya",
+        "walletAddress": "venture-priya"
+      },
+      "ts": 1776561300915,
+      "prevHash": "98700c0ed04c68811cdb5041",
+      "hash": "3fca2aa4ef5f76eb2b704027"
+    },
+    {
+      "id": "836668d4-925e-4888-9922-3360c42d9939",
+      "type": "USER_REGISTER",
+      "authorId": "venture-maya",
+      "payload": {
+        "name": "Maya",
+        "walletAddress": "venture-maya"
+      },
+      "ts": 1776561300917,
+      "prevHash": "3fca2aa4ef5f76eb2b704027",
+      "hash": "e1ef587e1cfbc802aea46555"
+    },
+    {
+      "id": "6dee8cd2-a66f-48db-a561-e8073c0c4091",
+      "type": "BET_CREATE",
+      "authorId": "system",
+      "payload": {
+        "betId": "b87c9f88-d704-4fb5-ac84-410e728dddde",
+        "title": "Network Growth",
+        "expiresAt": "2026-12-31T23:59:59.000Z"
+      },
+      "ts": 1776561300954,
+      "prevHash": "e1ef587e1cfbc802aea46555",
+      "hash": "6e42bb02c3c38e1ea377d9b4"
+    },
+    {
+      "id": "2b333444-19fe-4038-b426-13059aacd675",
+      "type": "BET_CREATE",
+      "authorId": "system",
+      "payload": {
+        "betId": "45d91c18-9ad6-41dd-84ed-d4287d85cc78",
+        "title": "Ledger Throughput",
+        "expiresAt": "2026-12-31T23:59:59.000Z"
+      },
+      "ts": 1776561300956,
+      "prevHash": "6e42bb02c3c38e1ea377d9b4",
+      "hash": "c7e0a096c301a80a7c27fea8"
+    }
+  ]
+}

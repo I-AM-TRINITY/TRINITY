@@ -1,0 +1,1169 @@
+{
+  "timestamp": "2026-04-19T14:40:57.283Z",
+  "root": "/Users/jameschapman/Documents/Codex/2026-04-19-files-mentioned-by-the-user-trinity/Trinity-Package/trinity-core",
+  "pass": false,
+  "totalPass": 1,
+  "totalWarn": 7,
+  "totalFail": 6,
+  "checks": [
+    {
+      "id": "BOOTSTRAP",
+      "label": "Bootstrap Determinism",
+      "status": "FAIL",
+      "findings": [
+        {
+          "file": "runtime/audit.js",
+          "line": 372,
+          "msg": "electron-is-dev import (ESM-only, breaks CommonJS)",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 372,
+          "msg": "electron-is-dev import (ESM-only, breaks CommonJS)",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 374,
+          "msg": "electron-is-dev import (ESM-only, breaks CommonJS)",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "id": "EVENT_LOG",
+      "label": "Event Log Purity",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 176,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 176,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 163,
+          "msg": "Direct state mutation: // Direct state mutation (rough heuristic: this.state.X = ... outside reducer)",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 168,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 325,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 135,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 136,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/transport.js",
+          "line": 316,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/transport.js",
+          "line": 316,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 61,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 61,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 336,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 336,
+          "msg": "Runtime-generated UUID as ID — not content-derived",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "IO_ISOLATION",
+      "label": "IO Isolation",
+      "status": "PASS",
+      "findings": []
+    },
+    {
+      "id": "TIME_CONTROL",
+      "label": "Time Control",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "crypto/wallet.js",
+          "line": 349,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "crypto/wallet.js",
+          "line": 351,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/compute-bridge.js",
+          "line": 211,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/compute-bridge.js",
+          "line": 227,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/compute-bridge.js",
+          "line": 256,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/identity.js",
+          "line": 30,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/identity.js",
+          "line": 33,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/identity.js",
+          "line": 56,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/sovereign-log.js",
+          "line": 74,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 62,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 68,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 79,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 104,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 182,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 367,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 368,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 370,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 404,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/ledger-bridge.js",
+          "line": 114,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/ledger-bridge.js",
+          "line": 182,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/ledger-bridge.js",
+          "line": 208,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 135,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 201,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 213,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 445,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 457,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 471,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 480,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 501,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 538,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 554,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 586,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 616,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 639,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 645,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 675,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 721,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 733,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 747,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 750,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 803,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 140,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 142,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 222,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 226,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 228,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 609,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 162,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 364,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 372,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 461,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 478,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 506,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 613,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1231,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1293,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1303,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1319,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1328,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1339,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 352,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 599,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 682,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 683,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 718,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 747,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 750,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 786,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 869,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 870,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 890,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 891,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 907,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 932,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 948,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1025,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1056,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1122,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1210,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1218,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1263,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1264,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1271,
+          "msg": "new Date() call — must use recorded timestamp for determinism",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/hybrid.js",
+          "line": 297,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/hybrid.js",
+          "line": 310,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/hybrid.js",
+          "line": 311,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/hybrid.js",
+          "line": 367,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/transport.js",
+          "line": 322,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 67,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 112,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 257,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 275,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 216,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 235,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 337,
+          "msg": "(globalThis.__now ? globalThis.__now() : Date.now()) in logic — must be injected as event data for replay",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "RANDOMNESS",
+      "label": "Randomness Control",
+      "status": "FAIL",
+      "findings": [
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 176,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 145,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 147,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 245,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        },
+        {
+          "file": "transport/transport.js",
+          "line": 322,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 67,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        },
+        {
+          "file": "trinity.js",
+          "line": 337,
+          "msg": "(globalThis.__rand ? globalThis.__rand() : Math.random()) — breaks replay determinism; use seeded PRNG",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "id": "MODULE_ISOLATION",
+      "label": "Module Isolation",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "execution/adapters/ollama.js",
+          "line": 468,
+          "msg": "Mutable module-scope variable: let _aiInstance = null;",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/state.js",
+          "line": 21,
+          "msg": "Mutable module-scope variable: let ollamaTemp            = 0;",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/state.js",
+          "line": 22,
+          "msg": "Mutable module-scope variable: let isGenerating          = false;",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/sovereign-bus.js",
+          "line": 25,
+          "msg": "Mutable module-scope variable: let _ch  = null;",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/sovereign-bus.js",
+          "line": 103,
+          "msg": "Mutable module-scope variable: let _isBusReady = false;",
+          "severity": "warn"
+        },
+        {
+          "file": "primitives/sovereign-log.js",
+          "line": 64,
+          "msg": "Mutable module-scope variable: let _seq      = 0;",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 669,
+          "msg": "Mutable module-scope variable: let _networkInstance = null;",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 192,
+          "msg": "Mutable module-scope variable: let persistTimer = null;",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 1437,
+          "msg": "Mutable module-scope variable: let expressApp = null;",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 12,
+          "msg": "Mutable module-scope variable: let _nodeModulesReady = false;",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "DAG_INTEGRITY",
+      "label": "DAG Integrity",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "ui/planespace/js/EventEmitter.js",
+          "line": 4,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/js/index.d.ts",
+          "line": 59,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/js/index.d.ts",
+          "line": 65,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/js/index.d.ts",
+          "line": 129,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace/src/core/EventEmitter.js",
+          "line": 4,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace/types/index.d.ts",
+          "line": 59,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace/types/index.d.ts",
+          "line": 65,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace/types/index.d.ts",
+          "line": 129,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace_v2/src/core/EventEmitter.js",
+          "line": 7,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace_v2/types/index.d.ts",
+          "line": 139,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace_v2/types/index.d.ts",
+          "line": 150,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/planespace_v2/types/index.d.ts",
+          "line": 345,
+          "msg": "Event type defined without parent hash reference — breaks DAG linkage",
+          "severity": "warn"
+        },
+        {
+          "file": "(project)",
+          "line": 0,
+          "msg": "No DAG event files detected — verify DAG structure exists",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "HASH_CONSISTENCY",
+      "label": "Hash / ID Consistency",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "execution/engine/compute-bridge.js",
+          "line": 150,
+          "msg": "Object.keys() near hash — key order not guaranteed",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/jsonflow.js",
+          "line": 41,
+          "msg": "Object.keys() near hash — key order not guaranteed",
+          "severity": "warn"
+        },
+        {
+          "file": "execution/engine/state.js",
+          "line": 103,
+          "msg": "Object.keys() near hash — key order not guaranteed",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 330,
+          "msg": "Object.keys() near hash — key order not guaranteed",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 206,
+          "msg": "Object.keys() near hash — key order not guaranteed",
+          "severity": "warn"
+        },
+        {
+          "file": "trinity.js",
+          "line": 83,
+          "msg": "Object.keys() near hash — key order not guaranteed",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "AI_CONSTRAINTS",
+      "label": "AI Agent Constraints",
+      "status": "FAIL",
+      "findings": [
+        {
+          "file": "runtime/audit.js",
+          "line": 348,
+          "msg": "AI/agent direct state mutation — must go through event dispatch",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 349,
+          "msg": "AI/agent direct state mutation — must go through event dispatch",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "id": "ELECTRON_RUNTIME",
+      "label": "Electron Runtime Sanity",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "src/main/index.js",
+          "line": 0,
+          "msg": "Main process file not found at expected path",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "BUILD_CONSISTENCY",
+      "label": "Build Consistency",
+      "status": "FAIL",
+      "findings": [
+        {
+          "file": "(project)",
+          "line": 0,
+          "msg": "No lockfile found — dependency versions may drift between builds",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "id": "REPLAY_INTEGRITY",
+      "label": "Replay Consistency",
+      "status": "FAIL",
+      "findings": [
+        {
+          "file": "(project)",
+          "line": 0,
+          "msg": "No chain/replay files detected — replay verification may not be implemented",
+          "severity": "warn"
+        },
+        {
+          "file": "(project)",
+          "line": 0,
+          "msg": "No snapshot files — full replay from genesis may be required for any audit",
+          "severity": "warn"
+        },
+        {
+          "file": "(project)",
+          "line": 0,
+          "msg": "No test files found — replay determinism is untested",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "id": "SECURITY",
+      "label": "Security Model",
+      "status": "FAIL",
+      "findings": [
+        {
+          "file": "runtime/audit.js",
+          "line": 493,
+          "msg": "nodeIntegration: true — severe security risk in Electron",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 495,
+          "msg": "nodeIntegration: true — severe security risk in Electron",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 498,
+          "msg": "contextIsolation: false — allows renderer to access Node.js",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 500,
+          "msg": "contextIsolation: false — allows renderer to access Node.js",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 503,
+          "msg": "eval() — arbitrary code execution risk",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 505,
+          "msg": "eval() — arbitrary code execution risk",
+          "severity": "error"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 508,
+          "msg": "new Function() — dynamic code execution",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 510,
+          "msg": "new Function() — dynamic code execution",
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "RED_FLAGS",
+      "label": "Red Flags Scan",
+      "status": "WARN",
+      "findings": [
+        {
+          "file": "execution/adapters/kernel-adapter.js",
+          "line": 37,
+          "msg": "Promise.race/all — potential async race condition",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/identity-bridge.js",
+          "line": 280,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 408,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "protocol/sovereign-network.js",
+          "line": 845,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 537,
+          "msg": "Possible multiple state stores: scan(src, /(?:createStore|createSlice|new\\s+Store|new\\s+EventStore)/g).forEach(m => {",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/audit.js",
+          "line": 537,
+          "msg": "Possible multiple state stores: scan(src, /(?:createStore|createSlice|new\\s+Store|new\\s+EventStore)/g).forEach(m => {",
+          "severity": "warn"
+        },
+        {
+          "file": "runtime/server.js",
+          "line": 245,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/hybrid.js",
+          "line": 344,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/transport.js",
+          "line": 97,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 174,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 177,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 202,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 204,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "transport/tunnel.js",
+          "line": 260,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        },
+        {
+          "file": "ui/planespace/cli-planespace/dev.js",
+          "line": 153,
+          "msg": "setTimeout with callback — verify it doesn't mutate state outside events",
+          "severity": "warn"
+        }
+      ]
+    }
+  ]
+}

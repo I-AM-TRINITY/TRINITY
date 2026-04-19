@@ -1,0 +1,20 @@
+{
+  "name": "trinity",
+  "version": "3.0.0",
+  "description": "TRINITY — sovereign compute network. Clean layers. One system.",
+  "main": "trinity.js",
+  "scripts": {
+    "start": "node runtime/server.js",
+    "test":  "node runtime/audit.js",
+    "legal:headers": "node ../tools/apply-legal-headers.mjs --root . --preset trinity-dual"
+  },
+  "license": "AGPL-3.0-or-later",
+  "engines": { "node": ">=14.17.0" },
+  "dependencies": { "ethers": "^6.16.0" },
+  "optionalDependencies": { "express": "^5.2.1", "sqlite3": "^6.0.1" },
+  "exports": {
+    ".": "./trinity.js",
+    "./browser": "./trinity.browser.js",
+    "./node": "./trinity.node.js"
+  }
+}
